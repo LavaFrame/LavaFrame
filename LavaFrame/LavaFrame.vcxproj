@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{f5891fc3-3cc8-497f-b8b9-3f25c0e9aa32}</ProjectGuid>
+    <RootNamespace>LavaFrame</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <TargetName>lavaframe</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <TargetName>lavaframe</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(SolutionDir)lavaframe\;$(SolutionDir)lavaframe\thirdparty\imgui;$(SolutionDir)lavaframe\thirdparty\glew\include;$(SolutionDir)lavaframe\thirdparty\stb;$(SolutionDir)lavaframe\thirdparty\gl3w;$(SolutionDir)lavaframe\thirdparty\imguizmo;$(SolutionDir)lavaframe\thirdparty\RadeonRays;$(SolutionDir)lavaframe\thirdparty\tinydir;$(SolutionDir)lavaframe\thirdparty\oidn\include\;$(SolutionDir)lavaframe\thirdparty\SDL2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <Optimization>Full</Optimization>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)lavaframe\thirdparty\oidn\lib\$(Configuration);$(SolutionDir)lavaframe\thirdparty\SDL2\lib\x64\$(Configuration);$(SolutionDir)lavaframe\thirdparty\SDL2\lib\x64;$(SolutionDir)lavaframe\thirdparty\oidn\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;SDL2.lib;SDL2main.lib;OpenImageDenoise.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <Version>0.5.1</Version>
+    </Link>
+    <CustomBuildStep>
+      <Command>Xcopy /E /I $(SolutionDir)shaders\ $(SolutionDir)$(Platform_Actual)\$(Configuration)\</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Copying shaders</Message>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(SolutionDir)lavaframe\;$(SolutionDir)lavaframe\thirdparty\imgui;$(SolutionDir)lavaframe\thirdparty\glew\include;$(SolutionDir)lavaframe\thirdparty\stb;$(SolutionDir)lavaframe\thirdparty\gl3w;$(SolutionDir)lavaframe\thirdparty\imguizmo;$(SolutionDir)lavaframe\thirdparty\RadeonRays;$(SolutionDir)lavaframe\thirdparty\tinydir;$(SolutionDir)lavaframe\thirdparty\oidn\include\;$(SolutionDir)lavaframe\thirdparty\SDL2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <Optimization>Full</Optimization>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)lavaframe\thirdparty\oidn\lib\$(Configuration);$(SolutionDir)lavaframe\thirdparty\SDL2\lib\x64\$(Configuration);$(SolutionDir)lavaframe\thirdparty\SDL2\lib\x64;$(SolutionDir)lavaframe\thirdparty\oidn\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;SDL2.lib;SDL2main.lib;OpenImageDenoise.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <Version>
+      </Version>
+    </Link>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>
+      </Message>
+    </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>echo Copying build files...
+Xcopy /E /I /Y $(SolutionDir)build_include\ $(SolutionDir)$(Platform_Actual)\$(Configuration)\
+Xcopy /E /I /Y $(SolutionDir)$(Platform_Actual)\$(Configuration)\ $(SolutionDir)$(Platform_Actual)\$(Configuration)_AMD\
+Xcopy /E /I /Y $(SolutionDir)shaders\ $(SolutionDir)$(Platform_Actual)\$(Configuration)\shaders\
+Xcopy /E /I /Y $(SolutionDir)shaders_amd\ $(SolutionDir)$(Platform_Actual)\$(Configuration)_AMD\shaders\
+del $(SolutionDir)$(Platform_Actual)\$(Configuration)\LavaFrame.pdb
+del $(SolutionDir)$(Platform_Actual)\$(Configuration)_AMD\LavaFrame.pdb
+echo Done copying build files.</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copying build files</Message>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>
+      </Message>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="hdrloader.cpp" />
+    <ClCompile Include="Loader.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Program.cpp" />
+    <ClCompile Include="Quad.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="thirdparty\gl3w\GL\gl3w.c" />
+    <ClCompile Include="thirdparty\imguizmo\ImGuizmo.cpp" />
+    <ClCompile Include="thirdparty\imgui\imgui.cpp" />
+    <ClCompile Include="thirdparty\imgui\imgui_demo.cpp" />
+    <ClCompile Include="thirdparty\imgui\imgui_draw.cpp" />
+    <ClCompile Include="thirdparty\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="thirdparty\imgui\imgui_impl_sdl.cpp" />
+    <ClCompile Include="thirdparty\imgui\imgui_stdlib.cpp" />
+    <ClCompile Include="thirdparty\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="thirdparty\RadeonRays\bbox.cpp" />
+    <ClCompile Include="thirdparty\RadeonRays\bvh.cpp" />
+    <ClCompile Include="thirdparty\RadeonRays\bvh_translator.cpp" />
+    <ClCompile Include="thirdparty\RadeonRays\split_bvh.cpp" />
+    <ClCompile Include="TiledRenderer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="hdrloader.h" />
+    <ClInclude Include="Loader.h" />
+    <ClInclude Include="Mat4.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="MathUtils.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Program.h" />
+    <ClInclude Include="Quad.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShaderIncludes.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="thirdparty\gl3w\GL\gl3w.h" />
+    <ClInclude Include="thirdparty\gl3w\GL\glcorearb.h" />
+    <ClInclude Include="thirdparty\imguizmo\ImGuizmo.h" />
+    <ClInclude Include="thirdparty\imgui\imconfig.h" />
+    <ClInclude Include="thirdparty\imgui\imgui.h" />
+    <ClInclude Include="thirdparty\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="thirdparty\imgui\imgui_impl_sdl.h" />
+    <ClInclude Include="thirdparty\imgui\imgui_internal.h" />
+    <ClInclude Include="thirdparty\imgui\imgui_stdlib.h" />
+    <ClInclude Include="thirdparty\imgui\imstb_rectpack.h" />
+    <ClInclude Include="thirdparty\imgui\imstb_textedit.h" />
+    <ClInclude Include="thirdparty\imgui\imstb_truetype.h" />
+    <ClInclude Include="thirdparty\oidn\include\OpenImageDenoise\config.h" />
+    <ClInclude Include="thirdparty\oidn\include\OpenImageDenoise\oidn.h" />
+    <ClInclude Include="thirdparty\oidn\include\OpenImageDenoise\oidn.hpp" />
+    <ClInclude Include="thirdparty\RadeonRays\bbox.h" />
+    <ClInclude Include="thirdparty\RadeonRays\bvh.h" />
+    <ClInclude Include="thirdparty\RadeonRays\bvh_translator.h" />
+    <ClInclude Include="thirdparty\RadeonRays\split_bvh.h" />
+    <ClInclude Include="thirdparty\stb\stb_image.h" />
+    <ClInclude Include="thirdparty\stb\stb_image_write.h" />
+    <ClInclude Include="thirdparty\tinydir\tinydir.h" />
+    <ClInclude Include="TiledRenderer.h" />
+    <ClInclude Include="tiny_obj_loader.h" />
+    <ClInclude Include="Vec2.h" />
+    <ClInclude Include="Vec3.h" />
+    <ClInclude Include="Vec4.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\build_include\assets\cornell_box.lfs" />
+    <None Include="..\build_include\OpenImageDenoise.dll" />
+    <None Include="..\build_include\SDL2.dll" />
+    <None Include="..\build_include\tbb.dll" />
+    <None Include="..\shaders\accumulation.glsl" />
+    <None Include="..\shaders\common\anyhit.glsl" />
+    <None Include="..\shaders\common\closest_hit.glsl" />
+    <None Include="..\shaders\common\disney.glsl" />
+    <None Include="..\shaders\common\globals.glsl" />
+    <None Include="..\shaders\common\intersection.glsl" />
+    <None Include="..\shaders\common\pathtrace.glsl" />
+    <None Include="..\shaders\common\sampling.glsl" />
+    <None Include="..\shaders\common\uniforms.glsl" />
+    <None Include="..\shaders\common\vertex.glsl" />
+    <None Include="..\shaders\output.glsl" />
+    <None Include="..\shaders\postprocess.glsl" />
+    <None Include="..\shaders\postprocess_neutral.glsl" />
+    <None Include="..\shaders\progressive.glsl" />
+    <None Include="..\shaders\tiled_renderer.glsl" />
+    <None Include="..\shaders\tonemap.glsl" />
+    <None Include="..\shaders_amd\accumulation.glsl" />
+    <None Include="..\shaders_amd\common\anyhit.glsl" />
+    <None Include="..\shaders_amd\common\closest_hit.glsl" />
+    <None Include="..\shaders_amd\common\disney.glsl" />
+    <None Include="..\shaders_amd\common\globals.glsl" />
+    <None Include="..\shaders_amd\common\intersection.glsl" />
+    <None Include="..\shaders_amd\common\pathtrace.glsl" />
+    <None Include="..\shaders_amd\common\sampling.glsl" />
+    <None Include="..\shaders_amd\common\uniforms.glsl" />
+    <None Include="..\shaders_amd\common\vertex.glsl" />
+    <None Include="..\shaders_amd\output.glsl" />
+    <None Include="..\shaders_amd\postprocess.glsl" />
+    <None Include="..\shaders_amd\postprocess_neutral.glsl" />
+    <None Include="..\shaders_amd\progressive.glsl" />
+    <None Include="..\shaders_amd\tiled_renderer.glsl" />
+    <None Include="..\shaders_amd\tonemap.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="..\build_include\fonts\Roboto-Regular.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="..\build_include\assets\cornell_box\cbox_back.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_ceiling.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_floor.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_greenwall.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_largebox.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_redwall.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_smallbox.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\glass_sphere.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Object>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

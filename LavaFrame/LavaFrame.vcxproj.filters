@@ -1,0 +1,429 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\core">
+      <UniqueIdentifier>{7aa282bf-8353-4152-9cb6-9c61880d27ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\loaders">
+      <UniqueIdentifier>{4a65fac6-45ba-4791-91db-9d341f197492}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math">
+      <UniqueIdentifier>{62379ad3-c8ed-4030-ada6-2765d7d975f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shaders">
+      <UniqueIdentifier>{ccb6257a-6e27-4cbd-b668-e6cf16ac09a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty">
+      <UniqueIdentifier>{c1853386-446e-40a6-a02f-7c6912475dfa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\gl3w">
+      <UniqueIdentifier>{dff29e12-6d08-450c-9168-bab7964d9c4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\gl3w\GL">
+      <UniqueIdentifier>{51f86c29-59e9-4ceb-9504-3e50e08da5de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\imgui">
+      <UniqueIdentifier>{1228c758-5b2e-4423-859e-b61ee5b9b575}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\imguizmo">
+      <UniqueIdentifier>{5be7583a-167d-4612-88d8-99c381e767ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\oidn">
+      <UniqueIdentifier>{ee493852-42cf-4c45-a4a2-434cea71a00e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\oidn\include">
+      <UniqueIdentifier>{342cfd6b-ced4-49f1-ac9a-65379077a6db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\oidn\include\OpenImageDenoise">
+      <UniqueIdentifier>{f196e135-7bd6-4555-bb9f-243bfcc0df35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\RadeonRays">
+      <UniqueIdentifier>{753ca43f-d5c4-47a8-be59-fb728b978dec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\stb">
+      <UniqueIdentifier>{2fe83f48-a8c1-4b1f-ad20-01576b039be6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\tinydir">
+      <UniqueIdentifier>{c1b088ee-def6-4e14-bc5d-8d552a8be85a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shaders\common">
+      <UniqueIdentifier>{eb176228-871f-4aec-a94d-f50302198d54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shaders_amd">
+      <UniqueIdentifier>{359f02ac-98f9-4ded-a3cf-d9b0d095994b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shaders_amd\common">
+      <UniqueIdentifier>{c0debdf6-b98c-4d31-a3dd-4f2947c490ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\build_include">
+      <UniqueIdentifier>{0b8c5b46-b816-4514-bc15-e0c5b3ac1794}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\build_include\assets">
+      <UniqueIdentifier>{7771d1a0-787b-4179-81d0-7061266046d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\build_include\fonts">
+      <UniqueIdentifier>{f10dc179-eb0d-460b-be4f-469a76c98e17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\build_include\assets\cornell_box">
+      <UniqueIdentifier>{275e5aff-9f9e-4f5e-899b-ccef7c1d48c1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="Program.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="Quad.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="TiledRenderer.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="hdrloader.cpp">
+      <Filter>Source Files\loaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Loader.cpp">
+      <Filter>Source Files\loaders</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\gl3w\GL\gl3w.c">
+      <Filter>Source Files\thirdparty\gl3w\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\imgui\imgui_stdlib.cpp">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\imgui\imgui_widgets.cpp">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\imgui\imgui.cpp">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\imgui\imgui_demo.cpp">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\imgui\imgui_draw.cpp">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\imgui\imgui_impl_sdl.cpp">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\imguizmo\ImGuizmo.cpp">
+      <Filter>Source Files\thirdparty\imguizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\RadeonRays\bvh_translator.cpp">
+      <Filter>Source Files\thirdparty\RadeonRays</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\RadeonRays\split_bvh.cpp">
+      <Filter>Source Files\thirdparty\RadeonRays</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\RadeonRays\bbox.cpp">
+      <Filter>Source Files\thirdparty\RadeonRays</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\RadeonRays\bvh.cpp">
+      <Filter>Source Files\thirdparty\RadeonRays</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Camera.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Program.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Quad.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderIncludes.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="TiledRenderer.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="hdrloader.h">
+      <Filter>Source Files\loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Loader.h">
+      <Filter>Source Files\loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="tiny_obj_loader.h">
+      <Filter>Source Files\loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Mat4.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="MathUtils.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="Vec2.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="Vec3.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="Vec4.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\gl3w\GL\glcorearb.h">
+      <Filter>Source Files\thirdparty\gl3w\GL</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\gl3w\GL\gl3w.h">
+      <Filter>Source Files\thirdparty\gl3w\GL</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\imgui\imgui_internal.h">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\imgui\imgui_stdlib.h">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\imgui\imstb_rectpack.h">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\imgui\imstb_textedit.h">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\imgui\imstb_truetype.h">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\imgui\imconfig.h">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\imgui\imgui.h">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\imgui\imgui_impl_opengl3.h">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\imgui\imgui_impl_sdl.h">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\imguizmo\ImGuizmo.h">
+      <Filter>Source Files\thirdparty\imguizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\oidn\include\OpenImageDenoise\oidn.hpp">
+      <Filter>Source Files\thirdparty\oidn\include\OpenImageDenoise</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\oidn\include\OpenImageDenoise\config.h">
+      <Filter>Source Files\thirdparty\oidn\include\OpenImageDenoise</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\oidn\include\OpenImageDenoise\oidn.h">
+      <Filter>Source Files\thirdparty\oidn\include\OpenImageDenoise</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\RadeonRays\bvh.h">
+      <Filter>Source Files\thirdparty\RadeonRays</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\RadeonRays\bvh_translator.h">
+      <Filter>Source Files\thirdparty\RadeonRays</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\RadeonRays\split_bvh.h">
+      <Filter>Source Files\thirdparty\RadeonRays</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\RadeonRays\bbox.h">
+      <Filter>Source Files\thirdparty\RadeonRays</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\stb\stb_image_write.h">
+      <Filter>Source Files\thirdparty\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\stb\stb_image.h">
+      <Filter>Source Files\thirdparty\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\tinydir\tinydir.h">
+      <Filter>Source Files\thirdparty\tinydir</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\shaders\output.glsl">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\shaders\postprocess.glsl">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\shaders\postprocess_neutral.glsl">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\shaders\progressive.glsl">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\shaders\tiled_renderer.glsl">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\shaders\tonemap.glsl">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\shaders\accumulation.glsl">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\shaders\common\anyhit.glsl">
+      <Filter>Source Files\shaders\common</Filter>
+    </None>
+    <None Include="..\shaders\common\closest_hit.glsl">
+      <Filter>Source Files\shaders\common</Filter>
+    </None>
+    <None Include="..\shaders\common\disney.glsl">
+      <Filter>Source Files\shaders\common</Filter>
+    </None>
+    <None Include="..\shaders\common\globals.glsl">
+      <Filter>Source Files\shaders\common</Filter>
+    </None>
+    <None Include="..\shaders\common\intersection.glsl">
+      <Filter>Source Files\shaders\common</Filter>
+    </None>
+    <None Include="..\shaders\common\pathtrace.glsl">
+      <Filter>Source Files\shaders\common</Filter>
+    </None>
+    <None Include="..\shaders\common\sampling.glsl">
+      <Filter>Source Files\shaders\common</Filter>
+    </None>
+    <None Include="..\shaders\common\uniforms.glsl">
+      <Filter>Source Files\shaders\common</Filter>
+    </None>
+    <None Include="..\shaders\common\vertex.glsl">
+      <Filter>Source Files\shaders\common</Filter>
+    </None>
+    <None Include="..\shaders_amd\accumulation.glsl">
+      <Filter>Source Files\shaders_amd</Filter>
+    </None>
+    <None Include="..\shaders_amd\output.glsl">
+      <Filter>Source Files\shaders_amd</Filter>
+    </None>
+    <None Include="..\shaders_amd\postprocess.glsl">
+      <Filter>Source Files\shaders_amd</Filter>
+    </None>
+    <None Include="..\shaders_amd\postprocess_neutral.glsl">
+      <Filter>Source Files\shaders_amd</Filter>
+    </None>
+    <None Include="..\shaders_amd\progressive.glsl">
+      <Filter>Source Files\shaders_amd</Filter>
+    </None>
+    <None Include="..\shaders_amd\tiled_renderer.glsl">
+      <Filter>Source Files\shaders_amd</Filter>
+    </None>
+    <None Include="..\shaders_amd\tonemap.glsl">
+      <Filter>Source Files\shaders_amd</Filter>
+    </None>
+    <None Include="..\shaders_amd\common\closest_hit.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\shaders_amd\common\disney.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\shaders_amd\common\globals.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\shaders_amd\common\intersection.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\shaders_amd\common\pathtrace.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\shaders_amd\common\sampling.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\shaders_amd\common\uniforms.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\shaders_amd\common\vertex.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\shaders_amd\common\anyhit.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\build_include\OpenImageDenoise.dll">
+      <Filter>Resource Files\build_include</Filter>
+    </None>
+    <None Include="..\build_include\SDL2.dll">
+      <Filter>Resource Files\build_include</Filter>
+    </None>
+    <None Include="..\build_include\tbb.dll">
+      <Filter>Resource Files\build_include</Filter>
+    </None>
+    <None Include="..\build_include\assets\cornell_box.lfs">
+      <Filter>Resource Files\build_include\assets</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="..\build_include\fonts\Roboto-Regular.ttf">
+      <Filter>Resource Files\build_include\fonts</Filter>
+    </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="..\build_include\assets\cornell_box\cbox_redwall.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_smallbox.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\glass_sphere.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_ceiling.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_floor.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_greenwall.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_largebox.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </Object>
+    <Object Include="..\build_include\assets\cornell_box\cbox_back.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </Object>
+  </ItemGroup>
+</Project>
