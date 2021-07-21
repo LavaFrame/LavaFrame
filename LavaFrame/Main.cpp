@@ -144,6 +144,15 @@ void SaveFrame(const std::string filename) //Saves current frame as a png
 	stbi_write_png(filename.c_str(), w, h, 3, data, w * 3);
 	delete data;
 }
+void SaveFrameTGA(const std::string filename) //Saves current frame as a png
+{
+	unsigned char* data = nullptr;
+	int w, h;
+	renderer->GetOutputBuffer(&data, w, h);
+	stbi_flip_vertically_on_write(true);
+	stbi_write_tga(filename.c_str(), w, h, 3, data);
+	delete data;
+}
 void SaveFrameJPG(const std::string filename) //Saves current frame as a bitmap-JPG
 {
 	unsigned char* data = nullptr;
@@ -346,6 +355,14 @@ void MainLoop(void* arg) //Its the main loop !
 						}
 						else {
 							SaveFrame("./" + exportname + ".png");
+						}
+					}
+					if (ImGui::MenuItem("Export as TGA", "")) {
+						if (exportname == "0") {
+							SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
+						}
+						else {
+							SaveFrameTGA("./" + exportname + ".tga");
 						}
 					}
 					ImGui::EndMenu();

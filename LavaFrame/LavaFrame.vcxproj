@@ -274,6 +274,7 @@ echo Done copying build files.</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\build_include\assets\cornell_box.lfs" />
+    <None Include="..\build_include\license" />
     <None Include="..\build_include\OpenImageDenoise.dll" />
     <None Include="..\build_include\SDL2.dll" />
     <None Include="..\build_include\tbb.dll" />
@@ -314,31 +315,38 @@ echo Done copying build files.</Command>
     <Font Include="..\build_include\fonts\Roboto-Regular.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <Object Include="..\build_include\assets\cornell_box\cbox_back.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    <None Include="..\build_include\assets\cornell_box\cbox_back.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_ceiling.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_floor.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_greenwall.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_largebox.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_redwall.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_smallbox.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\glass_sphere.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </Object>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_ceiling.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_floor.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_greenwall.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_largebox.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_redwall.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_smallbox.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\glass_sphere.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

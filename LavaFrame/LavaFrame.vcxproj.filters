@@ -394,36 +394,37 @@
     <None Include="..\build_include\assets\cornell_box.lfs">
       <Filter>Resource Files\build_include\assets</Filter>
     </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_back.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_ceiling.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_floor.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_greenwall.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_largebox.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_redwall.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\cbox_smallbox.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </None>
+    <None Include="..\build_include\assets\cornell_box\glass_sphere.obj">
+      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
+    </None>
+    <None Include="..\build_include\license">
+      <Filter>Resource Files\build_include</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Font Include="..\build_include\fonts\Roboto-Regular.ttf">
       <Filter>Resource Files\build_include\fonts</Filter>
     </Font>
-  </ItemGroup>
-  <ItemGroup>
-    <Object Include="..\build_include\assets\cornell_box\cbox_redwall.obj">
-      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_smallbox.obj">
-      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\glass_sphere.obj">
-      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_ceiling.obj">
-      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_floor.obj">
-      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_greenwall.obj">
-      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_largebox.obj">
-      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
-    </Object>
-    <Object Include="..\build_include\assets\cornell_box\cbox_back.obj">
-      <Filter>Resource Files\build_include\assets\cornell_box</Filter>
-    </Object>
   </ItemGroup>
 </Project>
