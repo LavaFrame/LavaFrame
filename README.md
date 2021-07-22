@@ -1,6 +1,6 @@
 # LavaFrame
 ### A GPU based path tracer.
-![img](https://raw.githubusercontent.com/LavaFrame/LavaFrame/master/showcase.jpg?token=AI7UPLQVW47A5JAUPSIYO6DA7BBMY)
+![img](showcase.jpg)
 (Currently only supports Windows - Linux support coming in the future)
 
 ## Installation
