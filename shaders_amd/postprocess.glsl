@@ -32,13 +32,6 @@ vec4 ToneMap(in vec4 c, float limit)
     return clamp((c * (a * c + b)) / (c * (y * c + d) + e), 0.0, 1.0);
 }
 
-/*void main()
-*{
-*    color = texture(pathTraceTexture, TexCoords) * invSampleCounter;
-*    color = pow(ToneMap(color, 1.5), vec4(1.0 / 2.2));
-*}
-*/
-
 void main()
 {
     color = texture(pathTraceTexture, TexCoords) * invSampleCounter;
