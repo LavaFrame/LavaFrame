@@ -313,7 +313,7 @@ void MainLoop(void* arg) //Its the main loop !
 	ImGui::NewFrame();
 	ImGuizmo::SetOrthographic(false);
 
-	ImGuizmo::BeginFrame(); //HORRIBLE GUI CODE INCOMING, PLEASE BEWARE
+	ImGuizmo::BeginFrame();
 	{
 		//io.Fonts->GetTexDataAsAlpha8(); Old font handling
 
@@ -321,7 +321,8 @@ void MainLoop(void* arg) //Its the main loop !
 		static bool no_titlebar = false;
 		static bool no_menu = false;
 		static bool no_move = true;
-		static bool no_resize = true;
+		static bool no_resize = false;
+		static bool window_override_size = true;
 
 		bool optionsChanged = false;
 
@@ -332,8 +333,11 @@ void MainLoop(void* arg) //Its the main loop !
 		if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
 
 		if (noUi == false) {
-			ImGui::SetNextWindowSize({ 340, 512 });
 			ImGui::SetNextWindowPos({ 0, 1 });
+			if (window_override_size) {
+				ImGui::SetNextWindowSize({ 340, 512 });
+				window_override_size = false;
+			}
 			ImGui::Begin(versionString.c_str(), nullptr, window_flags); //Main panel
 
 
