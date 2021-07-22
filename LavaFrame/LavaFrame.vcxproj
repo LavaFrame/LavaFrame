@@ -180,10 +180,10 @@
       </Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>Xcopy /E /I /Y $(SolutionDir)build_include\ $(SolutionDir)$(Platform_Actual)\$(Configuration)\
-Xcopy /E /I /Y $(SolutionDir)$(Platform_Actual)\$(Configuration)\ $(SolutionDir)$(Platform_Actual)\$(Configuration)_AMD\
-Xcopy /E /I /Y $(SolutionDir)shaders\ $(SolutionDir)$(Platform_Actual)\$(Configuration)\shaders\
-Xcopy /E /I /Y $(SolutionDir)shaders_amd\ $(SolutionDir)$(Platform_Actual)\$(Configuration)_AMD\shaders\</Command>
+      <Command>Xcopy /E /I /Y $(SolutionDir)build_include\ $(SolutionDir)$(Platform_Actual)\$(Configuration)\ &gt;NUL
+Xcopy /E /I /Y $(SolutionDir)$(Platform_Actual)\$(Configuration)\ $(SolutionDir)$(Platform_Actual)\$(Configuration)_AMD\ &gt;NUL
+Xcopy /E /I /Y $(SolutionDir)shaders\ $(SolutionDir)$(Platform_Actual)\$(Configuration)\shaders\ &gt;NUL
+Xcopy /E /I /Y $(SolutionDir)shaders_amd\ $(SolutionDir)$(Platform_Actual)\$(Configuration)_AMD\shaders\ &gt;NUL</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying build files</Message>
