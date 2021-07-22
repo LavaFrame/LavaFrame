@@ -139,10 +139,12 @@
       <Version>0.5.1</Version>
     </Link>
     <CustomBuildStep>
-      <Command>Xcopy /E /I $(SolutionDir)shaders\ $(SolutionDir)$(Platform_Actual)\$(Configuration)\</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <CustomBuildStep>
-      <Message>Copying shaders</Message>
+      <Message>
+      </Message>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
