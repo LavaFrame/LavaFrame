@@ -167,7 +167,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)lavaframe\thirdparty\oidn\lib\$(Configuration);$(SolutionDir)lavaframe\thirdparty\SDL2\lib\x64\$(Configuration);$(SolutionDir)lavaframe\thirdparty\SDL2\lib\x64;$(SolutionDir)lavaframe\thirdparty\oidn\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)lavaframe\thirdparty\SDL2\lib\$(PlatformTarget);$(SolutionDir)lavaframe\thirdparty\oidn\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glu32.lib;SDL2.lib;SDL2main.lib;OpenImageDenoise.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <Version>
