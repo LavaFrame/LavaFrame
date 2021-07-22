@@ -310,6 +310,11 @@ echo Done copying build files.</Command>
     <None Include="..\shaders_amd\progressive.glsl" />
     <None Include="..\shaders_amd\tiled_renderer.glsl" />
     <None Include="..\shaders_amd\tonemap.glsl" />
+    <None Include="thirdparty\oidn\lib\OpenImageDenoise.dll" />
+    <None Include="thirdparty\oidn\lib\tbb.dll" />
+    <None Include="thirdparty\oidn\lib\tbbmalloc.dll" />
+    <None Include="thirdparty\SDL2\lib\x64\SDL2.dll" />
+    <None Include="thirdparty\SDL2\lib\x86\SDL2.dll" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="..\build_include\fonts\Roboto-Regular.ttf" />
@@ -347,6 +352,15 @@ echo Done copying build files.</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="thirdparty\oidn\lib\OpenImageDenoise.lib" />
+    <Library Include="thirdparty\SDL2\lib\x64\SDL2.lib" />
+    <Library Include="thirdparty\SDL2\lib\x64\SDL2main.lib" />
+    <Library Include="thirdparty\SDL2\lib\x64\SDL2test.lib" />
+    <Library Include="thirdparty\SDL2\lib\x86\SDL2.lib" />
+    <Library Include="thirdparty\SDL2\lib\x86\SDL2main.lib" />
+    <Library Include="thirdparty\SDL2\lib\x86\SDL2test.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

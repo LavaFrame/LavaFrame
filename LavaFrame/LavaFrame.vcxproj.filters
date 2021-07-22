@@ -79,6 +79,21 @@
     <Filter Include="Resource Files\build_include\assets\cornell_box">
       <UniqueIdentifier>{275e5aff-9f9e-4f5e-899b-ccef7c1d48c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\thirdparty\oidn\lib">
+      <UniqueIdentifier>{457027bc-fb61-4414-9676-37697d8b2cb9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\sdl2">
+      <UniqueIdentifier>{25aaeb70-77e2-4194-a833-06db03c8d8ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\sdl2\lib">
+      <UniqueIdentifier>{0623103f-378c-49fb-ac04-53a41523a158}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\sdl2\lib\x64">
+      <UniqueIdentifier>{18efcb1b-3ea3-427d-841f-1c806e95de0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\thirdparty\sdl2\lib\x86">
+      <UniqueIdentifier>{eebf8b95-0d81-4bcb-bbac-a1b356961f64}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -421,10 +436,48 @@
     <None Include="..\build_include\license">
       <Filter>Resource Files\build_include</Filter>
     </None>
+    <None Include="thirdparty\oidn\lib\OpenImageDenoise.dll">
+      <Filter>Source Files\thirdparty\oidn\lib</Filter>
+    </None>
+    <None Include="thirdparty\oidn\lib\tbb.dll">
+      <Filter>Source Files\thirdparty\oidn\lib</Filter>
+    </None>
+    <None Include="thirdparty\oidn\lib\tbbmalloc.dll">
+      <Filter>Source Files\thirdparty\oidn\lib</Filter>
+    </None>
+    <None Include="thirdparty\SDL2\lib\x64\SDL2.dll">
+      <Filter>Source Files\thirdparty\sdl2\lib\x64</Filter>
+    </None>
+    <None Include="thirdparty\SDL2\lib\x86\SDL2.dll">
+      <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Font Include="..\build_include\fonts\Roboto-Regular.ttf">
       <Filter>Resource Files\build_include\fonts</Filter>
     </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="thirdparty\oidn\lib\OpenImageDenoise.lib">
+      <Filter>Source Files\thirdparty\oidn\lib</Filter>
+    </Library>
+    <Library Include="thirdparty\SDL2\lib\x64\SDL2.lib">
+      <Filter>Source Files\thirdparty\sdl2\lib\x64</Filter>
+    </Library>
+    <Library Include="thirdparty\SDL2\lib\x64\SDL2main.lib">
+      <Filter>Source Files\thirdparty\sdl2\lib\x64</Filter>
+    </Library>
+    <Library Include="thirdparty\SDL2\lib\x64\SDL2test.lib">
+      <Filter>Source Files\thirdparty\sdl2\lib\x64</Filter>
+    </Library>
+    <Library Include="thirdparty\SDL2\lib\x86\SDL2main.lib">
+      <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
+    </Library>
+    <Library Include="thirdparty\SDL2\lib\x86\SDL2test.lib">
+      <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
+    </Library>
+    <Library Include="thirdparty\SDL2\lib\x86\SDL2.lib">
+      <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
+    </Library>
   </ItemGroup>
 </Project>
