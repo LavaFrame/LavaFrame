@@ -186,7 +186,8 @@ Xcopy /E /I /Y $(SolutionDir)shaders\ $(SolutionDir)$(Platform_Actual)\$(Configu
 Xcopy /E /I /Y $(SolutionDir)shaders_amd\ $(SolutionDir)$(Platform_Actual)\$(Configuration)_AMD\shaders\ &gt;NUL</Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Copying build files</Message>
+      <Message>
+      </Message>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>
