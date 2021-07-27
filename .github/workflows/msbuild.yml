@@ -40,9 +40,11 @@ jobs:
       with:
         name: build
         path: D:\a\LavaFrame\LavaFrame\x64\Release\
+        retention-days: 10
         
     - name: Upload build artifacts - Release AMD
       uses: actions/upload-artifact@v2.2.4
       with:
         name: build_amd
         path: D:\a\LavaFrame\LavaFrame\x64\Release_AMD\
+        retention-days: 10
