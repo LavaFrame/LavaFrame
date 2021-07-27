@@ -44,5 +44,5 @@ jobs:
     - name: Upload build artifacts - Release AMD
       uses: actions/upload-artifact@v2.2.4
       with:
-        name: build
+        name: build_amd
         path: D:\a\LavaFrame\LavaFrame\x64\Release_AMD\
