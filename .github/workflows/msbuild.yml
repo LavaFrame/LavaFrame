@@ -1,6 +1,9 @@
-name: MSBuild
+name: Windows Build
 
-on: [workflow_dispatch]
+on:
+  push:
+    branches:
+    - main
 
 env:
   # Path to the solution file relative to the root of the project.
