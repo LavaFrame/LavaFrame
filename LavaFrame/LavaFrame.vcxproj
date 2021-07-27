@@ -183,10 +183,10 @@
       </Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>Xcopy /E /I /Y /R /Q /C /S /I $(SolutionDir)build_include\ $(OutDirFullPath)
-Xcopy /E /I /Y /R /Q /C /S /I $(OutDir) $(OutDirFullPath.TrimEnd('\'))_AMD\
-Xcopy /E /I /Y /R /Q /C /S /I $(SolutionDir)shaders\ $(OutDirFullPath)shaders\
-Xcopy /E /I /Y /R / Q /C /S /I $(SolutionDir)shaders_amd\ $(OutDirFullPath.TrimEnd('\'))_AMD\shaders\</Command>
+      <Command>Xcopy /E /I /Y /R /Q /C /S $(SolutionDir)build_include\ $(OutDirFullPath)
+Xcopy /E /I /Y /R /Q /C /S $(OutDir) $(OutDirFullPath.TrimEnd('\'))_AMD\
+Xcopy /E /I /Y /R /Q /C /S $(SolutionDir)shaders\ $(OutDirFullPath)shaders\
+Xcopy /E /I /Y /R / Q /C /S $(SolutionDir)shaders_amd\ $(OutDirFullPath.TrimEnd('\'))_AMD\shaders\</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>
