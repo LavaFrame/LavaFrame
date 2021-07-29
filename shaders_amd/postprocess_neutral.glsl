@@ -5,12 +5,12 @@
 
 #version 330
 
-precision highp float;
-precision highp int;
-precision highp sampler2D;
-precision highp samplerCube;
-precision highp isampler2D;
-precision highp sampler2DArray;
+highp float;
+highp int;
+highp sampler2D;
+highp samplerCube;
+highp isampler2D;
+highp sampler2DArray;
 
 out vec4 color;
 in vec2 TexCoords;
