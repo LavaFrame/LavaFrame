@@ -1,5 +1,5 @@
 # LavaFrame
-[![Windows Build](https://github.com/LavaFrame/LavaFrame/actions/workflows/msbuild.yml/badge.svg)](https://github.com/LavaFrame/LavaFrame/actions/workflows/msbuild.yml)
+[![Build](https://github.com/LavaFrame/LavaFrame/actions/workflows/msbuild.yml/badge.svg)](https://github.com/LavaFrame/LavaFrame/actions/workflows/msbuild.yml)
 ### A GPU based path tracer.
 ![showcase1](showcase.jpg)
 ![showcase2](showcase2.jpg)
