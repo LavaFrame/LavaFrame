@@ -411,7 +411,7 @@ void MainLoop(void* arg) //Its the main loop !
 					scenes.push_back(sceneFiles[i].c_str());
 				}
 
-				if (ImGui::Combo("Active scene", &sampleSceneIndex, scenes.data(), scenes.size()))
+				if (ImGui::Combo("Active scene", &sampleSceneIndex, scenes.data(), scenes.size(), scenes.size()))
 				{
 					LoadScene(sceneFiles[sampleSceneIndex]);
 					SDL_RestoreWindow(loopdata.mWindow);
