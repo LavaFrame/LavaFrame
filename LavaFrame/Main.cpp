@@ -59,7 +59,7 @@ bool done = false;
 bool noUi = false;
 bool noWindow = false;
 bool useDebug = false;
-std::string releaseVersion = "Version 0.5.1";
+std::string releaseVersion = "Version 0.5.15";
 std::string versionString = "LavaFrame - " + releaseVersion;
 int maxSamples = -1;
 float previewScale = 0.5f;
@@ -377,6 +377,11 @@ void MainLoop(void* arg) //Its the main loop !
 				ImGui::Text("- Debug Mode -");
 				ImGui::Text("Debug enabled : %d", useDebug);
 				ImGui::Text("Render size : %d x %d", renderer->GetScreenSize().x, renderer->GetScreenSize().y);
+				if (ImGui::Button("Reload scenes")) //Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
+				{
+					sceneFiles.clear();
+					GetSceneFiles();
+				}
 			}
 
 			ImGui::Text("Rendered samples: %d ", renderer->GetSampleCount()); //Sample counter
