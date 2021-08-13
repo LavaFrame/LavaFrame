@@ -30,9 +30,6 @@
     <Filter Include="Source Files\loaders">
       <UniqueIdentifier>{b5eff1ef-3229-4296-aae9-6bd3194de5b6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\math">
-      <UniqueIdentifier>{a20bec6e-d032-45f4-a379-2cda8981a0c2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\shaders">
       <UniqueIdentifier>{48da00d0-0fd6-45c0-9dab-8292af0b9e74}</UniqueIdentifier>
     </Filter>
@@ -92,6 +89,9 @@
     </Filter>
     <Filter Include="Source Files\shaders_amd\common">
       <UniqueIdentifier>{e4404cae-5ef7-4ec8-a18c-e6560501c3fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\math">
+      <UniqueIdentifier>{a20bec6e-d032-45f4-a379-2cda8981a0c2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -329,65 +329,20 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="Config.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="Program.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="Quad.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderIncludes.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="Texture.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="TiledRenderer.h">
-      <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="hdrloader.h">
-      <Filter>Source Files\loaders</Filter>
-    </ClInclude>
-    <ClInclude Include="Loader.h">
-      <Filter>Source Files\loaders</Filter>
-    </ClInclude>
-    <ClInclude Include="tiny_obj_loader.h">
-      <Filter>Source Files\loaders</Filter>
-    </ClInclude>
     <ClInclude Include="Mat4.h">
-      <Filter>Source Files\math</Filter>
+      <Filter>Header Files\math</Filter>
     </ClInclude>
     <ClInclude Include="MathUtils.h">
-      <Filter>Source Files\math</Filter>
+      <Filter>Header Files\math</Filter>
     </ClInclude>
     <ClInclude Include="Vec2.h">
-      <Filter>Source Files\math</Filter>
+      <Filter>Header Files\math</Filter>
     </ClInclude>
     <ClInclude Include="Vec3.h">
-      <Filter>Source Files\math</Filter>
+      <Filter>Header Files\math</Filter>
     </ClInclude>
     <ClInclude Include="Vec4.h">
-      <Filter>Source Files\math</Filter>
+      <Filter>Header Files\math</Filter>
     </ClInclude>
     <ClInclude Include="thirdparty\gl3w\GL\gl3w.h">
       <Filter>Source Files\thirdparty\gl3w\GL</Filter>
@@ -454,6 +409,54 @@
     </ClInclude>
     <ClInclude Include="thirdparty\tinydir\tinydir.h">
       <Filter>Source Files\thirdparty\tinydir</Filter>
+    </ClInclude>
+    <ClInclude Include="TiledRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderIncludes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Quad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Program.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tiny_obj_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hdrloader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Strint.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

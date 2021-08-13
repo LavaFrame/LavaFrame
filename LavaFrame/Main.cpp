@@ -20,6 +20,7 @@
 #include <SDL2/SDL.h>
 #include <GL/gl3w.h>
 #include <iostream>
+#include <io.h>
 
 #include <time.h>
 #include <math.h>
@@ -28,6 +29,7 @@
 #include "Scene.h"
 #include "TiledRenderer.h"
 #include "Camera.h"
+#include "Strint.h"
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
@@ -40,7 +42,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image.h"
 #include "stb_image_write.h"
-#include <io.h>
+
 
 using namespace std;
 using namespace LavaFrame;
@@ -59,12 +61,13 @@ bool done = false;
 bool noUi = false;
 bool noWindow = false;
 bool useDebug = false;
-std::string releaseVersion = "Version 0.5.15";
+std::string releaseVersion = "Version 0.5.2";
 std::string versionString = "LavaFrame - " + releaseVersion;
 int maxSamples = -1;
 float previewScale = 0.5f;
 bool useNeutralTonemap = false;
 std::string exportname = "0";
+int currentJpgQuality = 80;
 
 std::string shadersDir = "./shaders/";
 std::string assetsDir = "./assets/";
@@ -153,13 +156,13 @@ void SaveFrameTGA(const std::string filename) //Saves current frame as a png
 	stbi_write_tga(filename.c_str(), w, h, 3, data);
 	delete data;
 }
-void SaveFrameJPG(const std::string filename) //Saves current frame as a bitmap-JPG
+void SaveFrameJPG(const std::string filename, int jpgQuality) //Saves current frame as a bitmap-JPG
 {
 	unsigned char* data = nullptr;
 	int w, h;
 	renderer->GetOutputBuffer(&data, w, h);
 	stbi_flip_vertically_on_write(true);
-	stbi_write_bmp(filename.c_str(), w, h, 3, data);
+	stbi_write_jpg(filename.c_str(), w, h, 3, data, jpgQuality);
 	delete data;
 }
 
@@ -347,10 +350,10 @@ void MainLoop(void* arg) //Its the main loop !
 				{
 					if (ImGui::MenuItem("Export as JPG", "")) {
 						if (exportname == "0") {
-							SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg");
+							SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", currentJpgQuality);
 						}
 						else {
-							SaveFrameJPG("./" + exportname + ".jpg");
+							SaveFrameJPG("./" + exportname + ".jpg", 80);
 						}
 					}
 					if (ImGui::MenuItem("Export as PNG", "")) {
@@ -605,7 +608,105 @@ int main(int argc, char** argv)
 
 	std::string sceneFile;
 
-	for (int i = 1; i < argc; ++i) //Loops through each argument
+	for (int i = 1; i < argc; ++i) 
+	{
+		const std::string arg(argv[i]);
+		switch (strint(arg.c_str())) {
+		case strint("--scene"):
+			sceneFile = argv[++i];
+			break;
+
+		case strint("-s"):
+			sceneFile = argv[++i];
+			break;
+
+		case strint("-u"):
+			noUi = true;
+			break;
+
+		case strint("--noui"):
+			noUi = true;
+			break;
+
+		case strint("-w"):
+			noWindow = true;
+			break;
+
+		case strint("--nowindow"):
+			noWindow = true;
+			break;
+
+		case strint("-n"):
+			useNeutralTonemap = true;
+			break;
+
+		case strint("--neutral"):
+			useNeutralTonemap = true;
+			break;
+
+		case strint("-ms"):
+			std::string::size_type sz0;
+			maxSamples = std::stoi(argv[++i], &sz0);
+			break;
+
+		case strint("--maxsamples"):
+			std::string::size_type sz1;
+			maxSamples = std::stoi(argv[++i], &sz1);
+			break;
+
+		case strint("-ps"):
+			std::string::size_type sz2;
+			previewScale = std::stoi(argv[++i], &sz2);
+			break;
+
+		case strint("--previewscale"):
+			std::string::size_type sz3;
+			previewScale = std::stoi(argv[++i], &sz3);
+			break;
+
+		case strint("-ep"):
+			exportname = argv[++i];
+			break;
+
+		case strint("-exportname"):
+			exportname = argv[++i];
+			break;
+
+		case strint("-dn"):
+			renderOptions.enableDenoiser = true;
+			break;
+
+		case strint("--denoise"):
+			renderOptions.enableDenoiser = true;
+			break;
+
+		case strint("-db"):
+			useDebug = true;
+			break;
+
+		case strint("--debug"):
+			useDebug = true;
+			break;
+
+		case strint("-df"):
+			std::string::size_type sz4;
+			renderOptions.denoiserFrameCnt = std::stoi(argv[++i], &sz4);
+			break;
+
+		case strint("--denoiseframe"):
+			std::string::size_type sz5;
+			renderOptions.denoiserFrameCnt = std::stoi(argv[++i], &sz5);
+			break;
+
+		default:
+			printf("Unknown argument '%s' \n", arg.c_str());
+			exit(0);
+			break;
+		}
+	}
+
+	// OLD STARTUP CLI CODE
+	/*for (int i = 1; i < argc; ++i) //Loops through each argument
 	{
 		const std::string arg(argv[i]);
 		if (arg == "-s" || arg == "--scene") //I am actually sorry for this code. But readability was a priority here. 
@@ -660,7 +761,7 @@ int main(int argc, char** argv)
 			printf("Unknown argument '%s' \n", arg.c_str());
 			exit(0);
 		}
-	}
+	}*/
 
 	if (!sceneFile.empty())
 	{

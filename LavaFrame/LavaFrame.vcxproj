@@ -324,6 +324,7 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderIncludes.h" />
+    <ClInclude Include="Strint.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="thirdparty\gl3w\GL\gl3w.h" />
     <ClInclude Include="thirdparty\gl3w\GL\glcorearb.h" />
