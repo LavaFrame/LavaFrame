@@ -67,7 +67,7 @@ int maxSamples = -1;
 float previewScale = 0.5f;
 bool useNeutralTonemap = false;
 std::string exportname = "0";
-int currentJpgQuality = 80;
+int currentJpgQuality = 95;
 
 std::string shadersDir = "./shaders/";
 std::string assetsDir = "./assets/";
@@ -421,7 +421,7 @@ void MainLoop(void* arg) //Its the main loop !
 					SDL_SetWindowSize(loopdata.mWindow, renderOptions.resolution.x, renderOptions.resolution.y);
 					InitRenderer();
 				}
-
+				ImGui::SliderInt("JPG export quality", &currentJpgQuality, 1, 200);
 				optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &mouseSensitivity, 0.001f, 1.0f);
 
 				ImGui::Text("\n");
