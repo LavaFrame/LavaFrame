@@ -698,70 +698,23 @@ int main(int argc, char** argv)
 			renderOptions.denoiserFrameCnt = std::stoi(argv[++i], &sz5);
 			break;
 
+
+		case strint("--jpgquality"):
+			std::string::size_type sz6;
+			currentJpgQuality = std::stoi(argv[++i], &sz6);
+			break;
+
+		case strint("-jpgq"):
+			std::string::size_type sz7;
+			currentJpgQuality = std::stoi(argv[++i], &sz7);
+			break;
+
 		default:
 			printf("Unknown argument '%s' \n", arg.c_str());
 			exit(0);
 			break;
 		}
 	}
-
-	// OLD STARTUP CLI CODE
-	/*for (int i = 1; i < argc; ++i) //Loops through each argument
-	{
-		const std::string arg(argv[i]);
-		if (arg == "-s" || arg == "--scene") //I am actually sorry for this code. But readability was a priority here. 
-		{
-			sceneFile = argv[++i];
-		}
-		else if (arg == "-u" || arg == "--noui")
-		{
-			noUi = true;
-		}
-		else if (arg == "-b" || arg == "--b")
-		{
-			printf("     _ ___     \n     \.\'.\     \n      \'\'.\    \n     __\.\:/_//  \n    {{{{{(__()    \n    `~~~~>> > ^ \n\n");
-		}
-		else if (arg == "-w" || arg == "--nowindow")
-		{
-			noWindow = true;
-		}
-		else if (arg == "-n" || arg == "--neutral")
-		{
-			useNeutralTonemap = true;
-		}
-		else if (arg == "-ms" || arg == "--maxsamples")
-		{
-			std::string::size_type sz;
-			maxSamples = std::stoi(argv[++i], &sz);
-		}
-		else if (arg == "-ps" || arg == "--previewscale")
-		{
-			std::string::size_type sz;
-			previewScale = std::stoi(argv[++i], &sz);
-		}
-		else if (arg == "-ep" || arg == "--exportname")
-		{
-			exportname = argv[++i];
-		}
-		else if (arg == "-dn" || arg == "--denoise")
-		{
-			renderOptions.enableDenoiser = true;
-		}
-		else if (arg == "-db" || arg == "--debug")
-		{
-			useDebug = true;
-		}
-		else if (arg == "-df" || arg == "--denoiseframe")
-		{
-			std::string::size_type sz1;
-			renderOptions.denoiserFrameCnt = std::stoi(argv[++i], &sz1);
-		}
-		else if (arg[0] == '-')
-		{
-			printf("Unknown argument '%s' \n", arg.c_str());
-			exit(0);
-		}
-	}*/
 
 	if (!sceneFile.empty())
 	{
