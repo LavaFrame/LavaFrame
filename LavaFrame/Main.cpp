@@ -65,7 +65,7 @@ bool useDebug = false;
 int maxSamples = -1;
 float previewScale = 0.5f;
 bool useNeutralTonemap = false;
-std::string exportname = "0";
+std::string exportName = "0";
 int currentJpgQuality = 95;
 std::string exportType = "png";
 
@@ -221,35 +221,35 @@ void Update(float secondsElapsed)
 	// Maximum sample auto export
 	if (maxSamples == renderer->GetSampleCount()) {
 		if (exportType == "png") {
-			if (exportname == "0") {
+			if (exportName == "0") {
 				SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
 			}
 			else {
-				SaveFrame("./" + exportname + ".png");
+				SaveFrame("./" + exportName + ".png");
 			}
 		}
 		else if (exportType == "jpg") {
-			if (exportname == "0") {
+			if (exportName == "0") {
 				SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", currentJpgQuality);
 			}
 			else {
-				SaveFrameJPG("./" + exportname + ".jpg", currentJpgQuality);
+				SaveFrameJPG("./" + exportName + ".jpg", currentJpgQuality);
 			}
 		}
 		else if (exportType == "tga") {
-			if (exportname == "0") {
+			if (exportName == "0") {
 				SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
 			}
 			else {
-				SaveFrameTGA("./" + exportname + ".tga");
+				SaveFrameTGA("./" + exportName + ".tga");
 			}
 		}
 		else if (exportType == "bmp") {
-			if (exportname == "0") {
+			if (exportName == "0") {
 				SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
 			}
 			else {
-				SaveFrameBMP("./" + exportname + ".bmp");
+				SaveFrameBMP("./" + exportName + ".bmp");
 			}
 		}
 
@@ -387,36 +387,36 @@ void MainLoop(void* arg) //Its the main loop !
 				if (ImGui::BeginMenu("Export"))
 				{
 					if (ImGui::MenuItem("Export as JPG", "")) {
-						if (exportname == "0") {
+						if (exportName == "0") {
 							SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", currentJpgQuality);
 						}
 						else {
-							SaveFrameJPG("./" + exportname + ".jpg", 80);
+							SaveFrameJPG("./" + exportName + ".jpg", 80);
 						}
 					}
 					if (ImGui::MenuItem("Export as PNG", "")) {
-						if (exportname == "0") {
+						if (exportName == "0") {
 							SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
 						}
 						else {
-							SaveFrame("./" + exportname + ".png");
+							SaveFrame("./" + exportName + ".png");
 						}
 					}
 					if (ImGui::MenuItem("Export as TGA", "")) {
-						if (exportname == "0") {
+						if (exportName == "0") {
 							SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
 						}
 						else {
-							SaveFrameTGA("./" + exportname + ".tga");
+							SaveFrameTGA("./" + exportName + ".tga");
 						}
 					}
 
 						if (ImGui::MenuItem("Export as BMP", "")) {
-							if (exportname == "0") {
+							if (exportName == "0") {
 								SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
 							}
 							else {
-								SaveFrameBMP("./" + exportname + ".bmp");
+								SaveFrameBMP("./" + exportName + ".bmp");
 							}
 						}
 						ImGui::EndMenu();
@@ -468,7 +468,7 @@ void MainLoop(void* arg) //Its the main loop !
 						SDL_SetWindowSize(loopdata.mWindow, renderOptions.resolution.x, renderOptions.resolution.y);
 						InitRenderer();
 					}
-					ImGui::InputText("Export filename", &exportname);
+					ImGui::InputText("Export filename", &exportName);
 					ImGui::SliderInt("JPG export quality", &currentJpgQuality, 1, 200);
 					optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &mouseSensitivity, 0.001f, 1.0f);
 
@@ -713,11 +713,19 @@ int main(int argc, char** argv)
 			break;
 
 		case strint("-ep"):
-			exportname = argv[++i];
+			exportName = argv[++i];
 			break;
 
 		case strint("-exportname"):
-			exportname = argv[++i];
+			exportName = argv[++i];
+			break;
+
+		case strint("-et"):
+			exportType = argv[++i];
+			break;
+
+		case strint("-exporttype"):
+			exportType = argv[++i];
 			break;
 
 		case strint("-dn"):
