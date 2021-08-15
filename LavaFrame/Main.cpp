@@ -33,6 +33,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_stdlib.h"
 
 #include "Loader.h"
 #include "ImGuizmo.h"
@@ -61,16 +62,17 @@ bool done = false;
 bool noUi = false;
 bool noWindow = false;
 bool useDebug = false;
-std::string releaseVersion = "Version 0.5.2";
-std::string versionString = "LavaFrame - " + releaseVersion;
 int maxSamples = -1;
 float previewScale = 0.5f;
 bool useNeutralTonemap = false;
 std::string exportname = "0";
 int currentJpgQuality = 95;
+std::string exportType = "png";
 
 std::string shadersDir = "./shaders/";
 std::string assetsDir = "./assets/";
+std::string releaseVersion = "Version 0.5.2";
+std::string versionString = "LavaFrame - " + releaseVersion;
 
 RenderOptions renderOptions;
 
@@ -165,6 +167,15 @@ void SaveFrameJPG(const std::string filename, int jpgQuality) //Saves current fr
 	stbi_write_jpg(filename.c_str(), w, h, 3, data, jpgQuality);
 	delete data;
 }
+void SaveFrameBMP(const std::string filename) //Saves current frame as a bitmap-JPG
+{
+	unsigned char* data = nullptr;
+	int w, h;
+	renderer->GetOutputBuffer(&data, w, h);
+	stbi_flip_vertically_on_write(true);
+	stbi_write_bmp(filename.c_str(), w, h, 3, data);
+	delete data;
+}
 
 void Render() //Main Render function for ImGUI and the renderer.
 {
@@ -209,12 +220,39 @@ void Update(float secondsElapsed)
 
 	// Maximum sample auto export
 	if (maxSamples == renderer->GetSampleCount()) {
-		if (exportname == "0") {
-			SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
+		if (exportType == "png") {
+			if (exportname == "0") {
+				SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
+			}
+			else {
+				SaveFrame("./" + exportname + ".png");
+			}
 		}
-		else {
-			SaveFrame("./" + exportname + ".png");
+		else if (exportType == "jpg") {
+			if (exportname == "0") {
+				SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", currentJpgQuality);
+			}
+			else {
+				SaveFrameJPG("./" + exportname + ".jpg", currentJpgQuality);
+			}
 		}
+		else if (exportType == "tga") {
+			if (exportname == "0") {
+				SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
+			}
+			else {
+				SaveFrameTGA("./" + exportname + ".tga");
+			}
+		}
+		else if (exportType == "bmp") {
+			if (exportname == "0") {
+				SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
+			}
+			else {
+				SaveFrameBMP("./" + exportname + ".bmp");
+			}
+		}
+
 		printf("Render finished !");
 		exit(0);
 	}
@@ -372,235 +410,245 @@ void MainLoop(void* arg) //Its the main loop !
 							SaveFrameTGA("./" + exportname + ".tga");
 						}
 					}
-					ImGui::EndMenu();
+
+						if (ImGui::MenuItem("Export as BMP", "")) {
+							if (exportname == "0") {
+								SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
+							}
+							else {
+								SaveFrameBMP("./" + exportname + ".bmp");
+							}
+						}
+						ImGui::EndMenu();
+					}
+					ImGui::EndMenuBar();
 				}
-				ImGui::EndMenuBar();
-			}
-			if (useDebug) { //Some debug stats, --debug / -db
-				ImGui::Text("- Debug Mode -");
-				ImGui::Text("Debug enabled : %d", useDebug);
-				ImGui::Text("Render size : %d x %d", renderer->GetScreenSize().x, renderer->GetScreenSize().y);
-				if (ImGui::Button("Reload scenes")) //Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
+				if (useDebug) { //Some debug stats, --debug / -db
+					ImGui::Text("- Debug Mode -");
+					ImGui::Text("Debug enabled : %d", useDebug);
+					ImGui::Text("Render size : %d x %d", renderer->GetScreenSize().x, renderer->GetScreenSize().y);
+					if (ImGui::Button("Reload scenes")) //Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
+					{
+						sceneFiles.clear();
+						GetSceneFiles();
+					}
+				}
+
+				ImGui::Text("Rendered samples: %d ", renderer->GetSampleCount()); //Sample counter
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Currently rendered samples per pixel.");
+
+				if (useDebug) {
+					if (ImGui::Button("Recompile shaders")) //Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
+					{
+						InitRenderer(); //Recompile shaders and restart the renderer.
+					}
+				}
+
+				//Controls instruction - these will go into the documentation since they are universal.
+				//ImGui::BulletText("LMB + drag to rotate");
+				//ImGui::BulletText("MMB + drag to pan");
+				//ImGui::BulletText("RMB + drag to zoom in/out");
+
+				ImGui::Separator();
+				ImGui::Text("\n");
+
+				if (ImGui::CollapsingHeader("System"))
 				{
-					sceneFiles.clear();
-					GetSceneFiles();
+					std::vector<const char*> scenes;
+					for (int i = 0; i < sceneFiles.size(); ++i)
+					{
+						scenes.push_back(sceneFiles[i].c_str());
+					}
+
+					if (ImGui::Combo("Active scene", &sampleSceneIndex, scenes.data(), scenes.size(), scenes.size()))
+					{
+						LoadScene(sceneFiles[sampleSceneIndex]);
+						SDL_RestoreWindow(loopdata.mWindow);
+						SDL_SetWindowSize(loopdata.mWindow, renderOptions.resolution.x, renderOptions.resolution.y);
+						InitRenderer();
+					}
+					ImGui::InputText("Export filename", &exportname);
+					ImGui::SliderInt("JPG export quality", &currentJpgQuality, 1, 200);
+					optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &mouseSensitivity, 0.001f, 1.0f);
+
+					ImGui::Text("\n");
 				}
-			}
-
-			ImGui::Text("Rendered samples: %d ", renderer->GetSampleCount()); //Sample counter
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Currently rendered samples per pixel.");
-
-			if (useDebug) {
-				if (ImGui::Button("Recompile shaders")) //Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
-				{
-					InitRenderer(); //Recompile shaders and restart the renderer.
-				}
-			}
-
-			//Controls instruction - these will go into the documentation since they are universal.
-			//ImGui::BulletText("LMB + drag to rotate");
-			//ImGui::BulletText("MMB + drag to pan");
-			//ImGui::BulletText("RMB + drag to zoom in/out");
-
-			ImGui::Separator();
-			ImGui::Text("\n");
-
-			if (ImGui::CollapsingHeader("System"))
-			{
-				std::vector<const char*> scenes;
-				for (int i = 0; i < sceneFiles.size(); ++i)
-				{
-					scenes.push_back(sceneFiles[i].c_str());
-				}
-
-				if (ImGui::Combo("Active scene", &sampleSceneIndex, scenes.data(), scenes.size(), scenes.size()))
-				{
-					LoadScene(sceneFiles[sampleSceneIndex]);
-					SDL_RestoreWindow(loopdata.mWindow);
-					SDL_SetWindowSize(loopdata.mWindow, renderOptions.resolution.x, renderOptions.resolution.y);
-					InitRenderer();
-				}
-				ImGui::SliderInt("JPG export quality", &currentJpgQuality, 1, 200);
-				optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &mouseSensitivity, 0.001f, 1.0f);
 
 				ImGui::Text("\n");
-			}
 
-			ImGui::Text("\n");
-
-			if (ImGui::CollapsingHeader("Render Settings"))
-			{
-				bool requiresReload = false;
-				Vec3* bgCol = &renderOptions.bgColor;
-
-				optionsChanged |= ImGui::SliderInt("Max ray-depth", &renderOptions.maxDepth, 1, 20);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Limits the amount of times a ray is allowed to bounce. Causes longer render times for better quality.");
-				//requiresReload |= ImGui::Checkbox("Enable RR", &renderOptions.enableRR); Seems to currently do nothing, left it disabled for UI clarity. Can be set from scene file.
-				//requiresReload |= ImGui::SliderInt("RR depth", &renderOptions.RRDepth, 1, 10);
-				ImGui::Separator();
-				requiresReload |= ImGui::Checkbox("Enable HDRI", &renderOptions.useEnvMap);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Enable lighting from a 360 degree HDR image for lighting.");
-				optionsChanged |= ImGui::SliderFloat("HDRI multiplier", &renderOptions.hdrMultiplier, 0.1f, 10.0f);
-				ImGui::Separator();
-				requiresReload |= ImGui::Checkbox("Enable constant lighting", &renderOptions.useConstantBg);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Creates a constant sourrounding color lighting the scene.");
-				optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
-				ImGui::Separator();
-				ImGui::Checkbox("Enable denoiser", &renderOptions.enableDenoiser);
-				ImGui::SliderInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 1, 250);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Run the denoiser and update the view every x samples.");
-
-				if (requiresReload)
+				if (ImGui::CollapsingHeader("Render Settings"))
 				{
-					scene->renderOptions = renderOptions;
-					InitRenderer(); //When the options change, restart the render proccess. 
-				}
+					bool requiresReload = false;
+					Vec3* bgCol = &renderOptions.bgColor;
 
-				scene->renderOptions.enableDenoiser = renderOptions.enableDenoiser;
-				scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
-			}
+					optionsChanged |= ImGui::SliderInt("Max ray-depth", &renderOptions.maxDepth, 1, 20);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Limits the amount of times a ray is allowed to bounce. Causes longer render times for better quality.");
+					//requiresReload |= ImGui::Checkbox("Enable RR", &renderOptions.enableRR); Seems to currently do nothing, left it disabled for UI clarity. Can be set from scene file.
+					//requiresReload |= ImGui::SliderInt("RR depth", &renderOptions.RRDepth, 1, 10);
+					ImGui::Separator();
+					requiresReload |= ImGui::Checkbox("Enable HDRI", &renderOptions.useEnvMap);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Enable lighting from a 360 degree HDR image for lighting.");
+					optionsChanged |= ImGui::SliderFloat("HDRI multiplier", &renderOptions.hdrMultiplier, 0.1f, 10.0f);
+					ImGui::Separator();
+					requiresReload |= ImGui::Checkbox("Enable constant lighting", &renderOptions.useConstantBg);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Creates a constant sourrounding color lighting the scene.");
+					optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
+					ImGui::Separator();
+					ImGui::Checkbox("Enable denoiser", &renderOptions.enableDenoiser);
+					ImGui::SliderInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 1, 250);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Run the denoiser and update the view every x samples.");
 
-			ImGui::Text("\n");
-
-			if (ImGui::CollapsingHeader("Camera"))
-			{
-				float fov = Math::Degrees(scene->camera->fov);
-				float aperture = scene->camera->aperture * 1000.0f;
-				optionsChanged |= ImGui::SliderFloat("Field of vision", &fov, 10, 90);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Field of vision of the camera.");
-				scene->camera->SetFov(fov);
-				optionsChanged |= ImGui::SliderFloat("Aperture", &aperture, 0.0f, 10.8f);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Aperture of the camera. Rule of thumb : The larger this is, the more depth of field you will get. Set to 0 to disable.");
-				scene->camera->aperture = aperture / 1000.0f;
-				optionsChanged |= ImGui::SliderFloat("Focal Distance", &scene->camera->focalDist, 0.01f, 50.0f);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Focus distance of the camera.");
-				ImGui::Text("Pos: %.2f, %.2f, %.2f", scene->camera->position.x, scene->camera->position.y, scene->camera->position.z);
-			}
-
-		}
-
-
-		scene->camera->isMoving = false;
-
-		if (optionsChanged)
-		{
-			scene->renderOptions = renderOptions;
-			scene->camera->isMoving = true;
-		}
-
-		if (noUi == false) {
-			ImGui::Text("\n");
-
-			if (ImGui::CollapsingHeader("Objects"))
-			{
-				bool objectPropChanged = false;
-
-				std::vector<std::string> listboxItems;
-				for (int i = 0; i < scene->meshInstances.size(); i++)
-				{
-					listboxItems.push_back(scene->meshInstances[i].name);
-				}
-
-				// Object Selection
-				ImGui::ListBoxHeader("Instances");
-				for (int i = 0; i < scene->meshInstances.size(); i++)
-				{
-					bool is_selected = selectedInstance == i;
-					if (ImGui::Selectable(listboxItems[i].c_str(), is_selected))
+					if (requiresReload)
 					{
-						selectedInstance = i;
+						scene->renderOptions = renderOptions;
+						InitRenderer(); //When the options change, restart the render proccess. 
+					}
+
+					scene->renderOptions.enableDenoiser = renderOptions.enableDenoiser;
+					scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
+				}
+
+				ImGui::Text("\n");
+
+				if (ImGui::CollapsingHeader("Camera"))
+				{
+					float fov = Math::Degrees(scene->camera->fov);
+					float aperture = scene->camera->aperture * 1000.0f;
+					optionsChanged |= ImGui::SliderFloat("Field of vision", &fov, 10, 90);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Field of vision of the camera.");
+					scene->camera->SetFov(fov);
+					optionsChanged |= ImGui::SliderFloat("Aperture", &aperture, 0.0f, 10.8f);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Aperture of the camera. Rule of thumb : The larger this is, the more depth of field you will get. Set to 0 to disable.");
+					scene->camera->aperture = aperture / 1000.0f;
+					optionsChanged |= ImGui::SliderFloat("Focal Distance", &scene->camera->focalDist, 0.01f, 50.0f);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Focus distance of the camera.");
+					ImGui::Text("Pos: %.2f, %.2f, %.2f", scene->camera->position.x, scene->camera->position.y, scene->camera->position.z);
+				}
+
+			}
+
+
+			scene->camera->isMoving = false;
+
+			if (optionsChanged)
+			{
+				scene->renderOptions = renderOptions;
+				scene->camera->isMoving = true;
+			}
+
+			if (noUi == false) {
+				ImGui::Text("\n");
+
+				if (ImGui::CollapsingHeader("Objects"))
+				{
+					bool objectPropChanged = false;
+
+					std::vector<std::string> listboxItems;
+					for (int i = 0; i < scene->meshInstances.size(); i++)
+					{
+						listboxItems.push_back(scene->meshInstances[i].name);
+					}
+
+					// Object Selection
+					ImGui::ListBoxHeader("Instances");
+					for (int i = 0; i < scene->meshInstances.size(); i++)
+					{
+						bool is_selected = selectedInstance == i;
+						if (ImGui::Selectable(listboxItems[i].c_str(), is_selected))
+						{
+							selectedInstance = i;
+						}
+					}
+					ImGui::ListBoxFooter();
+
+					ImGui::Separator();
+					ImGui::Text("Materials");
+
+					// Material properties
+					Vec3* albedo = &scene->materials[scene->meshInstances[selectedInstance].materialID].albedo;
+					Vec3* emission = &scene->materials[scene->meshInstances[selectedInstance].materialID].emission;
+					Vec3* extinction = &scene->materials[scene->meshInstances[selectedInstance].materialID].extinction;
+
+					objectPropChanged |= ImGui::ColorEdit3("Albedo", (float*)albedo, 0);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Color of the object.");
+					objectPropChanged |= ImGui::SliderFloat("Metallic", &scene->materials[scene->meshInstances[selectedInstance].materialID].metallic, 0.0f, 1.0f);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("How metalness of the object.");
+					objectPropChanged |= ImGui::SliderFloat("Roughness", &scene->materials[scene->meshInstances[selectedInstance].materialID].roughness, 0.001f, 1.0f);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("How smoothness of the object. Setting this to 0 and metallic to max will result in a mirror.");
+					objectPropChanged |= ImGui::SliderFloat("Specular", &scene->materials[scene->meshInstances[selectedInstance].materialID].specular, 0.0f, 1.0f);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Intensity of specular highlights.");
+					objectPropChanged |= ImGui::SliderFloat("SpecularTint", &scene->materials[scene->meshInstances[selectedInstance].materialID].specularTint, 0.0f, 1.0f);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Tint of the specular highlights.");
+					objectPropChanged |= ImGui::SliderFloat("Subsurface", &scene->materials[scene->meshInstances[selectedInstance].materialID].subsurface, 0.0f, 1.0f);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Amount of subsurface scattering on the object.");
+					objectPropChanged |= ImGui::SliderFloat("Anisotropic", &scene->materials[scene->meshInstances[selectedInstance].materialID].anisotropic, 0.0f, 1.0f);
+					objectPropChanged |= ImGui::SliderFloat("Sheen", &scene->materials[scene->meshInstances[selectedInstance].materialID].sheen, 0.0f, 1.0f);
+					objectPropChanged |= ImGui::SliderFloat("SheenTint", &scene->materials[scene->meshInstances[selectedInstance].materialID].sheenTint, 0.0f, 1.0f);
+					objectPropChanged |= ImGui::SliderFloat("Clearcoat", &scene->materials[scene->meshInstances[selectedInstance].materialID].clearcoat, 0.0f, 1.0f);
+					objectPropChanged |= ImGui::SliderFloat("clearcoatRoughness", &scene->materials[scene->meshInstances[selectedInstance].materialID].clearcoatRoughness, 0.001f, 1.0f);
+					objectPropChanged |= ImGui::SliderFloat("Transmission", &scene->materials[scene->meshInstances[selectedInstance].materialID].transmission, 0.0f, 1.0f);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Amount of transmission/glass-ness. ");
+					objectPropChanged |= ImGui::SliderFloat("IOR", &scene->materials[scene->meshInstances[selectedInstance].materialID].ior, 1.001f, 2.0f);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Index of refraction of the object. Only used with transmission.");
+					objectPropChanged |= ImGui::ColorEdit3("Extinction", (float*)extinction, 0);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Light extinction of the transmission.");
+
+					// Transform properties
+					ImGui::Separator();
+					ImGui::Text("Transforms");
+					{
+						float viewMatrix[16];
+						float projMatrix[16];
+
+						auto io = ImGui::GetIO();
+						scene->camera->ComputeViewProjectionMatrix(viewMatrix, projMatrix, io.DisplaySize.x / io.DisplaySize.y);
+						Mat4 xform = scene->meshInstances[selectedInstance].transform;
+
+						EditTransform(viewMatrix, projMatrix, (float*)&xform);
+
+						if (memcmp(&xform, &scene->meshInstances[selectedInstance].transform, sizeof(float) * 16))
+						{
+							scene->meshInstances[selectedInstance].transform = xform;
+							objectPropChanged = true;
+						}
+					}
+
+					if (objectPropChanged)
+					{
+						scene->RebuildInstances();
 					}
 				}
-				ImGui::ListBoxFooter();
-
-				ImGui::Separator();
-				ImGui::Text("Materials");
-
-				// Material properties
-				Vec3* albedo = &scene->materials[scene->meshInstances[selectedInstance].materialID].albedo;
-				Vec3* emission = &scene->materials[scene->meshInstances[selectedInstance].materialID].emission;
-				Vec3* extinction = &scene->materials[scene->meshInstances[selectedInstance].materialID].extinction;
-
-				objectPropChanged |= ImGui::ColorEdit3("Albedo", (float*)albedo, 0);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Color of the object.");
-				objectPropChanged |= ImGui::SliderFloat("Metallic", &scene->materials[scene->meshInstances[selectedInstance].materialID].metallic, 0.0f, 1.0f);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("How metalness of the object.");
-				objectPropChanged |= ImGui::SliderFloat("Roughness", &scene->materials[scene->meshInstances[selectedInstance].materialID].roughness, 0.001f, 1.0f);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("How smoothness of the object. Setting this to 0 and metallic to max will result in a mirror.");
-				objectPropChanged |= ImGui::SliderFloat("Specular", &scene->materials[scene->meshInstances[selectedInstance].materialID].specular, 0.0f, 1.0f);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Intensity of specular highlights.");
-				objectPropChanged |= ImGui::SliderFloat("SpecularTint", &scene->materials[scene->meshInstances[selectedInstance].materialID].specularTint, 0.0f, 1.0f);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Tint of the specular highlights.");
-				objectPropChanged |= ImGui::SliderFloat("Subsurface", &scene->materials[scene->meshInstances[selectedInstance].materialID].subsurface, 0.0f, 1.0f);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Amount of subsurface scattering on the object.");
-				objectPropChanged |= ImGui::SliderFloat("Anisotropic", &scene->materials[scene->meshInstances[selectedInstance].materialID].anisotropic, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("Sheen", &scene->materials[scene->meshInstances[selectedInstance].materialID].sheen, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("SheenTint", &scene->materials[scene->meshInstances[selectedInstance].materialID].sheenTint, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("Clearcoat", &scene->materials[scene->meshInstances[selectedInstance].materialID].clearcoat, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("clearcoatRoughness", &scene->materials[scene->meshInstances[selectedInstance].materialID].clearcoatRoughness, 0.001f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("Transmission", &scene->materials[scene->meshInstances[selectedInstance].materialID].transmission, 0.0f, 1.0f);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Amount of transmission/glass-ness. ");
-				objectPropChanged |= ImGui::SliderFloat("IOR", &scene->materials[scene->meshInstances[selectedInstance].materialID].ior, 1.001f, 2.0f);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Index of refraction of the object. Only used with transmission.");
-				objectPropChanged |= ImGui::ColorEdit3("Extinction", (float*)extinction, 0);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Light extinction of the transmission.");
-
-				// Transform properties
-				ImGui::Separator();
-				ImGui::Text("Transforms");
-				{
-					float viewMatrix[16];
-					float projMatrix[16];
-
-					auto io = ImGui::GetIO();
-					scene->camera->ComputeViewProjectionMatrix(viewMatrix, projMatrix, io.DisplaySize.x / io.DisplaySize.y);
-					Mat4 xform = scene->meshInstances[selectedInstance].transform;
-
-					EditTransform(viewMatrix, projMatrix, (float*)&xform);
-
-					if (memcmp(&xform, &scene->meshInstances[selectedInstance].transform, sizeof(float) * 16))
-					{
-						scene->meshInstances[selectedInstance].transform = xform;
-						objectPropChanged = true;
-					}
-				}
-
-				if (objectPropChanged)
-				{
-					scene->RebuildInstances();
-				}
 			}
+			ImGui::End();
 		}
-		ImGui::End();
-	}
-	double presentTime = SDL_GetTicks();
-	Update((float)(presentTime - lastTime));
-	lastTime = presentTime;
-	glClearColor(0., 0., 0., 0.);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //OpenGL clearing.
-	glDisable(GL_DEPTH_TEST);
-	Render();
-	SDL_GL_SwapWindow(loopdata.mWindow);
+		double presentTime = SDL_GetTicks();
+		Update((float)(presentTime - lastTime));
+		lastTime = presentTime;
+		glClearColor(0., 0., 0., 0.);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //OpenGL clearing.
+		glDisable(GL_DEPTH_TEST);
+		Render();
+		SDL_GL_SwapWindow(loopdata.mWindow);
 }
 
-int main(int argc, char** argv)
+int main(int argc, char** argv) 
 {
 	Log(("--- " + versionString + " ---\n").c_str());
 
