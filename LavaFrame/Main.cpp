@@ -724,7 +724,7 @@ int main(int argc, char** argv)
 			exportType = argv[++i];
 			break;
 
-		case strint("-exporttype"):
+		case strint("--exporttype"):
 			exportType = argv[++i];
 			break;
 
