@@ -16,6 +16,7 @@ const char* script_filename = "default";
 std::string apppath = "";
 bool outputTime = false;
 
+
 void console_log(std::string text) {
 	printf((text + "\n").c_str());
 }
@@ -28,13 +29,12 @@ std::wstring ExePath() {
 }
 
 void launch_renderer_wait(std::string arguments) {
-	console_log(wstring_convert_string(ExePath()) + "\\LavaFrame.exe " + arguments);
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
 	si.cb = sizeof(si);
 	ZeroMemory(&pi, sizeof(pi));
-	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + "\\LavaFrame.exe " + arguments).c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + "\\LavaFrame.exe " + arguments).c_str()), NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &si, &pi))
 	{
 		printf("CreateProcess failed (%d).\n", GetLastError());
 		return;
@@ -45,7 +45,6 @@ void launch_renderer_wait(std::string arguments) {
 }
 
 void launch_renderer_standalone(std::string arguments) {
-	console_log(wstring_convert_string(ExePath()) + "\\LavaFrame.exe " + arguments);
 	STARTUPINFOA si_a;
 	PROCESS_INFORMATION pi_a;
 	ZeroMemory(&si_a, sizeof(si_a));
@@ -87,21 +86,44 @@ int main(int argc, char* argv[])
 	while (std::getline(script_file, filestr)) {
 		parameter = filestr.substr(filestr.find(" ") + 1);
 		switch (strint((filestr.substr(0, filestr.find(" "))).data())) {
+
 		case strint("render_scene_simple"): //Runs simple scene render with 500 samples and no denoising
 			console_log("Rendering scene " + parameter);
 			launch_renderer_wait("--maxsamples 500 --noui --nomove --scene " + parameter);
+			console_log("Render complete.");
 			break;
 
-		case strint("render"):
+		case strint("render_scene_simple_timed"): //Runs simple scene render with 500 samples and no denoising
+		{
+			console_log("Rendering scene " + parameter + " timed");
+			auto start_function_execution_timer = std::chrono::high_resolution_clock::now();
+			launch_renderer_wait("--maxsamples 500 --noui --nomove --scene " + parameter);
+			auto stop_function_execution_timer = std::chrono::high_resolution_clock::now();
+			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop_function_execution_timer - start_function_execution_timer).count() << "ms \n";
+			console_log("Render complete.");
+			break;
+		}
+
+
+		case strint("render_scene"): //Runs scene render
+			console_log("Rendering scene " + parameter);
+			launch_renderer_wait("--noui --nomove " + parameter);
+			console_log("Render complete.");
+			break;
+
+		case strint("render"): //Runs scene render command
 			console_log("Executed render command with parameters : " + parameter);
 			launch_renderer_wait(parameter);
+			console_log("Render complete.");
 			break;
 
 		case strint("render_create_thread_simple"): //Runs simple thread render with 500 samples and no denoising
+			console_log("Created simple render thread for file : " + parameter);
 			launch_renderer_standalone("--maxsamples 500 --nowindow --scene " + parameter);
 			break;
 
-		case strint("render_create_thread"):
+		case strint("render_create_thread"): //Runs thread render
+			console_log("Created render thread with parameters : " + parameter);
 			launch_renderer_standalone("--nowindow" + parameter);
 			break;
 
