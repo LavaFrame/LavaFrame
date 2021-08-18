@@ -3,7 +3,7 @@
 ### A GPU based path tracer.
 ![showcase1](showcase.jpg)
 ![showcase2](showcase2.jpg)
-(Currently only supports Windows - Linux support coming in the future)
+(Currently only supports Windows - Linux support coming in the future for the core renderer. LavaTask is Windows only.)
 
 ## Installation
 Download one of the releases from the [releases tab](https://github.com/LavaFrame/LavaFrame/releases) on the right.
