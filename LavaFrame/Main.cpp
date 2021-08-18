@@ -60,6 +60,7 @@ int selectedInstance = 0;
 double lastTime = SDL_GetTicks();
 bool done = false;
 bool noUi = false;
+bool noMove = false;
 bool noWindow = false;
 bool useDebug = false;
 int maxSamples = -1;
@@ -194,7 +195,7 @@ void Render() //Main Render function for ImGUI and the renderer.
 void Update(float secondsElapsed)
 {
 	keyPressed = false;
-	if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) && ImGui::IsAnyMouseDown() && !ImGuizmo::IsOver()) //Mouse control
+	if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) && ImGui::IsAnyMouseDown() && !ImGuizmo::IsOver() && !noMove) //Mouse control
 	{
 		if (ImGui::IsMouseDown(0))
 		{
@@ -674,6 +675,14 @@ int main(int argc, char** argv)
 
 		case strint("--noui"):
 			noUi = true;
+			break;
+
+		case strint("-nm"):
+			noMove = true;
+			break;
+
+		case strint("--nomove"):
+			noMove = true;
 			break;
 
 		case strint("-w"):
