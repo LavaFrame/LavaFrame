@@ -128,6 +128,7 @@ int main(int argc, char* argv[])
 			break;
 
 		case strint("render_timed"): //Runs scene render command
+		{
 			console_log("Executed render command with parameters : " + parameter);
 			auto start_function_execution_timer = std::chrono::high_resolution_clock::now();
 			launch_renderer_wait(parameter);
@@ -135,6 +136,7 @@ int main(int argc, char* argv[])
 			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop_function_execution_timer - start_function_execution_timer).count() << "ms \n";
 			console_log("Render complete.");
 			break;
+		}
 
 		case strint("render_create_thread_simple"): //Runs simple thread render with 500 samples and no denoising
 			console_log("Created simple render thread for file : " + parameter);
