@@ -534,11 +534,6 @@ void MainLoop(void* arg) //Its the main loop !
 				ImGui::Text("Pos: %.2f, %.2f, %.2f", scene->camera->position.x, scene->camera->position.y, scene->camera->position.z);
 			}
 
-
-
-
-			scene->camera->isMoving = false;
-
 			if (optionsChanged)
 			{
 				scene->renderOptions = renderOptions;
@@ -661,10 +656,11 @@ void MainLoop(void* arg) //Its the main loop !
 			ImGui::Begin("samplecount", nullptr, window_flags);
 
 			ImGui::Text("Rendered samples: %d ", renderer->GetSampleCount());
-			scene->camera->isMoving = false;
 			ImGui::End();
 		}
 	}
+
+	scene->camera->isMoving = false;
 	double presentTime = SDL_GetTicks();
 	Update((float)(presentTime - lastTime));
 	lastTime = presentTime;
