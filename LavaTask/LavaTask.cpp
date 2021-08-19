@@ -104,16 +104,35 @@ int main(int argc, char* argv[])
 			break;
 		}
 
-
 		case strint("render_scene"): //Runs scene render
 			console_log("Rendering scene " + parameter);
 			launch_renderer_wait("--noui --nomove " + parameter);
 			console_log("Render complete.");
 			break;
 
+		case strint("render_scene_timed"): //Runs scene render
+		{
+			console_log("Rendering scene " + parameter);
+			auto start_function_execution_timer = std::chrono::high_resolution_clock::now();
+			launch_renderer_wait("--noui --nomove " + parameter);
+			auto stop_function_execution_timer = std::chrono::high_resolution_clock::now();
+			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop_function_execution_timer - start_function_execution_timer).count() << "ms \n";
+			console_log("Render complete.");
+			break;
+		}
+
 		case strint("render"): //Runs scene render command
 			console_log("Executed render command with parameters : " + parameter);
 			launch_renderer_wait(parameter);
+			console_log("Render complete.");
+			break;
+
+		case strint("render_timed"): //Runs scene render command
+			console_log("Executed render command with parameters : " + parameter);
+			auto start_function_execution_timer = std::chrono::high_resolution_clock::now();
+			launch_renderer_wait(parameter);
+			auto stop_function_execution_timer = std::chrono::high_resolution_clock::now();
+			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop_function_execution_timer - start_function_execution_timer).count() << "ms \n";
 			console_log("Render complete.");
 			break;
 
