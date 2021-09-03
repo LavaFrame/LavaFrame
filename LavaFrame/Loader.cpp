@@ -34,6 +34,7 @@ freely, subject to the following restrictions:
 
 extern std::string versionString;
 extern bool useDebug;
+extern bool threadMode;
 
 namespace LavaFrame
 {
@@ -50,7 +51,7 @@ namespace LavaFrame
             Log("Couldn't open scene file %s for reading\n", filename.c_str());
             return false;
         }
-        Log("Loading Scene...\n");
+        if (!threadMode) { Log("Loading Scene...\n"); }
 
         struct MaterialData
         {

@@ -60,6 +60,7 @@ int selectedInstance = 0;
 double lastTime = SDL_GetTicks();
 bool done = false;
 bool noUi = false;
+bool threadMode = false;
 bool noMove = false;
 bool noWindow = false;
 bool useDebug = false;
@@ -70,6 +71,7 @@ bool useNeutralTonemap = false;
 std::string exportName = "0";
 int currentJpgQuality = 95;
 std::string exportType = "png";
+std::string threadID = "0";
 
 std::string shadersDir = "./shaders/";
 std::string assetsDir = "./assets/";
@@ -138,7 +140,13 @@ bool InitRenderer() //Create the tiled renderer and inform the user that the pro
 	delete renderer;
 	renderer = new TiledRenderer(scene, shadersDir);
 	renderer->Init();
-	printf("LavaFrame renderer started !\n");
+	if (!threadMode) { 
+		printf("LavaFrame renderer started\n"); 
+	}
+	else { 
+		printf(("\nLavaFrame thread " + threadID + " started, " + releaseVersion).c_str()); 
+	}
+
 	return true;
 }
 
@@ -255,7 +263,8 @@ void Update(float secondsElapsed)
 			}
 		}
 
-		printf("Render finished !");
+		if (!threadMode) { printf("Render finished\n"); }
+		else { printf(("\nThread " + threadID + " render finished").c_str()); }
 		exit(0);
 	}
 	renderer->Update(secondsElapsed);
@@ -375,6 +384,8 @@ void MainLoop(void* arg) //Its the main loop !
 			if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
 			if (no_move)            window_flags |= ImGuiWindowFlags_NoMove;
 			if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
+
+			scene->camera->isMoving = false;
 
 			ImGui::SetNextWindowPos({ 0, 1 });
 			if (window_override_size) {
@@ -632,7 +643,9 @@ void MainLoop(void* arg) //Its the main loop !
 			}
 			ImGui::End();
 		}
-		
+		if (noUi == true) {
+			scene->camera->isMoving = false;
+		}
 		if (noUi == true && displaySampleCounter == true) {
 			// Window flags
 			static bool no_titlebar = true;
@@ -651,16 +664,24 @@ void MainLoop(void* arg) //Its the main loop !
 			if (no_move)            window_flags |= ImGuiWindowFlags_NoMove;
 			if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
 
+			scene->camera->isMoving = false;
+
 			ImGui::SetNextWindowSize({ 340, 64 });
 			ImGui::SetNextWindowPos({ 0, 1 });
 			ImGui::Begin("samplecount", nullptr, window_flags);
 
 			ImGui::Text("Rendered samples: %d ", renderer->GetSampleCount());
 			ImGui::End();
+
+			if (optionsChanged)
+			{
+				scene->renderOptions = renderOptions;
+				scene->camera->isMoving = true;
+			}
+
 		}
 	}
 
-	scene->camera->isMoving = false;
 	double presentTime = SDL_GetTicks();
 	Update((float)(presentTime - lastTime));
 	lastTime = presentTime;
@@ -672,9 +693,7 @@ void MainLoop(void* arg) //Its the main loop !
 }
 
 int main(int argc, char** argv)
-{
-	Log(("--- " + versionString + " ---\n").c_str());
-
+{	 
 	srand((unsigned int)time(0));
 
 	std::string sceneFile;
@@ -777,6 +796,13 @@ int main(int argc, char** argv)
 			useDebug = true;
 			break;
 
+		case strint(".lt-threadmode"):
+		{
+			threadMode = true;
+			threadID = argv[++i];
+			break;
+		}
+
 		case strint("-sc"):
 			displaySampleCounter = true;
 			break;
@@ -824,6 +850,8 @@ int main(int argc, char** argv)
 		}
 	}
 
+	if (!threadMode) { Log(("--- " + versionString + " ---\n").c_str()); }
+
 	if (!sceneFile.empty())
 	{
 		scene = new Scene();
@@ -832,7 +860,7 @@ int main(int argc, char** argv)
 			exit(0);
 
 		scene->renderOptions = renderOptions;
-		std::cout << "Scene loaded\n\n";
+		if (!threadMode) { std::cout << "Scene loaded\n"; }
 	}
 	else
 	{

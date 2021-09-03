@@ -15,7 +15,7 @@
 const char* script_filename = "default";
 std::string apppath = "";
 bool outputTime = false;
-
+int threadID = 0;
 
 void console_log(std::string text) {
 	printf((text + "\n").c_str());
@@ -34,7 +34,7 @@ void launch_renderer_wait(std::string arguments) {
 	ZeroMemory(&si, sizeof(si));
 	si.cb = sizeof(si);
 	ZeroMemory(&pi, sizeof(pi));
-	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + "\\LavaFrame.exe " + arguments).c_str()), NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &si, &pi))
+	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + "\\LavaFrame.exe " + arguments).c_str()), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
 	{
 		printf("CreateProcess failed (%d).\n", GetLastError());
 		return;
@@ -44,19 +44,19 @@ void launch_renderer_wait(std::string arguments) {
 	CloseHandle(pi.hThread);
 }
 
-void launch_renderer_standalone(std::string arguments) {
+PROCESS_INFORMATION launch_renderer_thread(std::string arguments, std::string threadid) {
 	STARTUPINFOA si_a;
 	PROCESS_INFORMATION pi_a;
 	ZeroMemory(&si_a, sizeof(si_a));
 	si_a.cb = sizeof(si_a);
 	ZeroMemory(&pi_a, sizeof(pi_a));
-	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + "\\LavaFrame.exe " + arguments).c_str()), NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si_a, &pi_a))
+	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + "\\LavaFrame.exe .lt-threadmode " + threadid + " " + arguments).c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &si_a, &pi_a))
 	{
 		printf("CreateProcess failed (%d).\n", GetLastError());
-		return;
 	}
 	CloseHandle(pi_a.hProcess);
 	CloseHandle(pi_a.hThread);
+	return pi_a;
 }
 
 int main(int argc, char* argv[])
@@ -79,6 +79,8 @@ int main(int argc, char* argv[])
 	std::ifstream script_file(script_filename);
 	std::string filestr;
 	std::string parameter = "";
+	PROCESS_INFORMATION local_pi{};
+	bool waitForThreads = false;
 
 	auto start_execution_timer = std::chrono::high_resolution_clock::now();
 
@@ -140,12 +142,16 @@ int main(int argc, char* argv[])
 
 		case strint("render_create_thread_simple"): //Runs simple thread render with 500 samples and no denoising
 			console_log("Created simple render thread for file : " + parameter);
-			launch_renderer_standalone("--maxsamples 500 --nowindow --scene " + parameter);
+			threadID++;
+			waitForThreads = true;
+			local_pi = launch_renderer_thread("--maxsamples 500 --nowindow --scene " + parameter, std::to_string(threadID));
 			break;
 
 		case strint("render_create_thread"): //Runs thread render
 			console_log("Created render thread with parameters : " + parameter);
-			launch_renderer_standalone("--nowindow" + parameter);
+			threadID++;
+			waitForThreads = true;
+			local_pi = launch_renderer_thread("--nowindow" + parameter, std::to_string(threadID));
 			break;
 
 		case strint("//"):
@@ -162,6 +168,9 @@ int main(int argc, char* argv[])
 			console_log(parameter);
 			break;
 
+		case strint(""):
+			break;
+
 		default: 
 			console_log("\nUnknown command :");
 			console_log("> " + filestr + "\n");
@@ -169,10 +178,15 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	if (waitForThreads) {
+		WaitForSingleObject(local_pi.hProcess, INFINITE);
+	}
+
 	if (outputTime) {
 		console_log("\nOperation time : ");
 		auto stop_execution_timer = std::chrono::high_resolution_clock::now();
-		std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop_execution_timer - start_execution_timer).count() << "ms";
+		std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop_execution_timer - start_execution_timer).count();
+		console_log("ms \n");
 	}
 
 	return 0;

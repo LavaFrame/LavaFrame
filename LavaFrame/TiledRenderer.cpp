@@ -318,7 +318,7 @@ namespace LavaFrame
     {
         if (!initialized)
         {
-            printf("LavaFrame Renderer is not initialized.\n");
+            printf("Renderer is not initialized.\n");
             return;
         }
 
