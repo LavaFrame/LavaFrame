@@ -86,6 +86,8 @@ namespace LavaFrame
 
         quad = new Quad();
 
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
         //Create Buffer and Texture for BVH Tree
         glGenBuffers(1, &BVHBuffer);
         glBindBuffer(GL_TEXTURE_BUFFER, BVHBuffer);

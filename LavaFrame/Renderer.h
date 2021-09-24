@@ -9,7 +9,6 @@
 #include "Program.h"
 #include <Vec2.h>
 #include <Vec3.h>
-
 #include <vector>
 
 namespace LavaFrame
@@ -52,7 +51,7 @@ namespace LavaFrame
     class Renderer
     {
     protected:
-        Scene* scene;
+        Scene *scene;
         Quad* quad;
 
         iVec2 screenSize;
@@ -78,7 +77,7 @@ namespace LavaFrame
         bool initialized;
 
     public:
-        Renderer(Scene* scene, const std::string& shadersDirectory);
+        Renderer(Scene *scene, const std::string& shadersDirectory);
         virtual ~Renderer();
 
         const iVec2 GetScreenSize() const { return screenSize; }
@@ -91,6 +90,6 @@ namespace LavaFrame
         virtual void Update(float secondsElapsed);
         virtual float GetProgress() const = 0;
         virtual int GetSampleCount() const = 0;
-        virtual void GetOutputBuffer(unsigned char**, int& w, int& h) = 0;
+        virtual void GetOutputBuffer(unsigned char**, int &w, int &h) = 0;
     };
 }

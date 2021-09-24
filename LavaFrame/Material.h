@@ -33,11 +33,16 @@ namespace LavaFrame
 
             transmission = 0.0f;
             ior = 1.45f;
+            atDistance = 1.0f;
+            padding1 = 0.0f;
+
             extinction = Vec3(1.0f, 1.0f, 1.0f);
+            padding2 = 0.0f;
 
             albedoTexID = -1.0f;
             metallicRoughnessTexID = -1.0f;
             normalmapTexID = -1.0f;
+            padding3 = 0.0f;
         };
 
         Vec3 albedo;
@@ -58,10 +63,15 @@ namespace LavaFrame
 
         float transmission;
         float ior;
+        float atDistance;
+        float padding1;
+
         Vec3 extinction;
+        float padding2;
 
         float albedoTexID;
         float metallicRoughnessTexID;
         float normalmapTexID;
+        float padding3;
     };
 }

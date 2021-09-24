@@ -1,12 +1,70 @@
 /*
- * Read license.txt for license information.
- * This is based on the original GLSL-PathTracer by Asif Ali.
+ * MIT License
+ *
+ * Copyright(c) 2019-2021 Asif Ali
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this softwareand associated documentation files(the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions :
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 //-----------------------------------------------------------------------
 bool AnyHit(Ray r, float maxDist)
 //-----------------------------------------------------------------------
 {
+
+#ifdef LIGHTS
+    // Intersect Emitters
+    for (int i = 0; i < numOfLights; i++)
+    {
+        // Fetch light Data
+        vec3 position = texelFetch(lightsTex, ivec2(i * 5 + 0, 0), 0).xyz;
+        vec3 emission = texelFetch(lightsTex, ivec2(i * 5 + 1, 0), 0).xyz;
+        vec3 u = texelFetch(lightsTex, ivec2(i * 5 + 2, 0), 0).xyz;
+        vec3 v = texelFetch(lightsTex, ivec2(i * 5 + 3, 0), 0).xyz;
+        vec3 params = texelFetch(lightsTex, ivec2(i * 5 + 4, 0), 0).xyz;
+        float radius = params.x;
+        float area = params.y;
+        float type = params.z;
+
+        // Intersect rectangular area light
+        if (type == QUAD_LIGHT)
+        {
+            vec3 normal = normalize(cross(u, v));
+            vec4 plane = vec4(normal, dot(normal, position));
+            u *= 1.0f / dot(u, u);
+            v *= 1.0f / dot(v, v);
+
+            float d = RectIntersect(position, u, v, plane, r);
+            if (d > 0.0 && d < maxDist)
+                return true;
+        }
+
+        // Intersect spherical area light
+        if (type == SPHERE_LIGHT)
+        {
+            float d = SphereIntersect(radius, position, r);
+            if (d > 0.0 && d < maxDist)
+                return true;
+        }
+    }
+#endif
+
+    // Intersect BVH and tris
     int stack[64];
     int ptr = 0;
     stack[ptr++] = -1;

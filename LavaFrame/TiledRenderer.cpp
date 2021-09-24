@@ -237,12 +237,13 @@ namespace LavaFrame
         glUniform1i(glGetUniformLocation(shaderObject, "hdrCondDistTex"), 11);
 
         pathTraceShader->StopUsing();
+
         pathTraceShaderLowRes->Use();
         shaderObject = pathTraceShaderLowRes->getObject();
 
         glUniform1f(glGetUniformLocation(shaderObject, "hdrResolution"), scene->hdrData == nullptr ? 0 : float(scene->hdrData->width * scene->hdrData->height));
         glUniform1i(glGetUniformLocation(shaderObject, "topBVHIndex"), scene->bvhTranslator.topLevelIndex);
-        glUniform2f(glGetUniformLocation(shaderObject, "screenResolution"), float(screenSize.x * 0.9), float(screenSize.y * 0.9));
+        glUniform2f(glGetUniformLocation(shaderObject, "screenResolution"), float(screenSize.x), float(screenSize.y));
         glUniform1i(glGetUniformLocation(shaderObject, "numOfLights"), numOfLights);
         glUniform1i(glGetUniformLocation(shaderObject, "accumTexture"), 0);
         glUniform1i(glGetUniformLocation(shaderObject, "BVH"), 1);
@@ -321,49 +322,31 @@ namespace LavaFrame
         }
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, accumTexture);
 
-        if (!scene->camera->isMoving)
-        {
-            // If instances are moved then render to low res buffer once to avoid ghosting from previous frame
-            if (scene->instancesModified)
-            {
-                glBindFramebuffer(GL_FRAMEBUFFER, pathTraceFBOLowRes);
-                glViewport(0, 0, screenSize.x * pixelRatio, screenSize.y * pixelRatio);
-                quad->Draw(pathTraceShaderLowRes);
-                scene->instancesModified = false;
-            }
-
-            GLuint shaderObject;
-            pathTraceShader->Use();
-
-            shaderObject = pathTraceShader->getObject();
-            glUniform1i(glGetUniformLocation(shaderObject, "tileX"), tileX);
-            glUniform1i(glGetUniformLocation(shaderObject, "tileY"), tileY);
-            pathTraceShader->StopUsing();
-
-            glBindFramebuffer(GL_FRAMEBUFFER, pathTraceFBO);
-            glViewport(0, 0, tileWidth, tileHeight);
-            quad->Draw(pathTraceShader);
-
-            glBindFramebuffer(GL_FRAMEBUFFER, accumFBO);
-            glViewport(tileWidth * tileX, tileHeight * tileY, tileWidth, tileHeight);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, pathTraceTexture);
-            quad->Draw(accumShader);
-
-            glBindFramebuffer(GL_FRAMEBUFFER, outputFBO);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tileOutputTexture[currentBuffer], 0);
-            glViewport(0, 0, screenSize.x, screenSize.y);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, accumTexture);
-            quad->Draw(tonemapShader);
-        }
-        else
+        if (scene->camera->isMoving || scene->instancesModified)
         {
             glBindFramebuffer(GL_FRAMEBUFFER, pathTraceFBOLowRes);
             glViewport(0, 0, screenSize.x * pixelRatio, screenSize.y * pixelRatio);
             quad->Draw(pathTraceShaderLowRes);
+            scene->instancesModified = false;
+        }
+        else
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, pathTraceFBO);
+            glViewport(0, 0, tileWidth, tileHeight);
+            glBindTexture(GL_TEXTURE_2D, accumTexture);
+            quad->Draw(pathTraceShader);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, accumFBO);
+            glViewport(tileWidth * tileX, tileHeight * tileY, tileWidth, tileHeight);
+            glBindTexture(GL_TEXTURE_2D, pathTraceTexture);
+            quad->Draw(outputShader);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, outputFBO);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tileOutputTexture[currentBuffer], 0);
+            glViewport(0, 0, screenSize.x, screenSize.y);
+            glBindTexture(GL_TEXTURE_2D, accumTexture);
+            quad->Draw(tonemapShader);
         }
     }
 
@@ -372,22 +355,21 @@ namespace LavaFrame
         if (!initialized)
             return;
 
-        if (!scene->camera->isMoving)
-        {
-            glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);
 
+        if (scene->camera->isMoving || sampleCounter == 1)
+        {
+            glBindTexture(GL_TEXTURE_2D, pathTraceTextureLowRes);
+            quad->Draw(tonemapShader);
+        }
+        else
+        {
             if (scene->renderOptions.enableDenoiser && denoised)
                 glBindTexture(GL_TEXTURE_2D, denoisedTexture);
             else
                 glBindTexture(GL_TEXTURE_2D, tileOutputTexture[1 - currentBuffer]);
 
             quad->Draw(outputShader);
-        }
-        else
-        {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, pathTraceTextureLowRes);
-            quad->Draw(tonemapShader);
         }
     }
 
@@ -422,23 +404,21 @@ namespace LavaFrame
     {
         Renderer::Update(secondsElapsed);
 
-        float r1, r2, r3;
-
-        // Denoiser, see https://www.openimagedenoise.org/documentation.html
+        // Denoise Image
         if (scene->renderOptions.enableDenoiser && frameCounter % (scene->renderOptions.denoiserFrameCnt * (numTilesX * numTilesY)) == 0)
         {
             glBindTexture(GL_TEXTURE_2D, tileOutputTexture[1 - currentBuffer]);
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, denoiserInputFramePtr);
 
-            // Create an Open Image Denoise device
+            // Create an Intel Open Image Denoise device
             oidn::DeviceRef device = oidn::newDevice();
             device.commit();
 
             // Create a denoising filter
-            oidn::FilterRef filter = device.newFilter("RT"); // Generic Raytracing denoiser.
+            oidn::FilterRef filter = device.newFilter("RT"); // generic ray tracing filter
             filter.setImage("color", denoiserInputFramePtr, oidn::Format::Float3, screenSize.x, screenSize.y);
             filter.setImage("output", frameOutputPtr, oidn::Format::Float3, screenSize.x, screenSize.y);
-            filter.set("hdr", false); // Whether the image is hdr. It isn't.
+            filter.set("hdr", false);
             filter.commit();
 
             // Filter the image
@@ -457,7 +437,6 @@ namespace LavaFrame
 
         if (scene->camera->isMoving || scene->instancesModified)
         {
-            r1 = r2 = r3 = 0;
             tileX = -1;
             tileY = numTilesY - 1;
             sampleCounter = 1;
@@ -467,19 +446,6 @@ namespace LavaFrame
             glBindFramebuffer(GL_FRAMEBUFFER, accumFBO);
             glViewport(0, 0, screenSize.x, screenSize.y);
             glClear(GL_COLOR_BUFFER_BIT);
-
-            glBindFramebuffer(GL_FRAMEBUFFER, outputFBO);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tileOutputTexture[1 - currentBuffer], 0);
-            glViewport(0, 0, screenSize.x, screenSize.y);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, pathTraceTextureLowRes);
-            quad->Draw(tonemapShader);
-
-            /*glBindFramebuffer(GL_FRAMEBUFFER, accumFBO);
-            glViewport(0, 0, screenSize.x, screenSize.y);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, pathTraceTextureLowRes);
-            quad->Draw(accumShader);*/
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
@@ -499,10 +465,6 @@ namespace LavaFrame
                     currentBuffer = 1 - currentBuffer;
                 }
             }
-
-            r1 = ((float)rand() / (RAND_MAX));
-            r2 = ((float)rand() / (RAND_MAX));
-            r3 = ((float)rand() / (RAND_MAX));
         }
 
         GLuint shaderObject;
@@ -516,13 +478,13 @@ namespace LavaFrame
         glUniform1f(glGetUniformLocation(shaderObject, "camera.fov"), scene->camera->fov);
         glUniform1f(glGetUniformLocation(shaderObject, "camera.focalDist"), scene->camera->focalDist);
         glUniform1f(glGetUniformLocation(shaderObject, "camera.aperture"), scene->camera->aperture);
-        glUniform3f(glGetUniformLocation(shaderObject, "randomVector"), r1, r2, r3);
         glUniform1i(glGetUniformLocation(shaderObject, "useEnvMap"), scene->hdrData == nullptr ? false : scene->renderOptions.useEnvMap);
         glUniform1f(glGetUniformLocation(shaderObject, "hdrMultiplier"), scene->renderOptions.hdrMultiplier);
         glUniform1i(glGetUniformLocation(shaderObject, "maxDepth"), scene->renderOptions.maxDepth);
         glUniform1i(glGetUniformLocation(shaderObject, "tileX"), tileX);
         glUniform1i(glGetUniformLocation(shaderObject, "tileY"), tileY);
         glUniform3f(glGetUniformLocation(shaderObject, "bgColor"), scene->renderOptions.bgColor.x, scene->renderOptions.bgColor.y, scene->renderOptions.bgColor.z);
+        glUniform1i(glGetUniformLocation(shaderObject, "frame"), frameCounter);
         pathTraceShader->StopUsing();
 
         pathTraceShaderLowRes->Use();
@@ -536,8 +498,7 @@ namespace LavaFrame
         glUniform1f(glGetUniformLocation(shaderObject, "camera.aperture"), scene->camera->aperture);
         glUniform1i(glGetUniformLocation(shaderObject, "useEnvMap"), scene->hdrData == nullptr ? false : scene->renderOptions.useEnvMap);
         glUniform1f(glGetUniformLocation(shaderObject, "hdrMultiplier"), scene->renderOptions.hdrMultiplier);
-        //glUniform1i(glGetUniformLocation(shaderObject, "maxDepth"), scene->camera->isMoving || scene->instancesModified ? 2: scene->renderOptions.maxDepth);
-        glUniform1i(glGetUniformLocation(shaderObject, "maxDepth"), scene->renderOptions.maxDepth);
+        glUniform1i(glGetUniformLocation(shaderObject, "maxDepth"), scene->camera->isMoving || scene->instancesModified ? 2 : scene->renderOptions.maxDepth);
         glUniform3f(glGetUniformLocation(shaderObject, "camera.position"), scene->camera->position.x, scene->camera->position.y, scene->camera->position.z);
         glUniform3f(glGetUniformLocation(shaderObject, "bgColor"), scene->renderOptions.bgColor.x, scene->renderOptions.bgColor.y, scene->renderOptions.bgColor.z);
         pathTraceShaderLowRes->StopUsing();

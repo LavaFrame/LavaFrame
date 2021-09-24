@@ -1,6 +1,25 @@
 /*
- * Read license.txt for license information.
- * This is based on the original GLSL-PathTracer by Asif Ali.
+ * MIT License
+ *
+ * Copyright(c) 2019-2021 Asif Ali
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this softwareand associated documentation files(the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions :
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 //-----------------------------------------------------------------------
@@ -33,22 +52,23 @@ void GetNormalsAndTexCoord(inout State state, inout Ray r)
     state.normal = normal;
     state.ffnormal = dot(normal, r.direction) <= 0.0 ? normal : normal * -1.0;
 
-    Onb(state.ffnormal, state.tangent, state.bitangent);
+    Onb(state.normal, state.tangent, state.bitangent);
 }
 
 //-----------------------------------------------------------------------
 void GetMaterialsAndTextures(inout State state, in Ray r)
 //-----------------------------------------------------------------------
 {
-    int index = state.matID;
+    int index = state.matID * 7;
     Material mat;
 
-    vec4 param1 = texelFetch(materialsTex, ivec2(index * 6 + 0, 0), 0);
-    vec4 param2 = texelFetch(materialsTex, ivec2(index * 6 + 1, 0), 0);
-    vec4 param3 = texelFetch(materialsTex, ivec2(index * 6 + 2, 0), 0);
-    vec4 param4 = texelFetch(materialsTex, ivec2(index * 6 + 3, 0), 0);
-    vec4 param5 = texelFetch(materialsTex, ivec2(index * 6 + 4, 0), 0);
-    vec4 param6 = texelFetch(materialsTex, ivec2(index * 6 + 5, 0), 0);
+    vec4 param1 = texelFetch(materialsTex, ivec2(index + 0, 0), 0);
+    vec4 param2 = texelFetch(materialsTex, ivec2(index + 1, 0), 0);
+    vec4 param3 = texelFetch(materialsTex, ivec2(index + 2, 0), 0);
+    vec4 param4 = texelFetch(materialsTex, ivec2(index + 3, 0), 0);
+    vec4 param5 = texelFetch(materialsTex, ivec2(index + 4, 0), 0);
+    vec4 param6 = texelFetch(materialsTex, ivec2(index + 5, 0), 0);
+    vec4 param7 = texelFetch(materialsTex, ivec2(index + 6, 0), 0);
 
     mat.albedo         = param1.xyz;
     mat.specular       = param1.w;
@@ -65,13 +85,15 @@ void GetMaterialsAndTextures(inout State state, in Ray r)
     mat.sheen          = param4.x;
     mat.sheenTint      = param4.y;
     mat.clearcoat      = param4.z;
-    mat.clearcoatRoughness = mix(0.001, 0.1, param4.w);
+    mat.clearcoatRoughness = param4.w;
 
     mat.specTrans      = param5.x;
     mat.ior            = param5.y;
+    mat.atDistance     = param5.z;
 
-    mat.extinction     = vec3(param5.zw, param6.x);
-    mat.texIDs         = vec3(param6.yzw);
+    mat.extinction     = param6.xyz;
+
+    mat.texIDs         = param7.xyz;
 
     vec2 texUV = state.texCoord;
     texUV.y = 1.0 - texUV.y;
@@ -84,32 +106,34 @@ void GetMaterialsAndTextures(inout State state, in Ray r)
     if (int(mat.texIDs.y) >= 0)
     {
         vec2 matRgh;
-        matRgh = pow(texture(textureMapsArrayTex, vec3(texUV, int(mat.texIDs.y))).zy, vec2(2.2));
+        // TODO: Change metallic roughness maps in repo to linear space and remove gamma correction
+        matRgh = pow(texture(textureMapsArrayTex, vec3(texUV, int(mat.texIDs.y))).xy, vec2(2.2));
         mat.metallic = matRgh.x;
-        mat.roughness = matRgh.y;
+        mat.roughness = max(matRgh.y, 0.001);
     }
 
     // Normal Map
+    // FIXME: Output when using a normal map doesn't match up with Cycles (Blender) output
     if (int(mat.texIDs.z) >= 0)
     {
         vec3 nrm = texture(textureMapsArrayTex, vec3(texUV, int(mat.texIDs.z))).xyz;
         nrm = normalize(nrm * 2.0 - 1.0);
 
-        // Orthonormal Basis
         vec3 T, B;
-        Onb(state.ffnormal, T, B);
+        Onb(state.normal, T, B);
 
-        nrm = T * nrm.x + B * nrm.y + state.ffnormal * nrm.z;
+        nrm = T * nrm.x + B * nrm.y + state.normal * nrm.z;
         state.normal = normalize(nrm);
         state.ffnormal = dot(state.normal, r.direction) <= 0.0 ? state.normal : state.normal * -1.0;
 
-        Onb(state.ffnormal, state.tangent, state.bitangent);
+        Onb(state.normal, state.tangent, state.bitangent);
     }
 
+    // Commented out the following as anisotropic param is temporarily unused.
     // Calculate anisotropic roughness along the tangent and bitangent directions
-    float aspect = sqrt(1.0 - mat.anisotropic * 0.9);
-    mat.ax = max(0.001, mat.roughness / aspect);
-    mat.ay = max(0.001, mat.roughness * aspect);
+    // float aspect = sqrt(1.0 - mat.anisotropic * 0.9);
+    // mat.ax = max(0.001, mat.roughness / aspect);
+    // mat.ay = max(0.001, mat.roughness * aspect);
 
     state.mat = mat;
     state.eta = dot(state.normal, state.ffnormal) > 0.0 ? (1.0 / mat.ior) : mat.ior;
@@ -120,7 +144,7 @@ vec3 DirectLight(in Ray r, in State state)
 //-----------------------------------------------------------------------
 {
     vec3 Li = vec3(0.0);
-    vec3 surfacePos = state.fhp;
+    vec3 surfacePos = state.fhp + state.normal * EPS;
 
     BsdfSampleRec bsdfSampleRec;
 
@@ -133,21 +157,18 @@ vec3 DirectLight(in Ray r, in State state)
         vec3 lightDir = dirPdf.xyz;
         float lightPdf = dirPdf.w;
 
-        if (state.isSubsurface || dot(lightDir, state.ffnormal) > 0.0)
+        Ray shadowRay = Ray(surfacePos, lightDir);
+        bool inShadow = AnyHit(shadowRay, INFINITY - EPS);
+
+        if (!inShadow)
         {
-            Ray shadowRay = Ray(surfacePos + FaceForward(state.normal, lightDir) * EPS, lightDir);
-            bool inShadow = AnyHit(shadowRay, INFINITY - EPS);
+            bsdfSampleRec.f = DisneyEval(state, -r.direction, state.ffnormal, lightDir, bsdfSampleRec.pdf);
 
-            if (!inShadow)
+            if (bsdfSampleRec.pdf > 0.0)
             {
-                bsdfSampleRec.f = DisneyEval(state, -r.direction, state.ffnormal, lightDir, bsdfSampleRec.pdf);
-
-                if (bsdfSampleRec.pdf > 0.0)
-                {
-                    float misWeight = powerHeuristic(lightPdf, bsdfSampleRec.pdf);
-                    if (misWeight > 0.0)
-                        Li += misWeight * bsdfSampleRec.f * abs(dot(lightDir, state.ffnormal)) * color / lightPdf;
-                }
+                float misWeight = powerHeuristic(lightPdf, bsdfSampleRec.pdf);
+                if (misWeight > 0.0)
+                    Li += misWeight * bsdfSampleRec.f * abs(dot(lightDir, state.ffnormal)) * color / lightPdf;
             }
         }
     }
@@ -161,39 +182,37 @@ vec3 DirectLight(in Ray r, in State state)
         Light light;
 
         //Pick a light to sample
-        int index = int(rand() * float(numOfLights));
+        int index = int(rand() * float(numOfLights)) * 5;
 
         // Fetch light Data
-        vec3 position = texelFetch(lightsTex, ivec2(index * 5 + 0, 0), 0).xyz;
-        vec3 emission = texelFetch(lightsTex, ivec2(index * 5 + 1, 0), 0).xyz;
-        vec3 u        = texelFetch(lightsTex, ivec2(index * 5 + 2, 0), 0).xyz; // u vector for rect
-        vec3 v        = texelFetch(lightsTex, ivec2(index * 5 + 3, 0), 0).xyz; // v vector for rect
-        vec3 params   = texelFetch(lightsTex, ivec2(index * 5 + 4, 0), 0).xyz;
+        vec3 position = texelFetch(lightsTex, ivec2(index + 0, 0), 0).xyz;
+        vec3 emission = texelFetch(lightsTex, ivec2(index + 1, 0), 0).xyz;
+        vec3 u        = texelFetch(lightsTex, ivec2(index + 2, 0), 0).xyz; // u vector for rect
+        vec3 v        = texelFetch(lightsTex, ivec2(index + 3, 0), 0).xyz; // v vector for rect
+        vec3 params   = texelFetch(lightsTex, ivec2(index + 4, 0), 0).xyz;
         float radius  = params.x;
         float area    = params.y;
-        float type    = params.z; // 0->rect, 1->sphere
+        float type    = params.z; // 0->Rect, 1->Sphere, 2->Distant
 
         light = Light(position, emission, u, v, radius, area, type);
-        sampleLight(light, lightSampleRec);
+        sampleOneLight(light, surfacePos, lightSampleRec);
 
-        vec3 lightDir = lightSampleRec.surfacePos - surfacePos;
-        float lightDist = length(lightDir);
-        float lightDistSq = lightDist * lightDist;
-        lightDir /= sqrt(lightDistSq);
-
-        if (!state.isSubsurface && (dot(lightDir, state.ffnormal) <= 0.0 || dot(lightDir, lightSampleRec.normal) >= 0.0))
-            return Li;
-
-        Ray shadowRay = Ray(surfacePos + FaceForward(state.normal, lightDir) * EPS, lightDir);
-        bool inShadow = AnyHit(shadowRay, lightDist - EPS);
-
-        if (!inShadow)
+        if (dot(lightSampleRec.direction, lightSampleRec.normal) < 0.0)
         {
-            bsdfSampleRec.f = DisneyEval(state, -r.direction, state.ffnormal, lightDir, bsdfSampleRec.pdf);
-            float lightPdf = lightDistSq / (light.area * abs(dot(lightSampleRec.normal, lightDir)));
+            Ray shadowRay = Ray(surfacePos, lightSampleRec.direction);
+            bool inShadow = AnyHit(shadowRay, lightSampleRec.dist - EPS);
 
-            if (bsdfSampleRec.pdf > 0.0)
-                Li += powerHeuristic(lightPdf, bsdfSampleRec.pdf) * bsdfSampleRec.f * abs(dot(state.ffnormal, lightDir)) * lightSampleRec.emission / lightPdf;
+            if (!inShadow)
+            {
+                bsdfSampleRec.f = DisneyEval(state, -r.direction, state.ffnormal, lightSampleRec.direction, bsdfSampleRec.pdf);
+
+                float weight = 1.0;
+                if(light.area > 0.0)
+                    weight = powerHeuristic(lightSampleRec.pdf, bsdfSampleRec.pdf);
+
+                if (bsdfSampleRec.pdf > 0.0)
+                    Li += weight * bsdfSampleRec.f * abs(dot(state.ffnormal, lightSampleRec.direction)) * lightSampleRec.emission / lightSampleRec.pdf;
+            }
         }
     }
 #endif
@@ -215,7 +234,6 @@ vec3 PathTrace(Ray r)
     
     for (int depth = 0; depth < maxDepth; depth++)
     {
-        float lightPdf = 1.0f;
         state.depth = depth;
         float t = ClosestHit(r, state, lightSampleRec);
 
@@ -229,10 +247,10 @@ vec3 PathTrace(Ray r)
                 float misWeight = 1.0f;
                 vec2 uv = vec2((PI + atan(r.direction.z, r.direction.x)) * (1.0 / TWO_PI), acos(r.direction.y) * (1.0 / PI));
 
-                if (depth > 0 && !state.specularBounce)
+                if (depth > 0)
                 {
                     // TODO: Fix NaNs when using certain HDRs
-                    lightPdf = EnvPdf(r);
+                    float lightPdf = EnvPdf(r);
                     misWeight = powerHeuristic(bsdfSampleRec.pdf, lightPdf);
                 }
                 radiance += misWeight * texture(hdrTex, uv).xyz * throughput * hdrMultiplier;
@@ -268,7 +286,7 @@ vec3 PathTrace(Ray r)
 
         // Set absorption only if the ray is currently inside the object.
         if (dot(state.ffnormal, bsdfSampleRec.L) < 0.0)
-            absorption = -log(state.mat.extinction) / vec3(0.2); // TODO: Add atDistance
+            absorption = -log(state.mat.extinction) / state.mat.atDistance;
 
         if (bsdfSampleRec.pdf > 0.0)
             throughput *= bsdfSampleRec.f * abs(dot(state.ffnormal, bsdfSampleRec.L)) / bsdfSampleRec.pdf;
@@ -279,7 +297,7 @@ vec3 PathTrace(Ray r)
         // Russian roulette
         if (depth >= RR_DEPTH)
         {
-            float q = min(max(throughput.x, max(throughput.y, throughput.z)) * state.eta * state.eta + 0.001, 0.95);
+            float q = min(max(throughput.x, max(throughput.y, throughput.z)) + 0.001, 0.95);
             if (rand() > q)
                 break;
             throughput /= q;

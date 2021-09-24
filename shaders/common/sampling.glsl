@@ -1,6 +1,25 @@
 /*
- * Read license.txt for license information.
- * This is based on the original GLSL-PathTracer by Asif Ali.
+ * MIT License
+ *
+ * Copyright(c) 2019-2021 Asif Ali
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this softwareand associated documentation files(the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions :
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
  //----------------------------------------------------------------------
@@ -169,37 +188,64 @@ float powerHeuristic(float a, float b)
 }
 
 //-----------------------------------------------------------------------
-void sampleSphereLight(in Light light, inout LightSampleRec lightSampleRec)
+void sampleSphereLight(in Light light, in vec3 surfacePos, inout LightSampleRec lightSampleRec)
 //-----------------------------------------------------------------------
 {
+    // TODO: Pick a point only on the visible surface of the sphere
+
     float r1 = rand();
     float r2 = rand();
 
-    lightSampleRec.surfacePos = light.position + UniformSampleSphere(r1, r2) * light.radius;
-    lightSampleRec.normal = normalize(lightSampleRec.surfacePos - light.position);
+    vec3 lightSurfacePos = light.position + UniformSampleSphere(r1, r2) * light.radius;
+    lightSampleRec.direction = lightSurfacePos - surfacePos;
+    lightSampleRec.dist = length(lightSampleRec.direction);
+    float distSq = lightSampleRec.dist * lightSampleRec.dist;
+    lightSampleRec.direction /= lightSampleRec.dist;
+    lightSampleRec.normal = normalize(lightSurfacePos - light.position);
     lightSampleRec.emission = light.emission * float(numOfLights);
+    lightSampleRec.pdf = distSq / (light.area * abs(dot(lightSampleRec.normal, lightSampleRec.direction)));
 }
 
 //-----------------------------------------------------------------------
-void sampleRectLight(in Light light, inout LightSampleRec lightSampleRec)
+void sampleRectLight(in Light light, in vec3 surfacePos, inout LightSampleRec lightSampleRec)
 //-----------------------------------------------------------------------
 {
     float r1 = rand();
     float r2 = rand();
 
-    lightSampleRec.surfacePos = light.position + light.u * r1 + light.v * r2;
+    vec3 lightSurfacePos = light.position + light.u * r1 + light.v * r2;
+    lightSampleRec.direction = lightSurfacePos - surfacePos;
+    lightSampleRec.dist = length(lightSampleRec.direction);
+    float distSq = lightSampleRec.dist * lightSampleRec.dist;
+    lightSampleRec.direction /= lightSampleRec.dist;
     lightSampleRec.normal = normalize(cross(light.u, light.v));
     lightSampleRec.emission = light.emission * float(numOfLights);
+    lightSampleRec.pdf = distSq / (light.area * abs(dot(lightSampleRec.normal, lightSampleRec.direction)));
 }
 
 //-----------------------------------------------------------------------
-void sampleLight(in Light light, inout LightSampleRec lightSampleRec)
+void sampleDistantLight(in Light light, in vec3 surfacePos, inout LightSampleRec lightSampleRec)
 //-----------------------------------------------------------------------
 {
-    if (int(light.type) == 0) // Rect Light
-        sampleRectLight(light, lightSampleRec);
+    lightSampleRec.direction = normalize(light.position - vec3(0.0));
+    lightSampleRec.normal = normalize(surfacePos - light.position);
+    lightSampleRec.emission = light.emission * float(numOfLights);
+    lightSampleRec.dist = INFINITY;
+    lightSampleRec.pdf = 1.0;
+}
+
+//-----------------------------------------------------------------------
+void sampleOneLight(in Light light, in vec3 surfacePos, inout LightSampleRec lightSampleRec)
+//-----------------------------------------------------------------------
+{
+    int type = int(light.type);
+
+    if (type == QUAD_LIGHT)
+        sampleRectLight(light, surfacePos, lightSampleRec);
+    else if (type == SPHERE_LIGHT)
+        sampleSphereLight(light, surfacePos, lightSampleRec);
     else
-        sampleSphereLight(light, lightSampleRec);
+        sampleDistantLight(light, surfacePos, lightSampleRec);
 }
 
 #ifdef ENVMAP
@@ -246,7 +292,7 @@ vec3 EmitterSample(in Ray r, in State state, in LightSampleRec lightSampleRec, i
 {
     vec3 Le;
 
-    if (state.depth == 0 || state.specularBounce)
+    if (state.depth == 0)
         Le = lightSampleRec.emission;
     else
         Le = powerHeuristic(bsdfSampleRec.pdf, lightSampleRec.pdf) * lightSampleRec.emission;
