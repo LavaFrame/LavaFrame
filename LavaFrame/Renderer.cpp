@@ -7,8 +7,9 @@
 #include "Renderer.h"
 #include "ShaderIncludes.h"
 #include "Scene.h"
+#include "GlobalState.h"
 
-extern bool useDebug;
+extern LavaFrameState GlobalState;
 
 namespace LavaFrame
 {
@@ -67,7 +68,7 @@ namespace LavaFrame
         glDeleteTextures(1, &hdrConditionalDistTex);
 
         initialized = false;
-        if (useDebug) {
+        if (GlobalState.useDebug) {
             printf("Precomputation completed !\n");
         }
     }

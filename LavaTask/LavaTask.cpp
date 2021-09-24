@@ -4,13 +4,13 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <vector>
-#include <iterator>
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <chrono>
 #include "stringmanager.h"
+
+#define SIMPLE_RENDER_MODE_ARGS "--maxsamples 500 --noui --nomove --scene "
 
 const char* script_filename = "default";
 std::string apppath = "";
@@ -61,7 +61,7 @@ PROCESS_INFORMATION launch_renderer_thread(std::string arguments, std::string th
 
 int main(int argc, char* argv[])
 {
-	if (argc < 2) //Erroring out when no script file is given
+	if (argc < 2) // Erroring out when no script file is given
 	{
 		std::cerr << "Please specify the script file as the first CLI parameter." << std::endl;
 		std::exit(EXIT_FAILURE);
@@ -89,30 +89,30 @@ int main(int argc, char* argv[])
 		parameter = filestr.substr(filestr.find(" ") + 1);
 		switch (strint((filestr.substr(0, filestr.find(" "))).data())) {
 
-		case strint("render_scene_simple"): //Runs simple scene render with 500 samples and no denoising
+		case strint("render_scene_simple"): // Runs simple scene render with 500 samples and no denoising
 			console_log("Rendering scene " + parameter);
-			launch_renderer_wait("--maxsamples 500 --noui --nomove --scene " + parameter);
+			launch_renderer_wait(SIMPLE_RENDER_MODE_ARGS + parameter);
 			console_log("Render complete.");
 			break;
 
-		case strint("render_scene_simple_timed"): //Runs simple scene render with 500 samples and no denoising
+		case strint("render_scene_simple_timed"): // Runs simple scene render with 500 samples and no denoising with the timer enabled
 		{
 			console_log("Rendering scene " + parameter + " timed");
 			auto start_function_execution_timer = std::chrono::high_resolution_clock::now();
-			launch_renderer_wait("--maxsamples 500 --noui --nomove --scene " + parameter);
+			launch_renderer_wait(SIMPLE_RENDER_MODE_ARGS  "-timed " + parameter);
 			auto stop_function_execution_timer = std::chrono::high_resolution_clock::now();
 			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop_function_execution_timer - start_function_execution_timer).count() << "ms \n";
 			console_log("Render complete.");
 			break;
 		}
 
-		case strint("render_scene"): //Runs scene render
+		case strint("render_scene"): // Runs scene render
 			console_log("Rendering scene " + parameter);
 			launch_renderer_wait("--noui --nomove " + parameter);
 			console_log("Render complete.");
 			break;
 
-		case strint("render_scene_timed"): //Runs scene render
+		case strint("render_scene_timed"): // Runs scene render with timer
 		{
 			console_log("Rendering scene " + parameter);
 			auto start_function_execution_timer = std::chrono::high_resolution_clock::now();
@@ -123,13 +123,13 @@ int main(int argc, char* argv[])
 			break;
 		}
 
-		case strint("render"): //Runs scene render command
+		case strint("render"): // Runs scene render command
 			console_log("Executed render command with parameters : " + parameter);
 			launch_renderer_wait(parameter);
 			console_log("Render complete.");
 			break;
 
-		case strint("render_timed"): //Runs scene render command
+		case strint("render_timed"): // Runs scene render command
 		{
 			console_log("Executed render command with parameters : " + parameter);
 			auto start_function_execution_timer = std::chrono::high_resolution_clock::now();
@@ -140,14 +140,14 @@ int main(int argc, char* argv[])
 			break;
 		}
 
-		case strint("render_create_thread_simple"): //Runs simple thread render with 500 samples and no denoising
+		case strint("render_create_thread_simple"): // Runs simple thread render with 500 samples and no denoising
 			console_log("Created simple render thread for file : " + parameter);
 			threadID++;
 			waitForThreads = true;
-			local_pi = launch_renderer_thread("--maxsamples 500 --nowindow --scene " + parameter, std::to_string(threadID));
+			local_pi = launch_renderer_thread(SIMPLE_RENDER_MODE_ARGS + parameter, std::to_string(threadID));
 			break;
 
-		case strint("render_create_thread"): //Runs thread render
+		case strint("render_create_thread"): // Runs thread render
 			console_log("Created render thread with parameters : " + parameter);
 			threadID++;
 			waitForThreads = true;

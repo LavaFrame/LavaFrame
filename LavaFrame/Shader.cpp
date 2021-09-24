@@ -4,18 +4,19 @@
  */
 
 #include "Shader.h"
+#include "GlobalState.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
-extern bool useDebug;
+extern LavaFrameState GlobalState;
 
 namespace LavaFrame
 {
     Shader::Shader(const ShaderInclude::ShaderSource& sourceObj, GLenum shaderType)
     {
         object = glCreateShader(shaderType);
-        if (useDebug) {
+        if (GlobalState.useDebug) {
             printf("Compiling shader %s -> %d\n", sourceObj.path.c_str(), int(object));
         }
         const GLchar* src = (const GLchar*)sourceObj.src.c_str();
@@ -41,7 +42,7 @@ namespace LavaFrame
         }
         else
         {
-            if (useDebug) {
+            if (GlobalState.useDebug) {
                 printf("Shader compile successful !\n");
             }
         }

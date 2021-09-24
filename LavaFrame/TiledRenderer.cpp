@@ -6,12 +6,12 @@
 #include "Config.h"
 #include "TiledRenderer.h"
 #include "ShaderIncludes.h"
+#include "GlobalState.h"
 #include "Camera.h"
 #include "Scene.h"
 #include <string>
 
-extern float previewScale;
-extern bool useDebug;
+extern LavaFrameState GlobalState;
 
 namespace LavaFrame
 {
@@ -58,7 +58,7 @@ namespace LavaFrame
 
         numTilesX = ceil((float)screenSize.x / tileWidth);
         numTilesY = ceil((float)screenSize.y / tileHeight);
-        pixelRatio = previewScale;
+        pixelRatio = GlobalState.previewScale;
 
         tileX = -1;
         tileY = numTilesY - 1;
@@ -67,8 +67,6 @@ namespace LavaFrame
         // Shaders
         //----------------------------------------------------------
 
-        extern bool useNeutralTonemap;
-
         std::string toneMapShaderName = "postprocess.igtnmp";
 
         ShaderInclude::ShaderSource vertexShaderSrcObj = ShaderInclude::load(shadersDirectory + "common/vertex.glsl");
@@ -76,7 +74,7 @@ namespace LavaFrame
         ShaderInclude::ShaderSource pathTraceShaderLowResSrcObj = ShaderInclude::load(shadersDirectory + "progressive.glsl");
         ShaderInclude::ShaderSource accumShaderSrcObj = ShaderInclude::load(shadersDirectory + "accumulation.glsl");
         ShaderInclude::ShaderSource outputShaderSrcObj = ShaderInclude::load(shadersDirectory + "output.glsl");
-        if (useNeutralTonemap == true) {
+        if (GlobalState.useNeutralTonemap == true) {
             toneMapShaderName = "postprocess_neutral.glsl";
         }
         else {
@@ -122,14 +120,14 @@ namespace LavaFrame
         outputShader = LoadShaders(vertexShaderSrcObj, outputShaderSrcObj);
         tonemapShader = LoadShaders(vertexShaderSrcObj, tonemapShaderSrcObj);
 
-        if (useDebug) {
+        if (GlobalState.useDebug) {
             printf("Debug sizes : %d %d - %d %d\n", tileWidth, tileHeight, screenSize.x, screenSize.y);
         }
         //----------------------------------------------------------
         // FBO Setup
         //----------------------------------------------------------
         //Create FBOs for path trace shader (Tiled)
-        if (useDebug) {
+        if (GlobalState.useDebug) {
             printf("Buffer pathTraceFBO\n");
         }
         glGenFramebuffers(1, &pathTraceFBO);
@@ -145,7 +143,7 @@ namespace LavaFrame
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pathTraceTexture, 0);
 
         //Create FBOs for path trace shader (Progressive)
-        if (useDebug) {
+        if (GlobalState.useDebug) {
             printf("Buffer pathTraceFBOLowRes\n");
         }
         glGenFramebuffers(1, &pathTraceFBOLowRes);
@@ -163,7 +161,7 @@ namespace LavaFrame
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pathTraceTextureLowRes, 0);
 
         //Create FBOs for accum buffer
-        if (useDebug) {
+        if (GlobalState.useDebug) {
             printf("Buffer accumFBO\n");
         }
         glGenFramebuffers(1, &accumFBO);
@@ -179,7 +177,7 @@ namespace LavaFrame
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, accumTexture, 0);
 
         //Create FBOs for tile output shader
-        if (useDebug) {
+        if (GlobalState.useDebug) {
             printf("Buffer outputFBO\n");
         }
         glGenFramebuffers(1, &outputFBO);

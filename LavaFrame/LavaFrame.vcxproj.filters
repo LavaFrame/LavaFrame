@@ -458,6 +458,9 @@
     <ClInclude Include="Strint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GlobalState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="thirdparty\oidn\lib\OpenImageDenoise.lib">

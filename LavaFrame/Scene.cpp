@@ -4,11 +4,11 @@
  */
 
 #include <iostream>
-
+#include "GlobalState.h"
 #include "Scene.h"
 #include "Camera.h"
 
-extern bool useDebug;
+extern LavaFrameState GlobalState;
 
 namespace LavaFrame
 {
@@ -33,7 +33,7 @@ namespace LavaFrame
         if (mesh->LoadFromFile(filename))
         {
             meshes.push_back(mesh);
-            if (useDebug) {
+            if (GlobalState.useDebug) {
                 printf("Geometry %s loaded sucessfully\n", filename.c_str());
             }
         }
@@ -57,7 +57,7 @@ namespace LavaFrame
         if (texture->LoadTexture(filename))
         {
             textures.push_back(texture);
-            if (useDebug) {
+            if (GlobalState.useDebug) {
                 printf("Material %s loaded sucessfully\n", filename.c_str());
             }
         }
@@ -82,7 +82,7 @@ namespace LavaFrame
             printf("Unable to load HDRI\n");
         else
         {
-            if (useDebug) {
+            if (GlobalState.useDebug) {
                 printf("HDRI %s loaded\n", filename.c_str());
             }
             renderOptions.useEnvMap = true;
@@ -151,12 +151,12 @@ namespace LavaFrame
 #pragma omp parallel for
         for (int i = 0; i < meshes.size(); i++)
         {
-            if (useDebug) {
+            if (GlobalState.useDebug) {
                 printf("Generating virtual geometry for %s\n", meshes[i]->name.c_str());
                 printf("Constructing BVH for %s\n", meshes[i]->name.c_str());
             }
             meshes[i]->BuildBVH();
-            if (useDebug) {
+            if (GlobalState.useDebug) {
                 printf("Loading material for %s\n", meshes[i]->name.c_str());
             }
         }
@@ -181,7 +181,7 @@ namespace LavaFrame
     {
         createBLAS();
 
-        if (useDebug) {
+        if (GlobalState.useDebug) {
             printf("Building scene geometry...\n");
         }
         createTLAS();

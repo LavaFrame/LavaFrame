@@ -26,15 +26,14 @@ freely, subject to the following restrictions:
 */
 
 #include "Loader.h"
+#include "GlobalState.h"
 #include <tiny_obj_loader.h>
 #include <iostream>
 #include <iterator>
 #include <algorithm>
 #include <stdio.h>
 
-extern std::string versionString;
-extern bool useDebug;
-extern bool threadMode;
+extern LavaFrameState GlobalState;
 
 namespace LavaFrame
 {
@@ -51,7 +50,7 @@ namespace LavaFrame
             Log("Couldn't open scene file %s for reading\n", filename.c_str());
             return false;
         }
-        if (!threadMode) { Log("Loading Scene...\n"); }
+        if (!GlobalState.threadMode) { Log("Loading Scene...\n"); }
 
         struct MaterialData
         {
@@ -98,7 +97,7 @@ namespace LavaFrame
                     // end group
                     if (strchr(line, '}'))
                         break;
-                    if (useDebug) {
+                    if (GlobalState.useDebug) {
                         Log("Loading material data...\n");
                     }
                     sscanf(line, " name %s", name);
@@ -154,7 +153,7 @@ namespace LavaFrame
 
                 while (fgets(line, kMaxLineLength, file))
                 {
-                    if (useDebug) {
+                    if (GlobalState.useDebug) {
                         Log("Loading scene lighting...\n");
                     }
                     // end group
@@ -199,7 +198,7 @@ namespace LavaFrame
                 while (fgets(line, kMaxLineLength, file))
                 {
                     // end group
-                    if (useDebug) {
+                    if (GlobalState.useDebug) {
                         Log("Loading scene camera data...\n");
                     }
                     if (strchr(line, '}'))
@@ -233,7 +232,7 @@ namespace LavaFrame
                     // end group
                     if (strchr(line, '}'))
                         break;
-                    if (useDebug) {
+                    if (GlobalState.useDebug) {
                         Log("Loading scene data...\n");
                     }
                     sscanf(line, " envMap %s", envMap);

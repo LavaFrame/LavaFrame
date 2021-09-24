@@ -14,7 +14,6 @@
 * Check license.txt for more information on licensing
 * Based on the original software by Alif Ali (knightcrawler25)
 */
-
 #define _USE_MATH_DEFINES
 
 #include <SDL2/SDL.h>
@@ -30,6 +29,7 @@
 #include "TiledRenderer.h"
 #include "Camera.h"
 #include "Strint.h"
+#include "GlobalState.h"
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
@@ -44,40 +44,16 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 
-
 using namespace std;
 using namespace LavaFrame;
 
 Scene* scene = nullptr;
 Renderer* renderer = nullptr;
 
+double lastTime = SDL_GetTicks();
 std::vector<string> sceneFiles;
 
-float mouseSensitivity = 0.005f;
-bool keyPressed = false;
-int sampleSceneIndex = 0;
-int selectedInstance = 0;
-double lastTime = SDL_GetTicks();
-bool done = false;
-bool noUi = false;
-bool threadMode = false;
-bool noMove = false;
-bool noWindow = false;
-bool useDebug = false;
-bool displaySampleCounter = false;
-int maxSamples = -1;
-float previewScale = 0.5f;
-bool useNeutralTonemap = false;
-std::string exportName = "0";
-int currentJpgQuality = 95;
-std::string exportType = "png";
-std::string threadID = "0";
-
-std::string shadersDir = "./shaders/";
-std::string assetsDir = "./assets/";
-std::string releaseVersion = "Version 0.5.2";
-std::string versionString = "LavaFrame - " + releaseVersion;
-
+LavaFrameState GlobalState;
 RenderOptions renderOptions;
 
 struct LoopData
@@ -86,71 +62,71 @@ struct LoopData
 	SDL_GLContext mGLContext = nullptr;
 };
 
-void GetSceneFiles() //Load and index all scene files in a directory.
+void GetSceneFiles() // Load and index all scene files in the assets directory.
 {
 	tinydir_dir dir;
 	int i;
-	tinydir_open_sorted(&dir, assetsDir.c_str());
+	tinydir_open_sorted(&dir, GlobalState.assetsDir.c_str());
 
 	for (i = 0; i < dir.n_files; i++)
 	{
 		tinydir_file file;
 		tinydir_readfile_n(&dir, &file, i);
 
-		if (std::string(file.extension) == "ignition") //Support for old ignition files
+		if (std::string(file.extension) == "ignition") // Support for old ignition files
 		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
+			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
 		}
-		if (std::string(file.extension) == "scene") //Support for old scene files
+		if (std::string(file.extension) == "scene") // Support for old scene files
 		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
+			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
 		}
-		if (std::string(file.extension) == "lfs") //LavaFrame Scene
+		if (std::string(file.extension) == "lfs") // LavaFrame Scene
 		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
+			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
 		}
-		if (std::string(file.extension) == "lf") //LavaFrame Scene
+		if (std::string(file.extension) == "lf") // LavaFrame Scene
 		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
+			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
 		}
-		if (std::string(file.extension) == "lavaframe") //Full name file
+		if (std::string(file.extension) == "lavaframe") // Full name file
 		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
+			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
 		}
-		if (std::string(file.extension) == "lavaframescene") //Completely typed out filename
+		if (std::string(file.extension) == "lavaframescene") // Completely typed out filename
 		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
+			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
 		}
 	}
 
 	tinydir_close(&dir);
 }
 
-void LoadScene(std::string sceneName) //Load scene - this is also called on startup.
+void LoadScene(std::string sceneName) // Load scene - this is also called on startup.
 {
 	delete scene;
 	scene = new Scene();
 	LoadSceneFromFile(sceneName, scene, renderOptions);
-	selectedInstance = 0;
+	GlobalState.selectedInstance = 0;
 	scene->renderOptions = renderOptions;
 }
 
-bool InitRenderer() //Create the tiled renderer and inform the user that the proccess has started.
+bool InitRenderer() // Create the tiled renderer and inform the user that the proccess has started.
 {
 	delete renderer;
-	renderer = new TiledRenderer(scene, shadersDir);
+	renderer = new TiledRenderer(scene, GlobalState.shadersDir);
 	renderer->Init();
-	if (!threadMode) { 
+	if (!GlobalState.threadMode) {
 		printf("LavaFrame renderer started\n"); 
 	}
 	else { 
-		printf(("\nLavaFrame thread " + threadID + " started, " + releaseVersion).c_str()); 
+		printf(("\nLavaFrame thread " + GlobalState.threadID + " started, " + GlobalState.releaseVersion).c_str());
 	}
 
 	return true;
 }
 
-void SaveFrame(const std::string filename) //Saves current frame as a png
+void SaveFrame(const std::string filename) // Saves current frame as a png
 {
 	unsigned char* data = nullptr;
 	int w, h;
@@ -159,7 +135,7 @@ void SaveFrame(const std::string filename) //Saves current frame as a png
 	stbi_write_png(filename.c_str(), w, h, 3, data, w * 3);
 	delete data;
 }
-void SaveFrameTGA(const std::string filename) //Saves current frame as a png
+void SaveFrameTGA(const std::string filename) // Saves current frame as a png
 {
 	unsigned char* data = nullptr;
 	int w, h;
@@ -168,7 +144,7 @@ void SaveFrameTGA(const std::string filename) //Saves current frame as a png
 	stbi_write_tga(filename.c_str(), w, h, 3, data);
 	delete data;
 }
-void SaveFrameJPG(const std::string filename, int jpgQuality) //Saves current frame as a bitmap-JPG
+void SaveFrameJPG(const std::string filename, int jpgQuality) // Saves current frame as a bitmap-JPG
 {
 	unsigned char* data = nullptr;
 	int w, h;
@@ -177,7 +153,7 @@ void SaveFrameJPG(const std::string filename, int jpgQuality) //Saves current fr
 	stbi_write_jpg(filename.c_str(), w, h, 3, data, jpgQuality);
 	delete data;
 }
-void SaveFrameBMP(const std::string filename) //Saves current frame as a bitmap-JPG
+void SaveFrameBMP(const std::string filename) // Saves current frame as a bitmap-JPG
 {
 	unsigned char* data = nullptr;
 	int w, h;
@@ -187,11 +163,11 @@ void SaveFrameBMP(const std::string filename) //Saves current frame as a bitmap-
 	delete data;
 }
 
-void Render() //Main Render function for ImGUI and the renderer.
+void Render() // Main Render function for ImGUI and the renderer.
 {
 	auto io = ImGui::GetIO();
 	renderer->Render();
-	//const glm::ivec2 screenSize = renderer->GetScreenSize();
+	// const glm::ivec2 screenSize = renderer->GetScreenSize();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 	renderer->Present();
@@ -203,68 +179,68 @@ void Render() //Main Render function for ImGUI and the renderer.
 
 void Update(float secondsElapsed)
 {
-	keyPressed = false;
-	if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) && ImGui::IsAnyMouseDown() && !ImGuizmo::IsOver() && !noMove) //Mouse control
+	GlobalState.keyPressed = false;
+	if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) && ImGui::IsAnyMouseDown() && !ImGuizmo::IsOver() && !GlobalState.noMove) // Mouse control
 	{
 		if (ImGui::IsMouseDown(0))
 		{
 			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(0, 0);
-			scene->camera->OffsetOrientation(mouseDelta.x, mouseDelta.y); //Move camera in 3D
+			scene->camera->OffsetOrientation(mouseDelta.x, mouseDelta.y); // Move camera in 3D
 			ImGui::ResetMouseDragDelta(0);
 		}
 		else if (ImGui::IsMouseDown(1))
 		{
 			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(1, 0);
-			scene->camera->SetRadius(mouseSensitivity * mouseDelta.y); //"Scroll" camera in 3D
+			scene->camera->SetRadius(GlobalState.mouseSensitivity * mouseDelta.y); // "Scroll" camera in 3D
 			ImGui::ResetMouseDragDelta(1);
 		}
 		else if (ImGui::IsMouseDown(2))
 		{
 			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(2, 0);
-			scene->camera->Strafe(mouseSensitivity * mouseDelta.x, mouseSensitivity * mouseDelta.y); //Move the camera sidewards
+			scene->camera->Strafe(GlobalState.mouseSensitivity * mouseDelta.x, GlobalState.mouseSensitivity * mouseDelta.y); //Move the camera sidewards
 			ImGui::ResetMouseDragDelta(2);
 		}
-		scene->camera->isMoving = true; //Render preview frames
+		scene->camera->isMoving = true; // Render preview frames
 	}
 
 
 	// Maximum sample auto export
-	if (maxSamples == renderer->GetSampleCount()) {
-		if (exportType == "png") {
-			if (exportName == "0") {
+	if (GlobalState.maxSamples == renderer->GetSampleCount()) {
+		if (GlobalState.exportType == "png") {
+			if (GlobalState.exportName == "0") {
 				SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
 			}
 			else {
-				SaveFrame("./" + exportName + ".png");
+				SaveFrame("./" + GlobalState.exportName + ".png");
 			}
 		}
-		else if (exportType == "jpg") {
-			if (exportName == "0") {
-				SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", currentJpgQuality);
+		else if (GlobalState.exportType == "jpg") {
+			if (GlobalState.exportName == "0") {
+				SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
 			}
 			else {
-				SaveFrameJPG("./" + exportName + ".jpg", currentJpgQuality);
+				SaveFrameJPG("./" + GlobalState.exportName + ".jpg", GlobalState.currentJpgQuality);
 			}
 		}
-		else if (exportType == "tga") {
-			if (exportName == "0") {
+		else if (GlobalState.exportType == "tga") {
+			if (GlobalState.exportName == "0") {
 				SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
 			}
 			else {
-				SaveFrameTGA("./" + exportName + ".tga");
+				SaveFrameTGA("./" + GlobalState.exportName + ".tga");
 			}
 		}
-		else if (exportType == "bmp") {
-			if (exportName == "0") {
+		else if (GlobalState.exportType == "bmp") {
+			if (GlobalState.exportName == "0") {
 				SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
 			}
 			else {
-				SaveFrameBMP("./" + exportName + ".bmp");
+				SaveFrameBMP("./" + GlobalState.exportName + ".bmp");
 			}
 		}
 
-		if (!threadMode) { printf("Render finished\n"); }
-		else { printf(("\nThread " + threadID + " render finished").c_str()); }
+		if (!GlobalState.threadMode) { printf("Render finished\n"); }
+		else { printf(("\nThread " + GlobalState.threadID + " render finished").c_str()); }
 		exit(0);
 	}
 	renderer->Update(secondsElapsed);
@@ -275,7 +251,7 @@ void EditTransform(const float* view, const float* projection, float* matrix)
 	static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
 	static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::WORLD);
 
-	if (ImGui::IsKeyPressed(90))  //Hotkeys for object translation
+	if (ImGui::IsKeyPressed(90))  // Hotkeys for object translation
 	{
 		mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
 	}
@@ -333,7 +309,7 @@ void EditTransform(const float* view, const float* projection, float* matrix)
 	ImGuizmo::Manipulate(view, projection, mCurrentGizmoOperation, mCurrentGizmoMode, matrix, NULL, NULL);
 }
 
-void MainLoop(void* arg) //Its the main loop !
+void MainLoop(void* arg) // Its the main loop !
 {
 	LoopData& loopdata = *(LoopData*)arg;
 
@@ -343,19 +319,19 @@ void MainLoop(void* arg) //Its the main loop !
 		ImGui_ImplSDL2_ProcessEvent(&event);
 		if (event.type == SDL_QUIT)
 		{
-			done = true;
+			GlobalState.done = true;
 		}
 		if (event.type == SDL_WINDOWEVENT) // Render resolution gets set to window size
 		{
 			if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 			{
 				scene->renderOptions.resolution = iVec2(event.window.data1, event.window.data2);
-				InitRenderer(); //Restart renderer on window resize. 
+				InitRenderer(); // Restart renderer on window resize. 
 			}
 
 			if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(loopdata.mWindow))
 			{
-				done = true;
+				GlobalState.done = true;
 			}
 		}
 	}
@@ -367,12 +343,12 @@ void MainLoop(void* arg) //Its the main loop !
 
 	ImGuizmo::BeginFrame();
 	{
-		//io.Fonts->GetTexDataAsAlpha8(); Old font handling
+		// io.Fonts->GetTexDataAsAlpha8(); Old font handling
 		bool optionsChanged = false;
 
-		if (noUi == false) {
+		if (GlobalState.noUi == false) {
 
-			//Window flags
+			// Window flags
 			static bool no_titlebar = false;
 			static bool no_menu = false;
 			static bool no_move = true;
@@ -392,75 +368,75 @@ void MainLoop(void* arg) //Its the main loop !
 				ImGui::SetNextWindowSize({ 340, 512 });
 				window_override_size = false;
 			}
-			ImGui::Begin(versionString.c_str(), nullptr, window_flags); //Main panel
+			ImGui::Begin(GlobalState.versionString.c_str(), nullptr, window_flags); //Main panel
 
 			if (ImGui::BeginMenuBar()) // Export menu
 			{
 				if (ImGui::BeginMenu("Export"))
 				{
 					if (ImGui::MenuItem("Export as JPG", "")) {
-						if (exportName == "0") {
-							SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", currentJpgQuality);
+						if (GlobalState.exportName == "0") {
+							SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
 						}
 						else {
-							SaveFrameJPG("./" + exportName + ".jpg", 80);
+							SaveFrameJPG("./" + GlobalState.exportName + ".jpg", 80);
 						}
 					}
 					if (ImGui::MenuItem("Export as PNG", "")) {
-						if (exportName == "0") {
+						if (GlobalState.exportName == "0") {
 							SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
 						}
 						else {
-							SaveFrame("./" + exportName + ".png");
+							SaveFrame("./" + GlobalState.exportName + ".png");
 						}
 					}
 					if (ImGui::MenuItem("Export as TGA", "")) {
-						if (exportName == "0") {
+						if (GlobalState.exportName == "0") {
 							SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
 						}
 						else {
-							SaveFrameTGA("./" + exportName + ".tga");
+							SaveFrameTGA("./" + GlobalState.exportName + ".tga");
 						}
 					}
 
 					if (ImGui::MenuItem("Export as BMP", "")) {
-						if (exportName == "0") {
+						if (GlobalState.exportName == "0") {
 							SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
 						}
 						else {
-							SaveFrameBMP("./" + exportName + ".bmp");
+							SaveFrameBMP("./" + GlobalState.exportName + ".bmp");
 						}
 					}
 					ImGui::EndMenu();
 				}
 				ImGui::EndMenuBar();
 			}
-			if (useDebug) { //Some debug stats, --debug / -db
+			if (GlobalState.useDebug) { // Some debug stats, --debug / -db
 				ImGui::Text("- Debug Mode -");
-				ImGui::Text("Debug enabled : %d", useDebug);
+				ImGui::Text("Debug enabled : %d", GlobalState.useDebug);
 				ImGui::Text("Render size : %d x %d", renderer->GetScreenSize().x, renderer->GetScreenSize().y);
-				if (ImGui::Button("Reload scenes")) //Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
+				if (ImGui::Button("Reload scenes")) // Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
 				{
 					sceneFiles.clear();
 					GetSceneFiles();
 				}
 			}
 
-			ImGui::Text("Rendered samples: %d ", renderer->GetSampleCount()); //Sample counter
+			ImGui::Text("Rendered samples: %d ", renderer->GetSampleCount()); // Sample counter
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Currently rendered samples per pixel.");
 
-			if (useDebug) {
-				if (ImGui::Button("Recompile shaders")) //Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
+			if (GlobalState.useDebug) {
+				if (ImGui::Button("Recompile shaders")) // Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
 				{
-					InitRenderer(); //Recompile shaders and restart the renderer.
+					InitRenderer(); // Recompile shaders and restart the renderer.
 				}
 			}
 
-			//Controls instruction - these will go into the documentation since they are universal.
-			//ImGui::BulletText("LMB + drag to rotate");
-			//ImGui::BulletText("MMB + drag to pan");
-			//ImGui::BulletText("RMB + drag to zoom in/out");
+			// Controls instruction - these will go into the documentation since they are universal.
+			// ImGui::BulletText("LMB + drag to rotate");
+			// ImGui::BulletText("MMB + drag to pan");
+			// ImGui::BulletText("RMB + drag to zoom in/out");
 
 			ImGui::Separator();
 			ImGui::Text("\n");
@@ -473,16 +449,16 @@ void MainLoop(void* arg) //Its the main loop !
 					scenes.push_back(sceneFiles[i].c_str());
 				}
 
-				if (ImGui::Combo("Active scene", &sampleSceneIndex, scenes.data(), scenes.size(), scenes.size()))
+				if (ImGui::Combo("Active scene", &GlobalState.sampleSceneIndex, scenes.data(), scenes.size(), scenes.size()))
 				{
-					LoadScene(sceneFiles[sampleSceneIndex]);
+					LoadScene(sceneFiles[GlobalState.sampleSceneIndex]);
 					SDL_RestoreWindow(loopdata.mWindow);
 					SDL_SetWindowSize(loopdata.mWindow, renderOptions.resolution.x, renderOptions.resolution.y);
 					InitRenderer();
 				}
-				ImGui::InputText("Export filename", &exportName);
-				ImGui::SliderInt("JPG export quality", &currentJpgQuality, 1, 200);
-				optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &mouseSensitivity, 0.001f, 1.0f);
+				ImGui::InputText("Export filename", &GlobalState.exportName);
+				ImGui::SliderInt("JPG export quality", &GlobalState.currentJpgQuality, 1, 200);
+				optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &GlobalState.mouseSensitivity, 0.001f, 1.0f);
 
 				ImGui::Text("\n");
 			}
@@ -518,7 +494,7 @@ void MainLoop(void* arg) //Its the main loop !
 				if (requiresReload)
 				{
 					scene->renderOptions = renderOptions;
-					InitRenderer(); //When the options change, restart the render proccess. 
+					InitRenderer(); // When the options change, restart the render proccess. 
 				}
 
 				scene->renderOptions.enableDenoiser = renderOptions.enableDenoiser;
@@ -567,10 +543,10 @@ void MainLoop(void* arg) //Its the main loop !
 				ImGui::ListBoxHeader("Instances");
 				for (int i = 0; i < scene->meshInstances.size(); i++)
 				{
-					bool is_selected = selectedInstance == i;
+					bool is_selected = GlobalState.selectedInstance == i;
 					if (ImGui::Selectable(listboxItems[i].c_str(), is_selected))
 					{
-						selectedInstance = i;
+						GlobalState.selectedInstance = i;
 					}
 				}
 				ImGui::ListBoxFooter();
@@ -579,37 +555,37 @@ void MainLoop(void* arg) //Its the main loop !
 				ImGui::Text("Materials");
 
 				// Material properties
-				Vec3* albedo = &scene->materials[scene->meshInstances[selectedInstance].materialID].albedo;
-				Vec3* emission = &scene->materials[scene->meshInstances[selectedInstance].materialID].emission;
-				Vec3* extinction = &scene->materials[scene->meshInstances[selectedInstance].materialID].extinction;
+				Vec3* albedo = &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].albedo;
+				Vec3* emission = &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].emission;
+				Vec3* extinction = &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].extinction;
 
 				objectPropChanged |= ImGui::ColorEdit3("Albedo", (float*)albedo, 0);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Color of the object.");
-				objectPropChanged |= ImGui::SliderFloat("Metallic", &scene->materials[scene->meshInstances[selectedInstance].materialID].metallic, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Metallic", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].metallic, 0.0f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("How metalness of the object.");
-				objectPropChanged |= ImGui::SliderFloat("Roughness", &scene->materials[scene->meshInstances[selectedInstance].materialID].roughness, 0.001f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Roughness", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].roughness, 0.001f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("How smoothness of the object. Setting this to 0 and metallic to max will result in a mirror.");
-				objectPropChanged |= ImGui::SliderFloat("Specular", &scene->materials[scene->meshInstances[selectedInstance].materialID].specular, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Specular", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].specular, 0.0f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Intensity of specular highlights.");
-				objectPropChanged |= ImGui::SliderFloat("SpecularTint", &scene->materials[scene->meshInstances[selectedInstance].materialID].specularTint, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("SpecularTint", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].specularTint, 0.0f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Tint of the specular highlights.");
-				objectPropChanged |= ImGui::SliderFloat("Subsurface", &scene->materials[scene->meshInstances[selectedInstance].materialID].subsurface, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Subsurface", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].subsurface, 0.0f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Amount of subsurface scattering on the object.");
-				objectPropChanged |= ImGui::SliderFloat("Anisotropic", &scene->materials[scene->meshInstances[selectedInstance].materialID].anisotropic, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("Sheen", &scene->materials[scene->meshInstances[selectedInstance].materialID].sheen, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("SheenTint", &scene->materials[scene->meshInstances[selectedInstance].materialID].sheenTint, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("Clearcoat", &scene->materials[scene->meshInstances[selectedInstance].materialID].clearcoat, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("clearcoatRoughness", &scene->materials[scene->meshInstances[selectedInstance].materialID].clearcoatRoughness, 0.001f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("Transmission", &scene->materials[scene->meshInstances[selectedInstance].materialID].transmission, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Anisotropic", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].anisotropic, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Sheen", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].sheen, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("SheenTint", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].sheenTint, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Clearcoat", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].clearcoat, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("clearcoatRoughness", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].clearcoatRoughness, 0.001f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Transmission", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].transmission, 0.0f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Amount of transmission/glass-ness. ");
-				objectPropChanged |= ImGui::SliderFloat("IOR", &scene->materials[scene->meshInstances[selectedInstance].materialID].ior, 1.001f, 2.0f);
+				objectPropChanged |= ImGui::SliderFloat("IOR", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].ior, 1.001f, 2.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Index of refraction of the object. Only used with transmission.");
 				objectPropChanged |= ImGui::ColorEdit3("Extinction", (float*)extinction, 0);
@@ -625,13 +601,13 @@ void MainLoop(void* arg) //Its the main loop !
 
 					auto io = ImGui::GetIO();
 					scene->camera->ComputeViewProjectionMatrix(viewMatrix, projMatrix, io.DisplaySize.x / io.DisplaySize.y);
-					Mat4 xform = scene->meshInstances[selectedInstance].transform;
+					Mat4 xform = scene->meshInstances[GlobalState.selectedInstance].transform;
 
 					EditTransform(viewMatrix, projMatrix, (float*)&xform);
 
-					if (memcmp(&xform, &scene->meshInstances[selectedInstance].transform, sizeof(float) * 16))
+					if (memcmp(&xform, &scene->meshInstances[GlobalState.selectedInstance].transform, sizeof(float) * 16))
 					{
-						scene->meshInstances[selectedInstance].transform = xform;
+						scene->meshInstances[GlobalState.selectedInstance].transform = xform;
 						objectPropChanged = true;
 					}
 				}
@@ -643,10 +619,10 @@ void MainLoop(void* arg) //Its the main loop !
 			}
 			ImGui::End();
 		}
-		if (noUi == true) {
+		if (GlobalState.noUi == true) {
 			scene->camera->isMoving = false;
 		}
-		if (noUi == true && displaySampleCounter == true) {
+		if (GlobalState.noUi == true && GlobalState.displaySampleCounter == true) {
 			// Window flags
 			static bool no_titlebar = true;
 			static bool no_menu = true;
@@ -686,7 +662,7 @@ void MainLoop(void* arg) //Its the main loop !
 	Update((float)(presentTime - lastTime));
 	lastTime = presentTime;
 	glClearColor(0., 0., 0., 0.);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //OpenGL clearing.
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // OpenGL clearing.
 	glDisable(GL_DEPTH_TEST);
 	Render();
 	SDL_GL_SwapWindow(loopdata.mWindow);
@@ -711,77 +687,77 @@ int main(int argc, char** argv)
 			break;
 
 		case strint("-u"):
-			noUi = true;
+			GlobalState.noUi = true;
 			break;
 
 		case strint("--noui"):
-			noUi = true;
+			GlobalState.noUi = true;
 			break;
 
 		case strint("-nm"):
-			noMove = true;
+			GlobalState.noMove = true;
 			break;
 
 		case strint("--nomove"):
-			noMove = true;
+			GlobalState.noMove = true;
 			break;
 
 		case strint("-w"):
-			noWindow = true;
+			GlobalState.noWindow = true;
 			break;
 
 		case strint("--nowindow"):
-			noWindow = true;
+			GlobalState.noWindow = true;
 			break;
 
 		case strint("-n"):
-			useNeutralTonemap = true;
+			GlobalState.useNeutralTonemap = true;
 			break;
 
 		case strint("--neutral"):
-			useNeutralTonemap = true;
+			GlobalState.useNeutralTonemap = true;
 			break;
 
 		case strint("-ms"):
 			std::string::size_type sz;
-			maxSamples = std::stoi(argv[++i], &sz);
+			GlobalState.maxSamples = std::stoi(argv[++i], &sz);
 			break;
 
 		case strint("--maxsamples"):
 		{
 			std::string::size_type sz;
-			maxSamples = std::stoi(argv[++i], &sz);
+			GlobalState.maxSamples = std::stoi(argv[++i], &sz);
 			break;
 		}
 
 		case strint("-ps"):
 		{
 			std::string::size_type sz;
-			previewScale = std::stoi(argv[++i], &sz);
+			GlobalState.previewScale = std::stoi(argv[++i], &sz);
 			break;
 		}
 
 		case strint("--previewscale"):
 		{
 			std::string::size_type sz;
-			previewScale = std::stoi(argv[++i], &sz);
+			GlobalState.previewScale = std::stoi(argv[++i], &sz);
 			break;
 		}
 
 		case strint("-ep"):
-			exportName = argv[++i];
+			GlobalState.exportName = argv[++i];
 			break;
 
 		case strint("-exportname"):
-			exportName = argv[++i];
+			GlobalState.exportName = argv[++i];
 			break;
 
 		case strint("-et"):
-			exportType = argv[++i];
+			GlobalState.exportType = argv[++i];
 			break;
 
 		case strint("--exporttype"):
-			exportType = argv[++i];
+			GlobalState.exportType = argv[++i];
 			break;
 
 		case strint("-dn"):
@@ -793,26 +769,26 @@ int main(int argc, char** argv)
 			break;
 
 		case strint("-db"):
-			useDebug = true;
+			GlobalState.useDebug = true;
 			break;
 
 		case strint(".lt-threadmode"):
 		{
-			threadMode = true;
-			threadID = argv[++i];
+			GlobalState.threadMode = true;
+			GlobalState.threadID = argv[++i];
 			break;
 		}
 
 		case strint("-sc"):
-			displaySampleCounter = true;
+			GlobalState.displaySampleCounter = true;
 			break;
 
 		case strint("--samplecounter"):
-			displaySampleCounter = true;
+			GlobalState.displaySampleCounter = true;
 			break;
 
 		case strint("--debug"):
-			useDebug = true;
+			GlobalState.useDebug = true;
 			break;
 
 		case strint("-df"):
@@ -832,14 +808,14 @@ int main(int argc, char** argv)
 		case strint("--jpgquality"):
 		{
 			std::string::size_type sz;
-			currentJpgQuality = std::stoi(argv[++i], &sz);
+			GlobalState.currentJpgQuality = std::stoi(argv[++i], &sz);
 			break;
 		}
 
 		case strint("-jpgq"):
 		{
 			std::string::size_type sz;
-			currentJpgQuality = std::stoi(argv[++i], &sz);
+			GlobalState.currentJpgQuality = std::stoi(argv[++i], &sz);
 			break;
 		}
 
@@ -850,7 +826,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	if (!threadMode) { Log(("--- " + versionString + " ---\n").c_str()); }
+	if (!GlobalState.threadMode) { Log(("--- " + GlobalState.versionString + " ---\n").c_str()); }
 
 	if (!sceneFile.empty())
 	{
@@ -860,12 +836,12 @@ int main(int argc, char** argv)
 			exit(0);
 
 		scene->renderOptions = renderOptions;
-		if (!threadMode) { std::cout << "Scene loaded\n"; }
+		if (!GlobalState.threadMode) { std::cout << "Scene loaded\n"; }
 	}
 	else
 	{
 		GetSceneFiles();
-		LoadScene(sceneFiles[sampleSceneIndex]);
+		LoadScene(sceneFiles[GlobalState.sampleSceneIndex]);
 	}
 
 	// Setup SDL
@@ -877,7 +853,7 @@ int main(int argc, char** argv)
 
 	LoopData loopdata;
 
-#ifdef __APPLE__ //Broken apple support
+#ifdef __APPLE__ // Broken apple support
 	// GL 3.2 Core + GLSL 150
 	const char* glsl_version = "#version 150";
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
@@ -885,8 +861,8 @@ int main(int argc, char** argv)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #else
-	// GL 3.0 + GLSL 130
-	const char* glsl_version = "#version 130";
+	// GL 3.0 + GLSL 330
+	const char* glsl_version = "#version 330";
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -900,7 +876,7 @@ int main(int argc, char** argv)
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
 	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	if (noWindow == true) {
+	if (GlobalState.noWindow == true) {
 		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
 	}
 	loopdata.mWindow = SDL_CreateWindow("LavaFrame", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, renderOptions.resolution.x, renderOptions.resolution.y, window_flags);
@@ -938,7 +914,7 @@ int main(int argc, char** argv)
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", 16); //Make the font not-eyesore 
-	if (useDebug) {
+	if (GlobalState.useDebug) {
 		io.IniFilename = "guiconfig.ini";
 	}
 	else {
@@ -1015,7 +991,7 @@ int main(int argc, char** argv)
 	if (!InitRenderer())
 		return 1;
 
-	while (!done)
+	while (!GlobalState.done)
 	{
 		MainLoop(&loopdata);
 	}
