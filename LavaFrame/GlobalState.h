@@ -20,7 +20,7 @@ struct LavaFrameState {
 	int sampleSceneIndex = 0;
 	int selectedInstance = 0;
 	int currentJpgQuality = 95;
-	std::string exportName = "0";
+	std::string exportName = "";
 	std::string exportType = "png";
 	std::string threadID = "0";
 	std::string shadersDir = "./shaders/";

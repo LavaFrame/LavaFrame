@@ -6,7 +6,7 @@
 * extending another project and building it into something I can
 * use for my own projects.
 *
-* THIS SOURCE CODE CAN BE A BIT MESSY AT TIMES !!! PLEASE BEWARE AND FEEL FREE TO IMPROVE ON IT !
+* THIS SOURCE CODE CAN BE A BIT MESSY AT TIMES ! PLEASE BEWARE AND FEEL FREE TO IMPROVE ON IT !
 *
 * - Nolram
 *
@@ -207,7 +207,7 @@ void Update(float secondsElapsed)
 	// Maximum sample auto export
 	if (GlobalState.maxSamples == renderer->GetSampleCount()) {
 		if (GlobalState.exportType == "png") {
-			if (GlobalState.exportName == "0") {
+			if (GlobalState.exportName == "") {
 				SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
 			}
 			else {
@@ -215,7 +215,7 @@ void Update(float secondsElapsed)
 			}
 		}
 		else if (GlobalState.exportType == "jpg") {
-			if (GlobalState.exportName == "0") {
+			if (GlobalState.exportName == "") {
 				SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
 			}
 			else {
@@ -223,7 +223,7 @@ void Update(float secondsElapsed)
 			}
 		}
 		else if (GlobalState.exportType == "tga") {
-			if (GlobalState.exportName == "0") {
+			if (GlobalState.exportName == "") {
 				SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
 			}
 			else {
@@ -231,7 +231,7 @@ void Update(float secondsElapsed)
 			}
 		}
 		else if (GlobalState.exportType == "bmp") {
-			if (GlobalState.exportName == "0") {
+			if (GlobalState.exportName == "") {
 				SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
 			}
 			else {
@@ -375,7 +375,7 @@ void MainLoop(void* arg) // Its the main loop !
 				if (ImGui::BeginMenu("Export"))
 				{
 					if (ImGui::MenuItem("Export as JPG", "")) {
-						if (GlobalState.exportName == "0") {
+						if (GlobalState.exportName == "") {
 							SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
 						}
 						else {
@@ -383,7 +383,7 @@ void MainLoop(void* arg) // Its the main loop !
 						}
 					}
 					if (ImGui::MenuItem("Export as PNG", "")) {
-						if (GlobalState.exportName == "0") {
+						if (GlobalState.exportName == "") {
 							SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
 						}
 						else {
@@ -391,7 +391,7 @@ void MainLoop(void* arg) // Its the main loop !
 						}
 					}
 					if (ImGui::MenuItem("Export as TGA", "")) {
-						if (GlobalState.exportName == "0") {
+						if (GlobalState.exportName == "") {
 							SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
 						}
 						else {
@@ -400,7 +400,7 @@ void MainLoop(void* arg) // Its the main loop !
 					}
 
 					if (ImGui::MenuItem("Export as BMP", "")) {
-						if (GlobalState.exportName == "0") {
+						if (GlobalState.exportName == "") {
 							SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
 						}
 						else {
@@ -430,6 +430,15 @@ void MainLoop(void* arg) // Its the main loop !
 				if (ImGui::Button("Recompile shaders")) // Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
 				{
 					InitRenderer(); // Recompile shaders and restart the renderer.
+				}
+				if (ImGui::Button("Relay exportname"))
+				{
+					if (GlobalState.exportName == "") {
+						printf("Empty exportname.\n");
+					}
+					else { 
+						printf((GlobalState.exportName + "\n").c_str());
+					};
 				}
 			}
 

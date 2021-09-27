@@ -72,7 +72,7 @@ namespace LavaFrame
         ShaderInclude::ShaderSource vertexShaderSrcObj = ShaderInclude::load(shadersDirectory + "common/vertex.glsl");
         ShaderInclude::ShaderSource pathTraceShaderSrcObj = ShaderInclude::load(shadersDirectory + "tiled_renderer.glsl");
         ShaderInclude::ShaderSource pathTraceShaderLowResSrcObj = ShaderInclude::load(shadersDirectory + "progressive.glsl");
-        ShaderInclude::ShaderSource accumShaderSrcObj = ShaderInclude::load(shadersDirectory + "accumulation.glsl");
+        //ShaderInclude::ShaderSource accumShaderSrcObj = ShaderInclude::load(shadersDirectory + "accumulation.glsl"); Old accumulation shader
         ShaderInclude::ShaderSource outputShaderSrcObj = ShaderInclude::load(shadersDirectory + "output.glsl");
         if (GlobalState.useNeutralTonemap == true) {
             toneMapShaderName = "postprocess_neutral.glsl";
@@ -116,7 +116,7 @@ namespace LavaFrame
 
         pathTraceShader = LoadShaders(vertexShaderSrcObj, pathTraceShaderSrcObj);
         pathTraceShaderLowRes = LoadShaders(vertexShaderSrcObj, pathTraceShaderLowResSrcObj);
-        accumShader = LoadShaders(vertexShaderSrcObj, accumShaderSrcObj);
+        //accumShader = LoadShaders(vertexShaderSrcObj, accumShaderSrcObj);
         outputShader = LoadShaders(vertexShaderSrcObj, outputShaderSrcObj);
         tonemapShader = LoadShaders(vertexShaderSrcObj, tonemapShaderSrcObj);
 
