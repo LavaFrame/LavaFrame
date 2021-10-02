@@ -50,7 +50,7 @@ PROCESS_INFORMATION launch_renderer_thread(std::string arguments, std::string th
 	ZeroMemory(&si_a, sizeof(si_a));
 	si_a.cb = sizeof(si_a);
 	ZeroMemory(&pi_a, sizeof(pi_a));
-	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + "\\LavaFrame.exe .lt-threadmode " + threadid + " " + arguments).c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &si_a, &pi_a))
+	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + "\\LavaFrame.exe -w .lt-threadmode " + threadid + " " + arguments).c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &si_a, &pi_a))
 	{
 		printf("CreateProcess failed (%d).\n", GetLastError());
 	}
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 		{
 			console_log("Rendering scene " + parameter + " timed");
 			auto start_function_execution_timer = std::chrono::high_resolution_clock::now();
-			launch_renderer_wait(SIMPLE_RENDER_MODE_ARGS  "-timed " + parameter);
+			launch_renderer_wait(SIMPLE_RENDER_MODE_ARGS + parameter);
 			auto stop_function_execution_timer = std::chrono::high_resolution_clock::now();
 			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop_function_execution_timer - start_function_execution_timer).count() << "ms \n";
 			console_log("Render complete.");

@@ -3,8 +3,8 @@
 #include <string>
 
 struct LavaFrameState {
-	Scene* scene = nullptr;
-	Renderer* renderer = nullptr;
+	Scene* scene;
+	Renderer* renderer;
 	float mouseSensitivity = 0.005f;
 	float previewScale = 0.5f;
 	bool keyPressed = false;

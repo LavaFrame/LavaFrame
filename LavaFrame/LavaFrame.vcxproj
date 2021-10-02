@@ -312,6 +312,7 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Config.h" />
+    <ClInclude Include="Export.h" />
     <ClInclude Include="GlobalState.h" />
     <ClInclude Include="hdrloader.h" />
     <ClInclude Include="Loader.h" />

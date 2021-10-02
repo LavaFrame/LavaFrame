@@ -3,9 +3,6 @@
 #include <cassert>
 #include <cmath>
 
-
-using namespace std;
-
 namespace RadeonRays
 {
     void SplitBvh::BuildImpl(bbox const* bounds, int numbounds)

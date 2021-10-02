@@ -44,14 +44,10 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 
-using namespace std;
 using namespace LavaFrame;
 
-Scene* scene = nullptr;
-Renderer* renderer = nullptr;
-
 double lastTime = SDL_GetTicks();
-std::vector<string> sceneFiles;
+std::vector<std::string> sceneFiles;
 
 LavaFrameState GlobalState;
 RenderOptions renderOptions;
@@ -104,18 +100,18 @@ void GetSceneFiles() // Load and index all scene files in the assets directory.
 
 void LoadScene(std::string sceneName) // Load scene - this is also called on startup.
 {
-	delete scene;
-	scene = new Scene();
-	LoadSceneFromFile(sceneName, scene, renderOptions);
+	delete GlobalState.scene;
+	GlobalState.scene = new Scene();
+	LoadSceneFromFile(sceneName, GlobalState.scene, renderOptions);
 	GlobalState.selectedInstance = 0;
-	scene->renderOptions = renderOptions;
+	GlobalState.scene->renderOptions = renderOptions;
 }
 
 bool InitRenderer() // Create the tiled renderer and inform the user that the proccess has started.
 {
-	delete renderer;
-	renderer = new TiledRenderer(scene, GlobalState.shadersDir);
-	renderer->Init();
+	delete GlobalState.renderer;
+	GlobalState.renderer = new TiledRenderer(GlobalState.scene, GlobalState.shadersDir);
+	GlobalState.renderer->Init();
 	if (!GlobalState.threadMode) {
 		printf("LavaFrame renderer started\n"); 
 	}
@@ -130,7 +126,7 @@ void SaveFrame(const std::string filename) // Saves current frame as a png
 {
 	unsigned char* data = nullptr;
 	int w, h;
-	renderer->GetOutputBuffer(&data, w, h);
+	GlobalState.renderer->GetOutputBuffer(&data, w, h);
 	stbi_flip_vertically_on_write(true);
 	stbi_write_png(filename.c_str(), w, h, 3, data, w * 3);
 	delete data;
@@ -139,7 +135,7 @@ void SaveFrameTGA(const std::string filename) // Saves current frame as a png
 {
 	unsigned char* data = nullptr;
 	int w, h;
-	renderer->GetOutputBuffer(&data, w, h);
+	GlobalState.renderer->GetOutputBuffer(&data, w, h);
 	stbi_flip_vertically_on_write(true);
 	stbi_write_tga(filename.c_str(), w, h, 3, data);
 	delete data;
@@ -148,7 +144,7 @@ void SaveFrameJPG(const std::string filename, int jpgQuality) // Saves current f
 {
 	unsigned char* data = nullptr;
 	int w, h;
-	renderer->GetOutputBuffer(&data, w, h);
+	GlobalState.renderer->GetOutputBuffer(&data, w, h);
 	stbi_flip_vertically_on_write(true);
 	stbi_write_jpg(filename.c_str(), w, h, 3, data, jpgQuality);
 	delete data;
@@ -157,7 +153,7 @@ void SaveFrameBMP(const std::string filename) // Saves current frame as a bitmap
 {
 	unsigned char* data = nullptr;
 	int w, h;
-	renderer->GetOutputBuffer(&data, w, h);
+	GlobalState.renderer->GetOutputBuffer(&data, w, h);
 	stbi_flip_vertically_on_write(true);
 	stbi_write_bmp(filename.c_str(), w, h, 3, data);
 	delete data;
@@ -166,11 +162,10 @@ void SaveFrameBMP(const std::string filename) // Saves current frame as a bitmap
 void Render() // Main Render function for ImGUI and the renderer.
 {
 	auto io = ImGui::GetIO();
-	renderer->Render();
-	// const glm::ivec2 screenSize = renderer->GetScreenSize();
+	GlobalState.renderer->Render();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-	renderer->Present();
+	GlobalState.renderer->Present();
 
 	// Rendering of window
 	ImGui::Render();
@@ -185,30 +180,30 @@ void Update(float secondsElapsed)
 		if (ImGui::IsMouseDown(0))
 		{
 			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(0, 0);
-			scene->camera->OffsetOrientation(mouseDelta.x, mouseDelta.y); // Move camera in 3D
+			GlobalState.scene->camera->OffsetOrientation(mouseDelta.x, mouseDelta.y); // Move camera in 3D
 			ImGui::ResetMouseDragDelta(0);
 		}
 		else if (ImGui::IsMouseDown(1))
 		{
 			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(1, 0);
-			scene->camera->SetRadius(GlobalState.mouseSensitivity * mouseDelta.y); // "Scroll" camera in 3D
+			GlobalState.scene->camera->SetRadius(GlobalState.mouseSensitivity * mouseDelta.y); // "Scroll" camera in 3D
 			ImGui::ResetMouseDragDelta(1);
 		}
 		else if (ImGui::IsMouseDown(2))
 		{
 			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(2, 0);
-			scene->camera->Strafe(GlobalState.mouseSensitivity * mouseDelta.x, GlobalState.mouseSensitivity * mouseDelta.y); //Move the camera sidewards
+			GlobalState.scene->camera->Strafe(GlobalState.mouseSensitivity * mouseDelta.x, GlobalState.mouseSensitivity * mouseDelta.y); //Move the camera sidewards
 			ImGui::ResetMouseDragDelta(2);
 		}
-		scene->camera->isMoving = true; // Render preview frames
+		GlobalState.scene->camera->isMoving = true; // Render preview frames
 	}
 
 
 	// Maximum sample auto export
-	if (GlobalState.maxSamples == renderer->GetSampleCount()) {
+	if (GlobalState.maxSamples == GlobalState.renderer->GetSampleCount()) {
 		if (GlobalState.exportType == "png") {
 			if (GlobalState.exportName == "") {
-				SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
+				SaveFrame("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".png");
 			}
 			else {
 				SaveFrame("./" + GlobalState.exportName + ".png");
@@ -216,7 +211,7 @@ void Update(float secondsElapsed)
 		}
 		else if (GlobalState.exportType == "jpg") {
 			if (GlobalState.exportName == "") {
-				SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
+				SaveFrameJPG("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
 			}
 			else {
 				SaveFrameJPG("./" + GlobalState.exportName + ".jpg", GlobalState.currentJpgQuality);
@@ -224,7 +219,7 @@ void Update(float secondsElapsed)
 		}
 		else if (GlobalState.exportType == "tga") {
 			if (GlobalState.exportName == "") {
-				SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
+				SaveFrameTGA("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".tga");
 			}
 			else {
 				SaveFrameTGA("./" + GlobalState.exportName + ".tga");
@@ -232,7 +227,7 @@ void Update(float secondsElapsed)
 		}
 		else if (GlobalState.exportType == "bmp") {
 			if (GlobalState.exportName == "") {
-				SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
+				SaveFrameBMP("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".bmp");
 			}
 			else {
 				SaveFrameBMP("./" + GlobalState.exportName + ".bmp");
@@ -243,7 +238,7 @@ void Update(float secondsElapsed)
 		else { printf(("\nThread " + GlobalState.threadID + " render finished").c_str()); }
 		exit(0);
 	}
-	renderer->Update(secondsElapsed);
+	GlobalState.renderer->Update(secondsElapsed);
 }
 
 void EditTransform(const float* view, const float* projection, float* matrix)
@@ -325,7 +320,7 @@ void MainLoop(void* arg) // Its the main loop !
 		{
 			if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 			{
-				scene->renderOptions.resolution = iVec2(event.window.data1, event.window.data2);
+				GlobalState.scene->renderOptions.resolution = iVec2(event.window.data1, event.window.data2);
 				InitRenderer(); // Restart renderer on window resize. 
 			}
 
@@ -361,7 +356,7 @@ void MainLoop(void* arg) // Its the main loop !
 			if (no_move)            window_flags |= ImGuiWindowFlags_NoMove;
 			if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
 
-			scene->camera->isMoving = false;
+			GlobalState.scene->camera->isMoving = false;
 
 			ImGui::SetNextWindowPos({ 0, 1 });
 			if (window_override_size) {
@@ -376,7 +371,7 @@ void MainLoop(void* arg) // Its the main loop !
 				{
 					if (ImGui::MenuItem("Export as JPG", "")) {
 						if (GlobalState.exportName == "") {
-							SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
+							SaveFrameJPG("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
 						}
 						else {
 							SaveFrameJPG("./" + GlobalState.exportName + ".jpg", 80);
@@ -384,7 +379,7 @@ void MainLoop(void* arg) // Its the main loop !
 					}
 					if (ImGui::MenuItem("Export as PNG", "")) {
 						if (GlobalState.exportName == "") {
-							SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
+							SaveFrame("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".png");
 						}
 						else {
 							SaveFrame("./" + GlobalState.exportName + ".png");
@@ -392,7 +387,7 @@ void MainLoop(void* arg) // Its the main loop !
 					}
 					if (ImGui::MenuItem("Export as TGA", "")) {
 						if (GlobalState.exportName == "") {
-							SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
+							SaveFrameTGA("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".tga");
 						}
 						else {
 							SaveFrameTGA("./" + GlobalState.exportName + ".tga");
@@ -401,7 +396,7 @@ void MainLoop(void* arg) // Its the main loop !
 
 					if (ImGui::MenuItem("Export as BMP", "")) {
 						if (GlobalState.exportName == "") {
-							SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
+							SaveFrameBMP("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".bmp");
 						}
 						else {
 							SaveFrameBMP("./" + GlobalState.exportName + ".bmp");
@@ -414,7 +409,7 @@ void MainLoop(void* arg) // Its the main loop !
 			if (GlobalState.useDebug) { // Some debug stats, --debug / -db
 				ImGui::Text("- Debug Mode -");
 				ImGui::Text("Debug enabled : %d", GlobalState.useDebug);
-				ImGui::Text("Render size : %d x %d", renderer->GetScreenSize().x, renderer->GetScreenSize().y);
+				ImGui::Text("Render size : %d x %d", GlobalState.renderer->GetScreenSize().x, GlobalState.renderer->GetScreenSize().y);
 				if (ImGui::Button("Reload scenes")) // Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
 				{
 					sceneFiles.clear();
@@ -422,7 +417,7 @@ void MainLoop(void* arg) // Its the main loop !
 				}
 			}
 
-			ImGui::Text("Rendered samples: %d ", renderer->GetSampleCount()); // Sample counter
+			ImGui::Text("Rendered samples: %d ", GlobalState.renderer->GetSampleCount()); // Sample counter
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Currently rendered samples per pixel.");
 
@@ -502,38 +497,38 @@ void MainLoop(void* arg) // Its the main loop !
 
 				if (requiresReload)
 				{
-					scene->renderOptions = renderOptions;
+					GlobalState.scene->renderOptions = renderOptions;
 					InitRenderer(); // When the options change, restart the render proccess. 
 				}
 
-				scene->renderOptions.enableDenoiser = renderOptions.enableDenoiser;
-				scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
+				GlobalState.scene->renderOptions.enableDenoiser = renderOptions.enableDenoiser;
+				GlobalState.scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
 			}
 
 			ImGui::Text("\n");
 
 			if (ImGui::CollapsingHeader("Camera"))
 			{
-				float fov = Math::Degrees(scene->camera->fov);
-				float aperture = scene->camera->aperture * 1000.0f;
+				float fov = Math::Degrees(GlobalState.scene->camera->fov);
+				float aperture = GlobalState.scene->camera->aperture * 1000.0f;
 				optionsChanged |= ImGui::SliderFloat("Field of vision", &fov, 10, 90);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Field of vision of the camera.");
-				scene->camera->SetFov(fov);
+				GlobalState.scene->camera->SetFov(fov);
 				optionsChanged |= ImGui::SliderFloat("Aperture", &aperture, 0.0f, 10.8f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Aperture of the camera. Rule of thumb : The larger this is, the more depth of field you will get. Set to 0 to disable.");
-				scene->camera->aperture = aperture / 1000.0f;
-				optionsChanged |= ImGui::SliderFloat("Focal Distance", &scene->camera->focalDist, 0.01f, 50.0f);
+				GlobalState.scene->camera->aperture = aperture / 1000.0f;
+				optionsChanged |= ImGui::SliderFloat("Focal Distance", &GlobalState.scene->camera->focalDist, 0.01f, 50.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Focus distance of the camera.");
-				ImGui::Text("Pos: %.2f, %.2f, %.2f", scene->camera->position.x, scene->camera->position.y, scene->camera->position.z);
+				ImGui::Text("Pos: %.2f, %.2f, %.2f", GlobalState.scene->camera->position.x, GlobalState.scene->camera->position.y, GlobalState.scene->camera->position.z);
 			}
 
 			if (optionsChanged)
 			{
-				scene->renderOptions = renderOptions;
-				scene->camera->isMoving = true;
+				GlobalState.scene->renderOptions = renderOptions;
+				GlobalState.scene->camera->isMoving = true;
 			}
 
 			ImGui::Text("\n");
@@ -543,14 +538,14 @@ void MainLoop(void* arg) // Its the main loop !
 				bool objectPropChanged = false;
 
 				std::vector<std::string> listboxItems;
-				for (int i = 0; i < scene->meshInstances.size(); i++)
+				for (int i = 0; i < GlobalState.scene->meshInstances.size(); i++)
 				{
-					listboxItems.push_back(scene->meshInstances[i].name);
+					listboxItems.push_back(GlobalState.scene->meshInstances[i].name);
 				}
 
 				// Object Selection
 				ImGui::ListBoxHeader("Instances");
-				for (int i = 0; i < scene->meshInstances.size(); i++)
+				for (int i = 0; i < GlobalState.scene->meshInstances.size(); i++)
 				{
 					bool is_selected = GlobalState.selectedInstance == i;
 					if (ImGui::Selectable(listboxItems[i].c_str(), is_selected))
@@ -564,37 +559,37 @@ void MainLoop(void* arg) // Its the main loop !
 				ImGui::Text("Materials");
 
 				// Material properties
-				Vec3* albedo = &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].albedo;
-				Vec3* emission = &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].emission;
-				Vec3* extinction = &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].extinction;
+				Vec3* albedo = &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].albedo;
+				Vec3* emission = &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].emission;
+				Vec3* extinction = &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].extinction;
 
 				objectPropChanged |= ImGui::ColorEdit3("Albedo", (float*)albedo, 0);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Color of the object.");
-				objectPropChanged |= ImGui::SliderFloat("Metallic", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].metallic, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Metallic", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].metallic, 0.0f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("How metalness of the object.");
-				objectPropChanged |= ImGui::SliderFloat("Roughness", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].roughness, 0.001f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Roughness", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].roughness, 0.001f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("How smoothness of the object. Setting this to 0 and metallic to max will result in a mirror.");
-				objectPropChanged |= ImGui::SliderFloat("Specular", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].specular, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Specular", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].specular, 0.0f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Intensity of specular highlights.");
-				objectPropChanged |= ImGui::SliderFloat("SpecularTint", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].specularTint, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("SpecularTint", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].specularTint, 0.0f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Tint of the specular highlights.");
-				objectPropChanged |= ImGui::SliderFloat("Subsurface", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].subsurface, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Subsurface", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].subsurface, 0.0f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Amount of subsurface scattering on the object.");
-				objectPropChanged |= ImGui::SliderFloat("Anisotropic", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].anisotropic, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("Sheen", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].sheen, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("SheenTint", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].sheenTint, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("Clearcoat", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].clearcoat, 0.0f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("clearcoatRoughness", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].clearcoatRoughness, 0.001f, 1.0f);
-				objectPropChanged |= ImGui::SliderFloat("Transmission", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].transmission, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Anisotropic", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].anisotropic, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Sheen", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].sheen, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("SheenTint", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].sheenTint, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Clearcoat", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].clearcoat, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("clearcoatRoughness", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].clearcoatRoughness, 0.001f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Transmission", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].transmission, 0.0f, 1.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Amount of transmission/glass-ness. ");
-				objectPropChanged |= ImGui::SliderFloat("IOR", &scene->materials[scene->meshInstances[GlobalState.selectedInstance].materialID].ior, 1.001f, 2.0f);
+				objectPropChanged |= ImGui::SliderFloat("IOR", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].ior, 1.001f, 2.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Index of refraction of the object. Only used with transmission.");
 				objectPropChanged |= ImGui::ColorEdit3("Extinction", (float*)extinction, 0);
@@ -609,27 +604,27 @@ void MainLoop(void* arg) // Its the main loop !
 					float projMatrix[16];
 
 					auto io = ImGui::GetIO();
-					scene->camera->ComputeViewProjectionMatrix(viewMatrix, projMatrix, io.DisplaySize.x / io.DisplaySize.y);
-					Mat4 xform = scene->meshInstances[GlobalState.selectedInstance].transform;
+					GlobalState.scene->camera->ComputeViewProjectionMatrix(viewMatrix, projMatrix, io.DisplaySize.x / io.DisplaySize.y);
+					Mat4 xform = GlobalState.scene->meshInstances[GlobalState.selectedInstance].transform;
 
 					EditTransform(viewMatrix, projMatrix, (float*)&xform);
 
-					if (memcmp(&xform, &scene->meshInstances[GlobalState.selectedInstance].transform, sizeof(float) * 16))
+					if (memcmp(&xform, &GlobalState.scene->meshInstances[GlobalState.selectedInstance].transform, sizeof(float) * 16))
 					{
-						scene->meshInstances[GlobalState.selectedInstance].transform = xform;
+						GlobalState.scene->meshInstances[GlobalState.selectedInstance].transform = xform;
 						objectPropChanged = true;
 					}
 				}
 
 				if (objectPropChanged)
 				{
-					scene->RebuildInstances();
+					GlobalState.scene->RebuildInstances();
 				}
 			}
 			ImGui::End();
 		}
 		if (GlobalState.noUi == true) {
-			scene->camera->isMoving = false;
+			GlobalState.scene->camera->isMoving = false;
 		}
 		if (GlobalState.noUi == true && GlobalState.displaySampleCounter == true) {
 			// Window flags
@@ -649,19 +644,19 @@ void MainLoop(void* arg) // Its the main loop !
 			if (no_move)            window_flags |= ImGuiWindowFlags_NoMove;
 			if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
 
-			scene->camera->isMoving = false;
+			GlobalState.scene->camera->isMoving = false;
 
 			ImGui::SetNextWindowSize({ 340, 64 });
 			ImGui::SetNextWindowPos({ 0, 1 });
 			ImGui::Begin("samplecount", nullptr, window_flags);
 
-			ImGui::Text("Rendered samples: %d ", renderer->GetSampleCount());
+			ImGui::Text("Rendered samples: %d ", GlobalState.renderer->GetSampleCount());
 			ImGui::End();
 
 			if (optionsChanged)
 			{
-				scene->renderOptions = renderOptions;
-				scene->camera->isMoving = true;
+				GlobalState.scene->renderOptions = renderOptions;
+				GlobalState.scene->camera->isMoving = true;
 			}
 
 		}
@@ -839,12 +834,12 @@ int main(int argc, char** argv)
 
 	if (!sceneFile.empty())
 	{
-		scene = new Scene();
+		GlobalState.scene = new Scene();
 
-		if (!LoadSceneFromFile(sceneFile, scene, renderOptions))
+		if (!LoadSceneFromFile(sceneFile, GlobalState.scene, renderOptions))
 			exit(0);
 
-		scene->renderOptions = renderOptions;
+		GlobalState.scene->renderOptions = renderOptions;
 		if (!GlobalState.threadMode) { std::cout << "Scene loaded\n"; }
 	}
 	else
@@ -989,13 +984,10 @@ int main(int argc, char** argv)
 	colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 	colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 
-	//End of UI style code.
-
 	ImGui_ImplSDL2_InitForOpenGL(loopdata.mWindow, loopdata.mGLContext);
 
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
-	//ImGui::StyleColorsDark();
 
 	if (!InitRenderer())
 		return 1;
@@ -1005,8 +997,8 @@ int main(int argc, char** argv)
 		MainLoop(&loopdata);
 	}
 
-	delete renderer;
-	delete scene;
+	delete GlobalState.renderer;
+	delete GlobalState.scene;
 
 	// Cleanup
 	ImGui_ImplOpenGL3_Shutdown();
