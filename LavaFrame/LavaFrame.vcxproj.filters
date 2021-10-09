@@ -464,6 +464,9 @@
     <ClInclude Include="Export.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="thirdparty\oidn\lib\OpenImageDenoise.lib">
@@ -487,5 +490,10 @@
     <Library Include="thirdparty\SDL2\lib\x86\SDL2test.lib">
       <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
     </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="App.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

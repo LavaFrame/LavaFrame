@@ -323,6 +323,7 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
     <ClInclude Include="Program.h" />
     <ClInclude Include="Quad.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderIncludes.h" />
@@ -364,6 +365,9 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
     <Library Include="thirdparty\SDL2\lib\x86\SDL2.lib" />
     <Library Include="thirdparty\SDL2\lib\x86\SDL2main.lib" />
     <Library Include="thirdparty\SDL2\lib\x86\SDL2test.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="App.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
