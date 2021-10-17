@@ -28,4 +28,4 @@ The LavaFrame project is based on [this](https://github.com/knightcrawler25/GLSL
 - OIDN upgrade
 - [Blender Integration (WIP)](https://github.com/LavaFrame/LavaFrame-Blender-Integration-Addon)
 - Build automation (currently only on MSBuild - this will be changed later on.)
-- Some other stuff I forgot.
+- Native AMD support
