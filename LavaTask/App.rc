@@ -67,12 +67,10 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "FileDescription", "LavaTask render queueing system"
-            VALUE "FileVersion", "0.1.3.0"
+            VALUE "FileDescription", "LavaTask render management system"
             VALUE "InternalName", "LavaTask.exe"
             VALUE "OriginalFilename", "LavaTask.exe"
             VALUE "ProductName", "LavaTask"
-            VALUE "ProductVersion", "0.1.3.0"
         END
     END
     BLOCK "VarFileInfo"

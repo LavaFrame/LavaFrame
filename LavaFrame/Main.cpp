@@ -396,11 +396,6 @@ void MainLoop(void* arg) // Its the main loop !
 				}
 			}
 
-			// Controls instruction - these will go into the documentation since they are universal.
-			// ImGui::BulletText("LMB + drag to rotate");
-			// ImGui::BulletText("MMB + drag to pan");
-			// ImGui::BulletText("RMB + drag to zoom in/out");
-
 			ImGui::Separator();
 			ImGui::Text("\n");
 
@@ -944,9 +939,7 @@ int main(int argc, char** argv)
 	colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 
 	ImGui_ImplSDL2_InitForOpenGL(loopdata.mWindow, loopdata.mGLContext);
-
 	ImGui_ImplOpenGL3_Init(glsl_version);
-
 
 	if (!InitRenderer())
 		return 1;

@@ -68,11 +68,9 @@ BEGIN
         BLOCK "000004b0"
         BEGIN
             VALUE "FileDescription", "LavaFrame Renderer"
-            VALUE "FileVersion", "1.0.0.0"
             VALUE "InternalName", "LavaFrame.exe"
             VALUE "OriginalFilename", "LavaFrame.exe"
             VALUE "ProductName", "LavaFrame"
-            VALUE "ProductVersion", "1.0.0.0"
         END
     END
     BLOCK "VarFileInfo"
