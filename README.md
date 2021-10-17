@@ -14,10 +14,14 @@ Launch the renderer by double-clicking the executable or launching it from the c
 ## Contributing
 Pull requests are welcome ! For major changes, please open an issue first to discuss what you would like to change.
 
+## Blender integration
+Check out [this repository](https://github.com/LavaFrame/LavaFrame-Blender-Integration-Addon) and its dev branch.
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
 
 The LavaFrame project is based on [this](https://github.com/knightcrawler25/GLSL-PathTracer) GLSL path tracing project by knightcrawler25 - differences from the original include :
+- LavaTask task queueing and timing system
 - Broader AMD support
 - New UI
 - More export options
