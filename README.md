@@ -17,6 +17,9 @@ Pull requests are welcome ! For major changes, please open an issue first to dis
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
 
+## Blender integration
+Check out [this repository](https://github.com/LavaFrame/LavaFrame-Blender-Integration-Addon) and its dev branch.
+
 The LavaFrame project is based on [this](https://github.com/knightcrawler25/GLSL-PathTracer) GLSL path tracing project by knightcrawler25 - differences from the original include :
 - New UI
 - More export options
