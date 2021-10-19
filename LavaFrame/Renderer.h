@@ -20,8 +20,8 @@ namespace LavaFrame
         RenderOptions()
         {
             maxDepth = 2;
-            tileWidth = 128;
-            tileHeight = 128;
+            tileWidth = 512;
+            tileHeight = 512;
             useEnvMap = false;
             resolution = iVec2(1280, 720);
             hdrMultiplier = 1.0f;
@@ -31,6 +31,7 @@ namespace LavaFrame
             bgColor = Vec3(0.5f, 0.5f, 0.5f);
             denoiserFrameCnt = 50;
             enableDenoiser = false;
+            useAces = true;
         }
         iVec2 resolution;
         int maxDepth;
@@ -40,6 +41,7 @@ namespace LavaFrame
         bool enableRR;
         bool enableDenoiser;
         bool useConstantBg;
+        bool useAces;
         int RRDepth;
         int denoiserFrameCnt;
         float hdrMultiplier;

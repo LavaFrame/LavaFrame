@@ -67,19 +67,12 @@ namespace LavaFrame
         // Shaders
         //----------------------------------------------------------
 
-        std::string toneMapShaderName = "postprocess.igtnmp";
+        std::string toneMapShaderName = "postprocess.glsl";
 
         ShaderInclude::ShaderSource vertexShaderSrcObj = ShaderInclude::load(shadersDirectory + "common/vertex.glsl");
         ShaderInclude::ShaderSource pathTraceShaderSrcObj = ShaderInclude::load(shadersDirectory + "tiled_renderer.glsl");
         ShaderInclude::ShaderSource pathTraceShaderLowResSrcObj = ShaderInclude::load(shadersDirectory + "progressive.glsl");
-        //ShaderInclude::ShaderSource accumShaderSrcObj = ShaderInclude::load(shadersDirectory + "accumulation.glsl"); Old accumulation shader
         ShaderInclude::ShaderSource outputShaderSrcObj = ShaderInclude::load(shadersDirectory + "output.glsl");
-        if (GlobalState.useNeutralTonemap == true) {
-            toneMapShaderName = "postprocess_neutral.glsl";
-        }
-        else {
-            toneMapShaderName = "postprocess.glsl";
-        }
         ShaderInclude::ShaderSource tonemapShaderSrcObj = ShaderInclude::load(shadersDirectory + toneMapShaderName);
 
 
@@ -96,6 +89,8 @@ namespace LavaFrame
         }
         if (scene->renderOptions.useConstantBg)
             defines += "#define CONSTANT_BG\n";
+        if (scene->renderOptions.useAces)
+            defines += "#define USE_ACES\n";
 
         if (defines.size() > 0)
         {
@@ -114,9 +109,18 @@ namespace LavaFrame
             pathTraceShaderLowResSrcObj.src.insert(idx + 1, defines);
         }
 
+        if (defines.size() > 0)
+        {
+            size_t idx = tonemapShaderSrcObj.src.find("#version");
+            if (idx != -1)
+                idx = tonemapShaderSrcObj.src.find("\n", idx);
+            else
+                idx = 0;
+            tonemapShaderSrcObj.src.insert(idx + 1, defines);
+        }
+
         pathTraceShader = LoadShaders(vertexShaderSrcObj, pathTraceShaderSrcObj);
         pathTraceShaderLowRes = LoadShaders(vertexShaderSrcObj, pathTraceShaderLowResSrcObj);
-        //accumShader = LoadShaders(vertexShaderSrcObj, accumShaderSrcObj);
         outputShader = LoadShaders(vertexShaderSrcObj, outputShaderSrcObj);
         tonemapShader = LoadShaders(vertexShaderSrcObj, tonemapShaderSrcObj);
 
@@ -126,14 +130,14 @@ namespace LavaFrame
         //----------------------------------------------------------
         // FBO Setup
         //----------------------------------------------------------
-        //Create FBOs for path trace shader (Tiled)
+        // Create FBOs for path trace shader (Tiled)
         if (GlobalState.useDebug) {
             printf("Buffer pathTraceFBO\n");
         }
         glGenFramebuffers(1, &pathTraceFBO);
         glBindFramebuffer(GL_FRAMEBUFFER, pathTraceFBO);
 
-        //Create Texture for FBO
+        // Create Texture for FBO
         glGenTextures(1, &pathTraceTexture);
         glBindTexture(GL_TEXTURE_2D, pathTraceTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, tileWidth, tileHeight, 0, GL_RGB, GL_FLOAT, 0);
@@ -142,14 +146,14 @@ namespace LavaFrame
         glBindTexture(GL_TEXTURE_2D, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pathTraceTexture, 0);
 
-        //Create FBOs for path trace shader (Progressive)
+        // Create FBOs for path trace shader (Progressive)
         if (GlobalState.useDebug) {
             printf("Buffer pathTraceFBOLowRes\n");
         }
         glGenFramebuffers(1, &pathTraceFBOLowRes);
         glBindFramebuffer(GL_FRAMEBUFFER, pathTraceFBOLowRes);
 
-        //Create Texture for FBO
+        // Create Texture for FBO
         glGenTextures(1, &pathTraceTextureLowRes);
         glBindTexture(GL_TEXTURE_2D, pathTraceTextureLowRes);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, screenSize.x * pixelRatio, screenSize.y * pixelRatio, 0, GL_RGB, GL_FLOAT, 0);
@@ -160,14 +164,14 @@ namespace LavaFrame
         glBindTexture(GL_TEXTURE_2D, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pathTraceTextureLowRes, 0);
 
-        //Create FBOs for accum buffer
+        // Create FBOs for accum buffer
         if (GlobalState.useDebug) {
             printf("Buffer accumFBO\n");
         }
         glGenFramebuffers(1, &accumFBO);
         glBindFramebuffer(GL_FRAMEBUFFER, accumFBO);
 
-        //Create Texture for FBO
+        // Create Texture for FBO
         glGenTextures(1, &accumTexture);
         glBindTexture(GL_TEXTURE_2D, accumTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, GLsizei(screenSize.x), GLsizei(screenSize.y), 0, GL_RGB, GL_FLOAT, 0);
@@ -176,14 +180,14 @@ namespace LavaFrame
         glBindTexture(GL_TEXTURE_2D, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, accumTexture, 0);
 
-        //Create FBOs for tile output shader
+        // Create FBOs for tile output shader
         if (GlobalState.useDebug) {
             printf("Buffer outputFBO\n");
         }
         glGenFramebuffers(1, &outputFBO);
         glBindFramebuffer(GL_FRAMEBUFFER, outputFBO);
 
-        //Create Texture for FBO
+        // Create Texture for FBO
         glGenTextures(1, &tileOutputTexture[0]);
         glBindTexture(GL_TEXTURE_2D, tileOutputTexture[0]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, screenSize.x, screenSize.y, 0, GL_RGB, GL_FLOAT, 0);
@@ -200,7 +204,7 @@ namespace LavaFrame
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tileOutputTexture[currentBuffer], 0);
 
-        //For Denoiser
+        // For Denoiser
         denoiserInputFramePtr = new Vec3[screenSize.x * screenSize.y];
         frameOutputPtr = new Vec3[screenSize.x * screenSize.y];
         denoised = false;
@@ -479,6 +483,7 @@ namespace LavaFrame
         glUniform1f(glGetUniformLocation(shaderObject, "camera.focalDist"), scene->camera->focalDist);
         glUniform1f(glGetUniformLocation(shaderObject, "camera.aperture"), scene->camera->aperture);
         glUniform1i(glGetUniformLocation(shaderObject, "useEnvMap"), scene->hdrData == nullptr ? false : scene->renderOptions.useEnvMap);
+        glUniform1i(glGetUniformLocation(shaderObject, "useAces"), 1);
         glUniform1f(glGetUniformLocation(shaderObject, "hdrMultiplier"), scene->renderOptions.hdrMultiplier);
         glUniform1i(glGetUniformLocation(shaderObject, "maxDepth"), scene->renderOptions.maxDepth);
         glUniform1i(glGetUniformLocation(shaderObject, "tileX"), tileX);
@@ -497,6 +502,7 @@ namespace LavaFrame
         glUniform1f(glGetUniformLocation(shaderObject, "camera.focalDist"), scene->camera->focalDist);
         glUniform1f(glGetUniformLocation(shaderObject, "camera.aperture"), scene->camera->aperture);
         glUniform1i(glGetUniformLocation(shaderObject, "useEnvMap"), scene->hdrData == nullptr ? false : scene->renderOptions.useEnvMap);
+        glUniform1i(glGetUniformLocation(shaderObject, "useAces"), scene->renderOptions.useAces);
         glUniform1f(glGetUniformLocation(shaderObject, "hdrMultiplier"), scene->renderOptions.hdrMultiplier);
         glUniform1i(glGetUniformLocation(shaderObject, "maxDepth"), scene->camera->isMoving || scene->instancesModified ? 2 : scene->renderOptions.maxDepth);
         glUniform3f(glGetUniformLocation(shaderObject, "camera.position"), scene->camera->position.x, scene->camera->position.y, scene->camera->position.z);

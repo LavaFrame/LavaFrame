@@ -109,7 +109,7 @@ bool InitRenderer() // Create the tiled renderer and inform the user that the pr
 	GlobalState.renderer = new TiledRenderer(GlobalState.scene, GlobalState.shadersDir);
 	GlobalState.renderer->Init();
 	if (!GlobalState.threadMode) {
-		printf("LavaFrame renderer started\n"); 
+		if (GlobalState.useDebug) printf("Renderer started.\n");
 	}
 	else { 
 		printf(("\nLavaFrame thread " + GlobalState.threadID + " started, " + GlobalState.releaseVersion).c_str());
@@ -441,13 +441,14 @@ void MainLoop(void* arg) // Its the main loop !
 				ImGui::Separator();
 				requiresReload |= ImGui::Checkbox("Enable constant lighting", &renderOptions.useConstantBg);
 				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Creates a constant sourrounding color lighting the scene.");
+					ImGui::SetTooltip("Creates a constant surrounding color lighting the scene.");
 				optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
 				ImGui::Separator();
 				ImGui::Checkbox("Enable denoiser", &renderOptions.enableDenoiser);
 				ImGui::SliderInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 1, 250);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Run the denoiser and update the view every x samples.");
+				requiresReload |= ImGui::Checkbox("Use ACES tonemapping", &renderOptions.useAces);
 
 				if (requiresReload)
 				{
@@ -669,11 +670,11 @@ int main(int argc, char** argv)
 			break;
 
 		case strint("-n"):
-			GlobalState.useNeutralTonemap = true;
+			renderOptions.useAces = false;
 			break;
 
 		case strint("--neutral"):
-			GlobalState.useNeutralTonemap = true;
+			renderOptions.useAces = false;
 			break;
 
 		case strint("-ms"):
@@ -838,8 +839,6 @@ int main(int argc, char** argv)
 		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
 	}
 	loopdata.mWindow = SDL_CreateWindow("LavaFrame", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, renderOptions.resolution.x, renderOptions.resolution.y, window_flags);
-
-
 
 	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 

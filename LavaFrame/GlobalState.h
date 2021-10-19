@@ -15,7 +15,6 @@ struct LavaFrameState {
 	bool noWindow = false;
 	bool useDebug = false;
 	bool displaySampleCounter = false;
-	bool useNeutralTonemap = false;
 	int maxSamples = -1;
 	int sampleSceneIndex = 0;
 	int selectedInstance = 0;

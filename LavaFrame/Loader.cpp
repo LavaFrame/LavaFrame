@@ -243,6 +243,7 @@ namespace LavaFrame
                     sscanf(line, " tileHeight %i", &renderOptions.tileHeight);
                     sscanf(line, " enableRR %s", enableRR);
                     sscanf(line, " RRDepth %i", &renderOptions.RRDepth);
+                    sscanf(line, " useAces %s", &renderOptions.useAces);
                 }
 
                 if (strcmp(envMap, "None") != 0)

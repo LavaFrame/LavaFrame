@@ -15,11 +15,14 @@ precision highp sampler2DArray;
 out vec4 color;
 in vec2 TexCoords;
 
+#include common/globals.glsl
+#include common/uniforms.glsl
+
 uniform sampler2D pathTraceTexture;
 uniform float invSampleCounter;
 
 
-vec4 ToneMap(in vec4 c, float limit)
+vec4 tonemapACES(in vec4 c, float limit)
 {
     float a = 2.51f;
     float b = 0.03f;
@@ -32,8 +35,22 @@ vec4 ToneMap(in vec4 c, float limit)
     return clamp((c * (a * c + b)) / (c * (y * c + d) + e), 0.0, 1.0);
 }
 
+vec4 tonemap(in vec4 c, float limit)
+{
+    float luminance = 0.3*c.x + 0.6*c.y + 0.1*c.z;
+
+    return c * 1.0 / (1.0 + luminance / limit);
+}
+
 void main()
 {
     color = texture(pathTraceTexture, TexCoords) * invSampleCounter;
-    color = pow(ToneMap(color, 1.5), vec4(1.0 / 2.2));
+    
+    #ifdef USE_ACES
+    color = pow(tonemapACES(color, 1.5), vec4(1.0 / 2.2));
+    #endif
+    
+    #ifndef USE_ACES
+    color = pow(tonemap(color, 1.5), vec4(1.0 / 2.2));
+    #endif
 }

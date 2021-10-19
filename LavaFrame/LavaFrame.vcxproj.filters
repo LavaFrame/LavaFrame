@@ -134,9 +134,6 @@
     <None Include="..\build_include\license">
       <Filter>Resource Files\build_include</Filter>
     </None>
-    <None Include="..\shaders\accumulation.glsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
     <None Include="..\shaders\output.glsl">
       <Filter>Source Files\shaders</Filter>
     </None>
@@ -150,9 +147,6 @@
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="..\shaders\tiled_renderer.glsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="..\shaders\tonemap.glsl">
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="..\shaders\common\anyhit.glsl">
@@ -213,9 +207,6 @@
       <Filter>Source Files\shaders_amd</Filter>
     </None>
     <None Include="..\shaders_amd\tiled_renderer.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\tonemap.glsl">
       <Filter>Source Files\shaders_amd</Filter>
     </None>
     <None Include="..\shaders_amd\common\anyhit.glsl">

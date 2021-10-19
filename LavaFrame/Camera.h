@@ -32,6 +32,9 @@ namespace LavaFrame
         float focalDist;
         float aperture;
         float fov;
+
+        bool chromaticAberration;
+
         bool isMoving;
 
     private:
