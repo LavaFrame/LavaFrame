@@ -285,9 +285,6 @@
     <ClCompile Include="thirdparty\imgui\imgui.cpp">
       <Filter>Source Files\thirdparty\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="thirdparty\imgui\imgui_demo.cpp">
-      <Filter>Source Files\thirdparty\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="thirdparty\imgui\imgui_draw.cpp">
       <Filter>Source Files\thirdparty\imgui</Filter>
     </ClCompile>
@@ -317,6 +314,9 @@
     </ClCompile>
     <ClCompile Include="thirdparty\RadeonRays\split_bvh.cpp">
       <Filter>Source Files\thirdparty\RadeonRays</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\imgui\imgui_tables.cpp">
+      <Filter>Source Files\thirdparty\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

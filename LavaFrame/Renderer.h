@@ -93,5 +93,6 @@ namespace LavaFrame
         virtual float GetProgress() const = 0;
         virtual int GetSampleCount() const = 0;
         virtual void GetOutputBuffer(unsigned char**, int &w, int &h) = 0;
+        virtual uint32_t SetViewport(int width, int height) = 0;
     };
 }

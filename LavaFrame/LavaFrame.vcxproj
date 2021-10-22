@@ -294,11 +294,11 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
     <ClCompile Include="thirdparty\gl3w\GL\gl3w.c" />
     <ClCompile Include="thirdparty\imguizmo\ImGuizmo.cpp" />
     <ClCompile Include="thirdparty\imgui\imgui.cpp" />
-    <ClCompile Include="thirdparty\imgui\imgui_demo.cpp" />
     <ClCompile Include="thirdparty\imgui\imgui_draw.cpp" />
     <ClCompile Include="thirdparty\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="thirdparty\imgui\imgui_impl_sdl.cpp" />
     <ClCompile Include="thirdparty\imgui\imgui_stdlib.cpp" />
+    <ClCompile Include="thirdparty\imgui\imgui_tables.cpp" />
     <ClCompile Include="thirdparty\imgui\imgui_widgets.cpp" />
     <ClCompile Include="thirdparty\RadeonRays\bbox.cpp" />
     <ClCompile Include="thirdparty\RadeonRays\bvh.cpp" />

@@ -23,3 +23,24 @@ std::string wstring_convert_string(const std::wstring& wstr)
 
     return converterX.to_bytes(wstr);
 }
+
+inline const char* const bool_convert_string(bool b)
+{
+    return b ? "true" : "false";
+}
+
+int find_nth(const std::string& str, const std::string& findTarget, int nth)
+{
+    size_t  pos = 0;
+    int     cnt = 0;
+
+    while (cnt != nth)
+    {
+        pos += 1;
+        pos = str.find(findTarget, pos);
+        if (pos == std::string::npos)
+            return -1;
+        cnt++;
+    }
+    return pos;
+}

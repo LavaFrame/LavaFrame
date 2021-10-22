@@ -116,8 +116,8 @@ namespace LavaFrame
                     sscanf(line, " ior %f", &material.ior);
                     sscanf(line, " extinction %f %f %f", &material.extinction.x, &material.extinction.y, &material.extinction.z);
                     sscanf(line, " albedoTexture %s", albedoTexName);
-                    sscanf(line, " metallicRoughnessTexture %s", metallicRoughnessTexName); //new
-                    sscanf(line, " normalTexture %s", normalTexName); //new
+                    sscanf(line, " metallicRoughnessTexture %s", metallicRoughnessTexName);
+                    sscanf(line, " normalTexture %s", normalTexName);
                 }
 
                 // Albedo Texture

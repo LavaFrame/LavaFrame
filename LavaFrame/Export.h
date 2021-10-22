@@ -13,7 +13,7 @@ void SaveFrame(const std::string filename) // Saves current frame as a png
 	int w, h;
 	GlobalState.renderer->GetOutputBuffer(&data, w, h);
 	stbi_flip_vertically_on_write(true);
-	stbi_write_png(filename.c_str(), w, h, 3, data, w * 3);
+	stbi_write_png(std::string(GlobalState.output_path + filename).c_str(), w, h, 3, data, w * 3);
 	delete data;
 }
 void SaveFrameTGA(const std::string filename) // Saves current frame as a png
@@ -22,7 +22,7 @@ void SaveFrameTGA(const std::string filename) // Saves current frame as a png
 	int w, h;
 	GlobalState.renderer->GetOutputBuffer(&data, w, h);
 	stbi_flip_vertically_on_write(true);
-	stbi_write_tga(filename.c_str(), w, h, 3, data);
+	stbi_write_tga(std::string(GlobalState.output_path + filename).c_str(), w, h, 3, data);
 	delete data;
 }
 void SaveFrameJPG(const std::string filename, int jpgQuality) // Saves current frame as a bitmap-JPG
@@ -31,7 +31,7 @@ void SaveFrameJPG(const std::string filename, int jpgQuality) // Saves current f
 	int w, h;
 	GlobalState.renderer->GetOutputBuffer(&data, w, h);
 	stbi_flip_vertically_on_write(true);
-	stbi_write_jpg(filename.c_str(), w, h, 3, data, jpgQuality);
+	stbi_write_jpg(std::string(GlobalState.output_path + filename).c_str(), w, h, 3, data, jpgQuality);
 	delete data;
 }
 void SaveFrameBMP(const std::string filename) // Saves current frame as a bitmap-JPG
@@ -40,6 +40,6 @@ void SaveFrameBMP(const std::string filename) // Saves current frame as a bitmap
 	int w, h;
 	GlobalState.renderer->GetOutputBuffer(&data, w, h);
 	stbi_flip_vertically_on_write(true);
-	stbi_write_bmp(filename.c_str(), w, h, 3, data);
+	stbi_write_bmp(std::string(GlobalState.output_path + filename).c_str(), w, h, 3, data);
 	delete data;
 }

@@ -19,6 +19,9 @@ struct LavaFrameState {
 	int sampleSceneIndex = 0;
 	int selectedInstance = 0;
 	int currentJpgQuality = 95;
+	int displayX;
+	int displayY;
+	const char* output_path = "output\\";
 	std::string exportName = "";
 	std::string exportType = "png";
 	std::string threadID = "0";

@@ -32,6 +32,7 @@
 #include "GlobalState.h"
 #include "Export.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
@@ -47,6 +48,12 @@ std::vector<std::string> sceneFiles;
 
 LavaFrameState GlobalState;
 RenderOptions renderOptions;
+
+ImVec2 viewportPanelSize;
+ImVec2 viewportPanelMaxSize;
+bool viewportFocused = false;
+bool viewportHovered = false;
+bool viewportClicked = false;
 
 struct LoopData
 {
@@ -108,6 +115,8 @@ bool InitRenderer() // Create the tiled renderer and inform the user that the pr
 	delete GlobalState.renderer;
 	GlobalState.renderer = new TiledRenderer(GlobalState.scene, GlobalState.shadersDir);
 	GlobalState.renderer->Init();
+	viewportPanelSize.x = GlobalState.scene->renderOptions.resolution.x;
+	viewportPanelSize.y = GlobalState.scene->renderOptions.resolution.y;
 	if (!GlobalState.threadMode) {
 		if (GlobalState.useDebug) printf("Renderer started.\n");
 	}
@@ -118,43 +127,107 @@ bool InitRenderer() // Create the tiled renderer and inform the user that the pr
 	return true;
 }
 
-void Render() // Main Render function for ImGUI and the renderer.
+void Render()
 {
 	auto io = ImGui::GetIO();
 	GlobalState.renderer->Render();
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-	GlobalState.renderer->Present();
+	//Viewport Setup
 
-	// Rendering of window
+	bool no_titlebar = true;
+	bool no_menu = false;
+	bool no_move = false;
+	bool no_resize = false;
+	bool window_override_size = true;
+	bool window_override_pos = true;
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.WindowPadding = { 0, 0 };
+
+	if (!viewportClicked) no_move = false;
+	else no_move = true;
+
+	if (window_override_pos) {
+		ImGui::SetNextWindowPos({ static_cast<float>(GlobalState.displayX / 5), 0 });
+		window_override_pos = false;
+	}
+	if (window_override_size) {
+		ImGui::SetNextWindowSize({ static_cast<float>((GlobalState.displayX / 5) * 3),  static_cast<float>(GlobalState.displayY) });
+		window_override_size = false;
+	}
+
+	ImGuiWindowFlags window_flags = 0;
+	if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
+	if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
+	if (no_move)            window_flags |= ImGuiWindowFlags_NoMove;
+	if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
+
+	ImGui::Begin("Viewport", NULL, window_flags);
+	{
+		viewportFocused = ImGui::IsWindowFocused();
+		viewportHovered = ImGui::IsWindowHovered();
+		viewportClicked = ImGui::IsItemClicked();
+		viewportPanelSize = ImGui::GetContentRegionAvail();
+
+		if (GlobalState.scene->renderOptions.resolution.x != viewportPanelSize.x || GlobalState.scene->renderOptions.resolution.y != viewportPanelSize.y)
+		{
+			GlobalState.scene->renderOptions.resolution.x = viewportPanelSize.x;
+			GlobalState.scene->renderOptions.resolution.y = viewportPanelSize.y;
+			GlobalState.scene->camera->isMoving = true;
+			InitRenderer();
+		}
+
+		if (GlobalState.scene->camera->isMoving)
+		{
+			GlobalState.renderer->Present();
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, viewportPanelSize.x, viewportPanelSize.y);
+		uint32_t tex = GlobalState.renderer->SetViewport(10, 10);
+		//ImGui::SetCursorPos({ ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.5f });
+		ImGui::Image((void*)tex, { viewportPanelSize.x, viewportPanelSize.y}, ImVec2(0, 1), ImVec2(1, 0));
+
+		ImGui::End();
+
+		style.WindowPadding = { 8, 8 };
+	}
 	ImGui::Render();
+	ImGui::UpdatePlatformWindows();
+
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void Update(float secondsElapsed)
 {
 	GlobalState.keyPressed = false;
-	if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) && ImGui::IsAnyMouseDown() && !ImGuizmo::IsOver() && !GlobalState.noMove) // Mouse control
+	if (ImGui::IsAnyMouseDown())
 	{
-		if (ImGui::IsMouseDown(0))
+		ImVec2 mousePos = ImGui::GetMousePos();
+		if (viewportHovered) // Chech if mouse is on viewport TODO(PIXEL): object mouse picking
 		{
-			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(0, 0);
-			GlobalState.scene->camera->OffsetOrientation(mouseDelta.x, mouseDelta.y); // Move camera in 3D
-			ImGui::ResetMouseDragDelta(0);
+			if (ImGui::IsMouseDown(0))
+			{
+				//Rotate Mouse around center
+				ImVec2 mouseDelta = ImGui::GetMouseDragDelta(0, 0);
+				GlobalState.scene->camera->OffsetOrientation(mouseDelta.x, mouseDelta.y);
+				ImGui::ResetMouseDragDelta(0);
+			}
+			else if (ImGui::IsMouseDown(1))
+			{
+				//Move mouse the in Z axis
+				ImVec2 mouseDelta = ImGui::GetMouseDragDelta(1, 0);
+				GlobalState.scene->camera->SetRadius(GlobalState.mouseSensitivity * mouseDelta.y);
+				ImGui::ResetMouseDragDelta(1);
+			}
+			else if (ImGui::IsMouseDown(2))
+			{
+				//Move mouse the in the XY Plane
+				ImVec2 mouseDelta = ImGui::GetMouseDragDelta(2, 0);
+				GlobalState.scene->camera->Strafe(GlobalState.mouseSensitivity * mouseDelta.x, GlobalState.mouseSensitivity * mouseDelta.y);
+				ImGui::ResetMouseDragDelta(2);
+			}
+			GlobalState.scene->camera->isMoving = true;
 		}
-		else if (ImGui::IsMouseDown(1))
-		{
-			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(1, 0);
-			GlobalState.scene->camera->SetRadius(GlobalState.mouseSensitivity * mouseDelta.y); // "Scroll" camera in 3D
-			ImGui::ResetMouseDragDelta(1);
-		}
-		else if (ImGui::IsMouseDown(2))
-		{
-			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(2, 0);
-			GlobalState.scene->camera->Strafe(GlobalState.mouseSensitivity * mouseDelta.x, GlobalState.mouseSensitivity * mouseDelta.y); //Move the camera sidewards
-			ImGui::ResetMouseDragDelta(2);
-		}
-		GlobalState.scene->camera->isMoving = true; // Render preview frames
 	}
 
 
@@ -266,6 +339,7 @@ void EditTransform(const float* view, const float* projection, float* matrix)
 void MainLoop(void* arg) // Its the main loop !
 {
 	LoopData& loopdata = *(LoopData*)arg;
+	SDL_GetWindowSize(loopdata.mWindow, &GlobalState.displayX, &GlobalState.displayY);
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -294,7 +368,7 @@ void MainLoop(void* arg) // Its the main loop !
 	ImGui_ImplSDL2_NewFrame(loopdata.mWindow);
 	ImGui::NewFrame();
 	ImGuizmo::SetOrthographic(false);
-
+	ImGui::DockSpaceOverViewport();
 	ImGuizmo::BeginFrame();
 	{
 		// io.Fonts->GetTexDataAsAlpha8(); Old font handling
@@ -303,11 +377,12 @@ void MainLoop(void* arg) // Its the main loop !
 		if (GlobalState.noUi == false) {
 
 			// Window flags
-			static bool no_titlebar = false;
-			static bool no_menu = false;
-			static bool no_move = true;
-			static bool no_resize = false;
-			static bool window_override_size = true;
+			bool no_titlebar = true;
+			bool no_menu = false;
+			bool no_move = false;
+			bool no_resize = true;
+			bool window_override_size = true;
+			bool window_override_pos = true;
 
 			ImGuiWindowFlags window_flags = 0;
 			if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -317,54 +392,65 @@ void MainLoop(void* arg) // Its the main loop !
 
 			GlobalState.scene->camera->isMoving = false;
 
-			ImGui::SetNextWindowPos({ 0, 1 });
+			if (window_override_pos) {
+				ImGui::SetNextWindowPos({ 0, 0 });
+				window_override_pos = false;
+			}
+			
 			if (window_override_size) {
-				ImGui::SetNextWindowSize({ 340, 512 });
+				ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
 				window_override_size = false;
 			}
-			ImGui::Begin(GlobalState.versionString.c_str(), nullptr, window_flags); //Main panel
+
+			ImGui::Begin("Panel1", nullptr, window_flags); //Main panel
 
 			if (ImGui::BeginMenuBar()) // Export menu
 			{
-				if (ImGui::BeginMenu("Export"))
+				if (ImGui::BeginMenu("File"))
 				{
-					if (ImGui::MenuItem("Export as JPG", "")) {
-						if (GlobalState.exportName == "") {
-							SaveFrameJPG("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
+					if (ImGui::BeginMenu("Export")) {
+						if (ImGui::MenuItem("Export as JPG", "")) {
+							if (GlobalState.exportName == "") {
+								SaveFrameJPG("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
+							}
+							else {
+								SaveFrameJPG("./" + GlobalState.exportName + ".jpg", 80);
+							}
 						}
-						else {
-							SaveFrameJPG("./" + GlobalState.exportName + ".jpg", 80);
+						if (ImGui::MenuItem("Export as PNG", "")) {
+							if (GlobalState.exportName == "") {
+								SaveFrame("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".png");
+							}
+							else {
+								SaveFrame("./" + GlobalState.exportName + ".png");
+							}
 						}
-					}
-					if (ImGui::MenuItem("Export as PNG", "")) {
-						if (GlobalState.exportName == "") {
-							SaveFrame("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".png");
+						if (ImGui::MenuItem("Export as TGA", "")) {
+							if (GlobalState.exportName == "") {
+								SaveFrameTGA("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".tga");
+							}
+							else {
+								SaveFrameTGA("./" + GlobalState.exportName + ".tga");
+							}
 						}
-						else {
-							SaveFrame("./" + GlobalState.exportName + ".png");
-						}
-					}
-					if (ImGui::MenuItem("Export as TGA", "")) {
-						if (GlobalState.exportName == "") {
-							SaveFrameTGA("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".tga");
-						}
-						else {
-							SaveFrameTGA("./" + GlobalState.exportName + ".tga");
-						}
-					}
 
-					if (ImGui::MenuItem("Export as BMP", "")) {
-						if (GlobalState.exportName == "") {
-							SaveFrameBMP("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".bmp");
+						if (ImGui::MenuItem("Export as BMP", "")) {
+							if (GlobalState.exportName == "") {
+								SaveFrameBMP("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".bmp");
+							}
+							else {
+								SaveFrameBMP("./" + GlobalState.exportName + ".bmp");
+							}
 						}
-						else {
-							SaveFrameBMP("./" + GlobalState.exportName + ".bmp");
-						}
+						ImGui::EndMenu();
+
 					}
 					ImGui::EndMenu();
 				}
-				ImGui::EndMenuBar();
 			}
+			ImGui::EndMenuBar();
+
+
 			if (GlobalState.useDebug) { // Some debug stats, --debug / -db
 				ImGui::Text("- Debug Mode -");
 				ImGui::Text("Debug enabled : %d", GlobalState.useDebug);
@@ -381,7 +467,7 @@ void MainLoop(void* arg) // Its the main loop !
 				ImGui::SetTooltip("Currently rendered samples per pixel.");
 
 			if (GlobalState.useDebug) {
-				if (ImGui::Button("Recompile shaders")) // Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
+				if (ImGui::Button("Recompile shaders")) // Button for working on shaders to restart the renderer without a complete application restart.
 				{
 					InitRenderer(); // Recompile shaders and restart the renderer.
 				}
@@ -410,18 +496,14 @@ void MainLoop(void* arg) // Its the main loop !
 				if (ImGui::Combo("Active scene", &GlobalState.sampleSceneIndex, scenes.data(), scenes.size(), scenes.size()))
 				{
 					LoadScene(sceneFiles[GlobalState.sampleSceneIndex]);
-					SDL_RestoreWindow(loopdata.mWindow);
-					SDL_SetWindowSize(loopdata.mWindow, renderOptions.resolution.x, renderOptions.resolution.y);
+					//SDL_RestoreWindow(loopdata.mWindow);
+					//SDL_SetWindowSize(loopdata.mWindow, renderOptions.resolution.x, renderOptions.resolution.y);
 					InitRenderer();
 				}
 				ImGui::InputText("Export filename", &GlobalState.exportName);
 				ImGui::SliderInt("JPG export quality", &GlobalState.currentJpgQuality, 1, 200);
 				optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &GlobalState.mouseSensitivity, 0.001f, 1.0f);
-
-				ImGui::Text("\n");
 			}
-
-			ImGui::Text("\n");
 
 			if (ImGui::CollapsingHeader("Render Settings"))
 			{
@@ -448,6 +530,7 @@ void MainLoop(void* arg) // Its the main loop !
 				ImGui::SliderInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 1, 250);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Run the denoiser and update the view every x samples.");
+				ImGui::Separator();
 				requiresReload |= ImGui::Checkbox("Use ACES tonemapping", &renderOptions.useAces);
 
 				if (requiresReload)
@@ -460,7 +543,23 @@ void MainLoop(void* arg) // Its the main loop !
 				GlobalState.scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
 			}
 
-			ImGui::Text("\n");
+			ImGui::End();
+
+			// PANEL 2
+			bool window_override_size_p2 = true;
+			bool window_override_pos_p2 = true;
+
+			if (window_override_pos_p2) {
+				ImGui::SetNextWindowPos({ (static_cast<float>(GlobalState.displayX) / 5) * 4, 0 });
+				window_override_pos_p2 = false;
+			};
+			
+			if (window_override_size_p2) {
+				ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
+				window_override_size_p2 = false;
+			}
+
+			ImGui::Begin("Panel2", nullptr, window_flags);
 
 			if (ImGui::CollapsingHeader("Camera"))
 			{
@@ -486,7 +585,6 @@ void MainLoop(void* arg) // Its the main loop !
 				GlobalState.scene->camera->isMoving = true;
 			}
 
-			ImGui::Text("\n");
 
 			if (ImGui::CollapsingHeader("Objects"))
 			{
@@ -577,6 +675,7 @@ void MainLoop(void* arg) // Its the main loop !
 				}
 			}
 			ImGui::End();
+
 		}
 		if (GlobalState.noUi == true) {
 			GlobalState.scene->camera->isMoving = false;
@@ -585,9 +684,10 @@ void MainLoop(void* arg) // Its the main loop !
 			// Window flags
 			static bool no_titlebar = true;
 			static bool no_menu = true;
-			static bool no_move = true;
+			static bool no_move = false;
 			static bool no_resize = true;
 			static bool window_override_size = false;
+
 
 			ImVec4* colors = ImGui::GetStyle().Colors;
 			colors[ImGuiCol_Border] = ImVec4(0.01f, 0.01f, 0.01f, 0.00f);
@@ -620,7 +720,7 @@ void MainLoop(void* arg) // Its the main loop !
 	double presentTime = SDL_GetTicks();
 	Update((float)(presentTime - lastTime));
 	lastTime = presentTime;
-	glClearColor(0., 0., 0., 0.);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // OpenGL clearing.
 	glDisable(GL_DEPTH_TEST);
 	Render();
@@ -702,6 +802,14 @@ int main(int argc, char** argv)
 			GlobalState.previewScale = std::stoi(argv[++i], &sz);
 			break;
 		}
+
+		case strint("-ou"):
+			GlobalState.output_path = argv[++i];
+			break;
+
+		case strint("--outputpath"):
+			GlobalState.output_path = argv[++i];
+			break;
 
 		case strint("-ep"):
 			GlobalState.exportName = argv[++i];
@@ -834,11 +942,11 @@ int main(int argc, char** argv)
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
-	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
 	if (GlobalState.noWindow == true) {
 		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
 	}
-	loopdata.mWindow = SDL_CreateWindow("LavaFrame", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, renderOptions.resolution.x, renderOptions.resolution.y, window_flags);
+	loopdata.mWindow = SDL_CreateWindow(GlobalState.versionString.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1920, renderOptions.resolution.y, window_flags);
 
 	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
@@ -851,26 +959,17 @@ int main(int argc, char** argv)
 	SDL_GL_SetSwapInterval(0); // Disable vsync
 
 	// Initialize OpenGL loader
-#if GL_VERSION_3_2
-#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
 	bool err = gl3wInit() != 0;
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
-	bool err = glewInit() != GLEW_OK;
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-	bool err = gladLoadGL() == 0;
-#endif
 	if (err)
 	{
 		fprintf(stderr, "Failed to initialize OpenGL loader!\n");
 		return 1;
 	}
-#endif
 
 	// Setup Dear ImGui context and style
-	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", 16); //Make the font not-eyesore 
+	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", 18); //Make the font not-eyesore 
 	if (GlobalState.useDebug) {
 		io.IniFilename = "guiconfig.ini";
 	}
@@ -879,60 +978,67 @@ int main(int argc, char** argv)
 	}
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		  // Enable DOCKING
 	ImGuiStyle& style = ImGui::GetStyle();
-	style.Alpha = 0.9f;
+	style.Alpha = 1.0f;
 	style.WindowRounding = 0;
 	style.GrabRounding = 1;
 	style.GrabMinSize = 20;
-	style.FrameRounding = 3;
+	style.FrameRounding = 2;
+	style.FramePadding = { 4, 4 };
 
 	ImVec4* colors = ImGui::GetStyle().Colors;
 
 	colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 	colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-	colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.74f);
+	colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.25f);
 	colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 	colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
-	colors[ImGuiCol_Border] = ImVec4(0.01f, 0.01f, 0.01f, 0.50f);
+	colors[ImGuiCol_Border] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 	colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	colors[ImGuiCol_FrameBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.54f);
-	colors[ImGuiCol_FrameBgHovered] = ImVec4(1.00f, 1.00f, 1.00f, 0.40f);
-	colors[ImGuiCol_FrameBgActive] = ImVec4(1.00f, 0.45f, 0.00f, 0.67f);
+	colors[ImGuiCol_FrameBg] = ImVec4(0.43f, 0.43f, 0.43f, 0.54f);
+	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.64f, 0.64f, 0.64f, 0.40f);
+	colors[ImGuiCol_FrameBgActive] = ImVec4(0.58f, 0.58f, 0.58f, 0.67f);
 	colors[ImGuiCol_TitleBg] = ImVec4(0.04f, 0.04f, 0.04f, 1.00f);
-	colors[ImGuiCol_TitleBgActive] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
+	colors[ImGuiCol_TitleBgActive] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
 	colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
-	colors[ImGuiCol_MenuBarBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+	colors[ImGuiCol_MenuBarBg] = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
 	colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
 	colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
 	colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
 	colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
-	colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_SliderGrab] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_SliderGrabActive] = ImVec4(1.00f, 0.64f, 0.30f, 1.00f);
-	colors[ImGuiCol_Button] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_ButtonHovered] = ImVec4(1.00f, 0.63f, 0.27f, 1.00f);
-	colors[ImGuiCol_ButtonActive] = ImVec4(0.57f, 0.28f, 0.00f, 1.00f);
-	colors[ImGuiCol_Header] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_HeaderHovered] = ImVec4(1.00f, 0.58f, 0.18f, 1.00f);
-	colors[ImGuiCol_HeaderActive] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_Separator] = ImVec4(0.45f, 0.45f, 0.45f, 0.50f);
-	colors[ImGuiCol_SeparatorHovered] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
-	colors[ImGuiCol_SeparatorActive] = ImVec4(0.17f, 0.16f, 0.16f, 1.00f);
-	colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_ResizeGripHovered] = ImVec4(1.00f, 0.61f, 0.24f, 1.00f);
-	colors[ImGuiCol_ResizeGripActive] = ImVec4(1.00f, 0.75f, 0.51f, 1.00f);
-	colors[ImGuiCol_Tab] = ImVec4(0.85f, 0.42f, 0.00f, 1.00f);
-	colors[ImGuiCol_TabHovered] = ImVec4(1.00f, 0.69f, 0.36f, 1.00f);
-	colors[ImGuiCol_TabActive] = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
-	colors[ImGuiCol_TabUnfocused] = ImVec4(0.31f, 0.15f, 0.00f, 1.00f);
-	colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.64f, 0.31f, 0.00f, 1.00f);
+	colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
+	colors[ImGuiCol_SliderGrab] = ImVec4(0.1f, 0.1f, 0.1f, 1.00f);
+	colors[ImGuiCol_SliderGrabActive] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
+	colors[ImGuiCol_Button] = ImVec4(0.00f, 0.00f, 0.00f, 0.38f);
+	colors[ImGuiCol_ButtonHovered] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
+	colors[ImGuiCol_ButtonActive] = ImVec4(1.00f, 0.42f, 0.06f, 1.00f);
+	colors[ImGuiCol_Header] = ImVec4(0.00f, 0.00f, 0.00f, 0.31f);
+	colors[ImGuiCol_HeaderHovered] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
+	colors[ImGuiCol_HeaderActive] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
+	colors[ImGuiCol_Separator] = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
+	colors[ImGuiCol_SeparatorHovered] = ImVec4(0.00f, 0.00f, 0.00f, 0.78f);
+	colors[ImGuiCol_SeparatorActive] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+	colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 1.00f, 1.00f, 0.20f);
+	colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.98f, 0.59f, 0.26f, 1.00f);
+	colors[ImGuiCol_ResizeGripActive] = ImVec4(0.98f, 0.65f, 0.26f, 1.00f);
+	colors[ImGuiCol_Tab] = ImVec4(0.47f, 0.47f, 0.47f, 0.86f);
+	colors[ImGuiCol_TabHovered] = ImVec4(0.35f, 0.35f, 0.35f, 0.80f);
+	colors[ImGuiCol_TabActive] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
+	colors[ImGuiCol_TabUnfocused] = ImVec4(0.07f, 0.10f, 0.15f, 0.97f);
+	colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.14f, 0.26f, 0.42f, 1.00f);
 	colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
 	colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
 	colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
 	colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-	colors[ImGuiCol_TextSelectedBg] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
+	colors[ImGuiCol_TableHeaderBg] = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
+	colors[ImGuiCol_TableBorderStrong] = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);
+	colors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);
+	colors[ImGuiCol_TableRowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
+	colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
 	colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
-	colors[ImGuiCol_NavHighlight] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
+	colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
 	colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
 	colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 	colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);

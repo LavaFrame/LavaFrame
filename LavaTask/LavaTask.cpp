@@ -11,6 +11,7 @@
 #include "stringmanager.h"
 
 #define SIMPLE_RENDER_MODE_ARGS "--maxsamples 500 --noui --nomove --scene "
+#define RENDERER_PATH "\\LavaFrame.exe "
 
 const char* script_filename = "default";
 std::string apppath = "";
@@ -28,13 +29,26 @@ std::wstring ExePath() {
 	return std::wstring(buffer).substr(0, pos);
 }
 
+void file_copy(std::string from, std::string to, bool copyRecursive) {
+	std::error_code errorcode;
+	std::filesystem::copy_options copyOptions = std::filesystem::copy_options::update_existing;
+	if (copyRecursive) {
+		copyOptions = std::filesystem::copy_options::update_existing | std::filesystem::copy_options::recursive;
+	}
+	console_log("Copying from " + from + " to " + to + " | Recursive : " + bool_convert_string(copyRecursive));
+	std::filesystem::copy(from, to, copyOptions, errorcode);
+	console_log("Copy operation failed. Error : " + errorcode.message());
+	if (errorcode.value() == 0) console_log("Copy action complete.");
+	return;
+}
+
 void launch_renderer_wait(std::string arguments) {
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
 	si.cb = sizeof(si);
 	ZeroMemory(&pi, sizeof(pi));
-	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + "\\LavaFrame.exe " + arguments).c_str()), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
+	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + RENDERER_PATH + arguments).c_str()), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
 	{
 		printf("CreateProcess failed (%d).\n", GetLastError());
 		return;
@@ -50,7 +64,7 @@ PROCESS_INFORMATION launch_renderer_thread(std::string arguments, std::string th
 	ZeroMemory(&si_a, sizeof(si_a));
 	si_a.cb = sizeof(si_a);
 	ZeroMemory(&pi_a, sizeof(pi_a));
-	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + "\\LavaFrame.exe -w .lt-threadmode " + threadid + " " + arguments).c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &si_a, &pi_a))
+	if (!CreateProcessA(NULL, LPSTR(std::string(wstring_convert_string(ExePath()) + RENDERER_PATH + "-w .lt-threadmode " + threadid + " " + arguments).c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &si_a, &pi_a))
 	{
 		printf("CreateProcess failed (%d).\n", GetLastError());
 	}
@@ -78,7 +92,9 @@ int main(int argc, char* argv[])
 	std::filesystem::path script_filepath = script_filename;
 	std::ifstream script_file(script_filename);
 	std::string filestr;
+	std::string full_parameter = "";
 	std::string parameter = "";
+	std::string parameter_2 = "";
 	PROCESS_INFORMATION local_pi{};
 	bool waitForThreads = false;
 
@@ -86,12 +102,14 @@ int main(int argc, char* argv[])
 
 	//Script interpreter
 	while (std::getline(script_file, filestr)) {
-		parameter = filestr.substr(filestr.find(" ") + 1);
+		full_parameter = filestr.substr(filestr.find(" ") + 1);
+		parameter = filestr.substr(find_nth(filestr, " ", 1) + 1, (find_nth(filestr, " ", 2) - find_nth(filestr, " ", 1)) - 1);
+		parameter_2 = filestr.substr(find_nth(filestr, " ", 2) + 1);
 		switch (strint((filestr.substr(0, filestr.find(" "))).data())) {
 
 		case strint("render_scene_simple"): // Runs simple scene render with 500 samples and no denoising
 			console_log("Rendering scene " + parameter);
-			launch_renderer_wait(SIMPLE_RENDER_MODE_ARGS + parameter);
+			launch_renderer_wait(SIMPLE_RENDER_MODE_ARGS + full_parameter);
 			console_log("Render complete.");
 			break;
 
@@ -99,7 +117,7 @@ int main(int argc, char* argv[])
 		{
 			console_log("Rendering scene " + parameter + " timed");
 			auto start_function_execution_timer = std::chrono::high_resolution_clock::now();
-			launch_renderer_wait(SIMPLE_RENDER_MODE_ARGS + parameter);
+			launch_renderer_wait(SIMPLE_RENDER_MODE_ARGS + full_parameter);
 			auto stop_function_execution_timer = std::chrono::high_resolution_clock::now();
 			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop_function_execution_timer - start_function_execution_timer).count() << "ms \n";
 			console_log("Render complete.");
@@ -108,7 +126,7 @@ int main(int argc, char* argv[])
 
 		case strint("render_scene"): // Runs scene render
 			console_log("Rendering scene " + parameter);
-			launch_renderer_wait("--noui --nomove " + parameter);
+			launch_renderer_wait("--noui --nomove " + full_parameter);
 			console_log("Render complete.");
 			break;
 
@@ -116,7 +134,7 @@ int main(int argc, char* argv[])
 		{
 			console_log("Rendering scene " + parameter);
 			auto start_function_execution_timer = std::chrono::high_resolution_clock::now();
-			launch_renderer_wait("--noui --nomove " + parameter);
+			launch_renderer_wait("--noui --nomove " + full_parameter);
 			auto stop_function_execution_timer = std::chrono::high_resolution_clock::now();
 			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop_function_execution_timer - start_function_execution_timer).count() << "ms \n";
 			console_log("Render complete.");
@@ -124,16 +142,16 @@ int main(int argc, char* argv[])
 		}
 
 		case strint("render"): // Runs scene render command
-			console_log("Executed render command with parameters : " + parameter);
-			launch_renderer_wait(parameter);
+			console_log("Executed render command with parameters : " + full_parameter);
+			launch_renderer_wait(full_parameter);
 			console_log("Render complete.");
 			break;
 
 		case strint("render_timed"): // Runs scene render command
 		{
-			console_log("Executed render command with parameters : " + parameter);
+			console_log("Executed render command with parameters : " + full_parameter);
 			auto start_function_execution_timer = std::chrono::high_resolution_clock::now();
-			launch_renderer_wait(parameter);
+			launch_renderer_wait(full_parameter);
 			auto stop_function_execution_timer = std::chrono::high_resolution_clock::now();
 			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop_function_execution_timer - start_function_execution_timer).count() << "ms \n";
 			console_log("Render complete.");
@@ -144,14 +162,14 @@ int main(int argc, char* argv[])
 			console_log("Created simple render thread for file : " + parameter);
 			threadID++;
 			waitForThreads = true;
-			local_pi = launch_renderer_thread(SIMPLE_RENDER_MODE_ARGS + parameter, std::to_string(threadID));
+			local_pi = launch_renderer_thread(SIMPLE_RENDER_MODE_ARGS + full_parameter, std::to_string(threadID));
 			break;
 
 		case strint("render_create_thread"): // Runs thread render
-			console_log("Created render thread with parameters : " + parameter);
+			console_log("Created render thread with parameters : " + full_parameter);
 			threadID++;
 			waitForThreads = true;
-			local_pi = launch_renderer_thread("--nowindow" + parameter, std::to_string(threadID));
+			local_pi = launch_renderer_thread("--nowindow" + full_parameter, std::to_string(threadID));
 			break;
 
 		case strint("//"):
@@ -165,10 +183,18 @@ int main(int argc, char* argv[])
 			break;
 
 		case strint("log"):
-			console_log(parameter);
+			console_log(full_parameter);
 			break;
 
 		case strint(""):
+			break;
+
+		case strint("file_copy"):
+			file_copy(parameter, parameter_2, false);
+			break;
+
+		case strint("file_copy_recursive"):
+			file_copy(parameter, parameter_2, true);
 			break;
 
 		default: 

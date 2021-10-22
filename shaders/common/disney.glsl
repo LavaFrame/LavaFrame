@@ -101,10 +101,9 @@ vec3 EvalDiffuse(State state, vec3 Csheen, vec3 V, vec3 N, vec3 L, vec3 H, inout
     float Fd90 = 0.5 + 2.0 * dot(L, H) * dot(L, H) * state.mat.roughness;
     float Fd = mix(1.0, Fd90, FL) * mix(1.0, Fd90, FV);
 
-    // Fake Subsurface TODO: Replace with volumetric scattering
     float Fss90 = dot(L, H) * dot(L, H) * state.mat.roughness;
     float Fss = mix(1.0, Fss90, FL) * mix(1.0, Fss90, FV);
-    float ss = 1.25 * (Fss * (1.0 / (dot(N, L) + dot(N, V)) - 0.5) + 0.5);
+    float ss = 1 * (Fss * (1.0 / (dot(N, L) + dot(N, V)) - 0.5) + 0.5);
     vec3 Fsheen = FH * state.mat.sheen * Csheen;
     //return ((1.0 / PI) * mix(Fd, ss, state.mat.subsurface) * state.mat.albedo + Fsheen) * (1.0 - state.mat.metallic);
 

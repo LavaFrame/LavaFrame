@@ -448,7 +448,7 @@ namespace LavaFrame
             frameCounter = 1;
 
             glBindFramebuffer(GL_FRAMEBUFFER, accumFBO);
-            glViewport(0, 0, screenSize.x, screenSize.y);
+            //glViewport(0, 0, screenSize.x, screenSize.y);
             glClear(GL_COLOR_BUFFER_BIT);
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -513,5 +513,19 @@ namespace LavaFrame
         shaderObject = tonemapShader->getObject();
         glUniform1f(glGetUniformLocation(shaderObject, "invSampleCounter"), 1.0f / (sampleCounter));
         tonemapShader->StopUsing();
+    }
+
+    uint32_t TiledRenderer::SetViewport(int width, int height)
+    {
+        if (GlobalState.scene->camera->isMoving || sampleCounter == 1)
+        {
+            glBindTexture(GL_TEXTURE_2D, pathTraceTextureLowRes);
+            quad->Draw(tonemapShader);
+            return pathTraceTextureLowRes;
+        }
+        else
+        {
+            return tileOutputTexture[1 - currentBuffer];
+        }
     }
 }
