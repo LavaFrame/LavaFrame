@@ -89,8 +89,6 @@ namespace LavaFrame
         }
         if (scene->renderOptions.useConstantBg)
             defines += "#define CONSTANT_BG\n";
-        if (scene->renderOptions.useAces)
-            defines += "#define USE_ACES\n";
 
         if (defines.size() > 0)
         {
@@ -107,16 +105,6 @@ namespace LavaFrame
             else
                 idx = 0;
             pathTraceShaderLowResSrcObj.src.insert(idx + 1, defines);
-        }
-
-        if (defines.size() > 0)
-        {
-            size_t idx = tonemapShaderSrcObj.src.find("#version");
-            if (idx != -1)
-                idx = tonemapShaderSrcObj.src.find("\n", idx);
-            else
-                idx = 0;
-            tonemapShaderSrcObj.src.insert(idx + 1, defines);
         }
 
         pathTraceShader = LoadShaders(vertexShaderSrcObj, pathTraceShaderSrcObj);
@@ -512,6 +500,7 @@ namespace LavaFrame
         tonemapShader->Use();
         shaderObject = tonemapShader->getObject();
         glUniform1f(glGetUniformLocation(shaderObject, "invSampleCounter"), 1.0f / (sampleCounter));
+        glUniform1i(glGetUniformLocation(shaderObject, "useAces"), scene->renderOptions.useAces);
         tonemapShader->StopUsing();
     }
 

@@ -140,9 +140,6 @@
     <None Include="..\shaders\postprocess.glsl">
       <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="..\shaders\postprocess_neutral.glsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
     <None Include="..\shaders\progressive.glsl">
       <Filter>Source Files\shaders</Filter>
     </None>

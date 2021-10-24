@@ -531,7 +531,7 @@ void MainLoop(void* arg) // Its the main loop !
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Run the denoiser and update the view every x samples.");
 				ImGui::Separator();
-				requiresReload |= ImGui::Checkbox("Use ACES tonemapping", &renderOptions.useAces);
+				ImGui::Checkbox("Use ACES tonemapping", &renderOptions.useAces);
 
 				if (requiresReload)
 				{
@@ -541,6 +541,7 @@ void MainLoop(void* arg) // Its the main loop !
 
 				GlobalState.scene->renderOptions.enableDenoiser = renderOptions.enableDenoiser;
 				GlobalState.scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
+				GlobalState.scene->renderOptions.useAces = renderOptions.useAces;
 			}
 
 			ImGui::End();
@@ -946,7 +947,18 @@ int main(int argc, char** argv)
 	if (GlobalState.noWindow == true) {
 		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
 	}
-	loopdata.mWindow = SDL_CreateWindow(GlobalState.versionString.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1920, renderOptions.resolution.y, window_flags);
+
+	SDL_DisplayMode sdldisplaymode;
+	SDL_GetDesktopDisplayMode(0, &sdldisplaymode);
+	int nativeScreenWidth = sdldisplaymode.w;
+	int nativeScreenHeight = sdldisplaymode.h;
+
+	SDL_Rect displayBounds;
+	SDL_GetDisplayUsableBounds(0, &displayBounds);
+	int screenWidth = displayBounds.w;
+	int screenHeight = displayBounds.h;
+
+	loopdata.mWindow = SDL_CreateWindow(GlobalState.versionString.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenWidth, screenHeight, window_flags);
 
 	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
@@ -969,7 +981,7 @@ int main(int argc, char** argv)
 	// Setup Dear ImGui context and style
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", 18); //Make the font not-eyesore 
+	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", nativeScreenWidth / 122); //Make the font not-eyesore 
 	if (GlobalState.useDebug) {
 		io.IniFilename = "guiconfig.ini";
 	}
