@@ -21,6 +21,8 @@ struct LavaFrameState {
 	int currentJpgQuality = 95;
 	int displayX;
 	int displayY;
+	int nativeScreenWidth;
+	int nativeScreenHeight;
 	const char* output_path = "output\\";
 	std::string exportName = "";
 	std::string exportType = "png";

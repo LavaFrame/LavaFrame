@@ -55,6 +55,19 @@ bool viewportFocused = false;
 bool viewportHovered = false;
 bool viewportClicked = false;
 
+bool viewport_window_override_size = true;
+bool viewport_window_override_pos = true;
+
+bool no_titlebar = true;
+bool no_menu = false;
+bool no_move = false;
+bool no_resize = true;
+bool window_override_size = true;
+bool window_override_pos = true;
+
+bool window_override_size_p2 = true;
+bool window_override_pos_p2 = true;
+
 struct LoopData
 {
 	SDL_Window* mWindow = nullptr;
@@ -129,43 +142,44 @@ bool InitRenderer() // Create the tiled renderer and inform the user that the pr
 
 void Render()
 {
-	auto io = ImGui::GetIO();
 	GlobalState.renderer->Render();
 	//Viewport Setup
 
-	bool no_titlebar = true;
-	bool no_menu = false;
+	ImGuiStyle& style = ImGui::GetStyle();
+
+	bool no_titlebar = false;
+	bool no_menu = true;
 	bool no_move = false;
 	bool no_resize = false;
-	bool window_override_size = true;
-	bool window_override_pos = true;
+	bool no_collapse = true;
 
-	ImGuiStyle& style = ImGui::GetStyle();
 	style.WindowPadding = { 0, 0 };
 
-	if (!viewportClicked) no_move = false;
+	if (!viewportHovered) no_move = false;
 	else no_move = true;
 
-	if (window_override_pos) {
+	if (viewport_window_override_pos) {
 		ImGui::SetNextWindowPos({ static_cast<float>(GlobalState.displayX / 5), 0 });
-		window_override_pos = false;
 	}
-	if (window_override_size) {
+	viewport_window_override_pos = false;
+
+	if (viewport_window_override_size) {
 		ImGui::SetNextWindowSize({ static_cast<float>((GlobalState.displayX / 5) * 3),  static_cast<float>(GlobalState.displayY) });
-		window_override_size = false;
 	}
+	viewport_window_override_size = false;
+
+	printf(std::to_string(viewportClicked).c_str());
 
 	ImGuiWindowFlags window_flags = 0;
 	if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
 	if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
 	if (no_move)            window_flags |= ImGuiWindowFlags_NoMove;
 	if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
+	if (no_collapse)          window_flags |= ImGuiWindowFlags_NoCollapse;
 
 	ImGui::Begin("Viewport", NULL, window_flags);
 	{
 		viewportFocused = ImGui::IsWindowFocused();
-		viewportHovered = ImGui::IsWindowHovered();
-		viewportClicked = ImGui::IsItemClicked();
 		viewportPanelSize = ImGui::GetContentRegionAvail();
 
 		if (GlobalState.scene->renderOptions.resolution.x != viewportPanelSize.x || GlobalState.scene->renderOptions.resolution.y != viewportPanelSize.y)
@@ -186,10 +200,12 @@ void Render()
 		uint32_t tex = GlobalState.renderer->SetViewport(10, 10);
 		//ImGui::SetCursorPos({ ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.5f });
 		ImGui::Image((void*)tex, { viewportPanelSize.x, viewportPanelSize.y}, ImVec2(0, 1), ImVec2(1, 0));
+		viewportHovered = ImGui::IsItemHovered();
+		viewportClicked = ImGui::IsItemClicked();
 
 		ImGui::End();
 
-		style.WindowPadding = { 8, 8 };
+		style.WindowPadding = { static_cast<float>(GlobalState.nativeScreenWidth / 200), static_cast<float>(GlobalState.nativeScreenWidth / 200) };
 	}
 	ImGui::Render();
 	ImGui::UpdatePlatformWindows();
@@ -353,8 +369,8 @@ void MainLoop(void* arg) // Its the main loop !
 		{
 			if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 			{
-				GlobalState.scene->renderOptions.resolution = iVec2(event.window.data1, event.window.data2);
-				InitRenderer(); // Restart renderer on window resize. 
+				//GlobalState.scene->renderOptions.resolution = iVec2(event.window.data1, event.window.data2);
+				//InitRenderer(); // Restart renderer on window resize. 
 			}
 
 			if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(loopdata.mWindow))
@@ -377,12 +393,6 @@ void MainLoop(void* arg) // Its the main loop !
 		if (GlobalState.noUi == false) {
 
 			// Window flags
-			bool no_titlebar = true;
-			bool no_menu = false;
-			bool no_move = false;
-			bool no_resize = true;
-			bool window_override_size = true;
-			bool window_override_pos = true;
 
 			ImGuiWindowFlags window_flags = 0;
 			if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -394,13 +404,13 @@ void MainLoop(void* arg) // Its the main loop !
 
 			if (window_override_pos) {
 				ImGui::SetNextWindowPos({ 0, 0 });
-				window_override_pos = false;
 			}
+			window_override_pos = false;
 			
 			if (window_override_size) {
 				ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
-				window_override_size = false;
 			}
+			window_override_size = false;
 
 			ImGui::Begin("Panel1", nullptr, window_flags); //Main panel
 
@@ -547,18 +557,16 @@ void MainLoop(void* arg) // Its the main loop !
 			ImGui::End();
 
 			// PANEL 2
-			bool window_override_size_p2 = true;
-			bool window_override_pos_p2 = true;
 
 			if (window_override_pos_p2) {
 				ImGui::SetNextWindowPos({ (static_cast<float>(GlobalState.displayX) / 5) * 4, 0 });
-				window_override_pos_p2 = false;
 			};
+			window_override_pos_p2 = false;
 			
 			if (window_override_size_p2) {
 				ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
-				window_override_size_p2 = false;
 			}
+			window_override_size_p2 = false;
 
 			ImGui::Begin("Panel2", nullptr, window_flags);
 
@@ -721,7 +729,7 @@ void MainLoop(void* arg) // Its the main loop !
 	double presentTime = SDL_GetTicks();
 	Update((float)(presentTime - lastTime));
 	lastTime = presentTime;
-	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClearColor(0.25, 0.25, 0.25, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // OpenGL clearing.
 	glDisable(GL_DEPTH_TEST);
 	Render();
@@ -913,7 +921,7 @@ int main(int argc, char** argv)
 	}
 
 	// Setup SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) //Init. SDL2
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) // Init. SDL2
 	{
 		printf("Error: %s\n", SDL_GetError());
 		return -1;
@@ -950,8 +958,8 @@ int main(int argc, char** argv)
 
 	SDL_DisplayMode sdldisplaymode;
 	SDL_GetDesktopDisplayMode(0, &sdldisplaymode);
-	int nativeScreenWidth = sdldisplaymode.w;
-	int nativeScreenHeight = sdldisplaymode.h;
+	GlobalState.nativeScreenWidth = sdldisplaymode.w;
+	GlobalState.nativeScreenHeight = sdldisplaymode.h;
 
 	SDL_Rect displayBounds;
 	SDL_GetDisplayUsableBounds(0, &displayBounds);
@@ -981,7 +989,7 @@ int main(int argc, char** argv)
 	// Setup Dear ImGui context and style
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", nativeScreenWidth / 121); //Make the font not-eyesore 
+	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", GlobalState.nativeScreenWidth / 121); //Make the font not-eyesore 
 	if (GlobalState.useDebug) {
 		io.IniFilename = "guiconfig.ini";
 	}
@@ -991,7 +999,10 @@ int main(int argc, char** argv)
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		  // Enable DOCKING
+
 	ImGuiStyle& style = ImGui::GetStyle();
+	ImVec4* colors = ImGui::GetStyle().Colors;
+
 	style.Alpha = 1.0f;
 	style.WindowRounding = 0;
 	style.GrabRounding = 1;
@@ -999,16 +1010,14 @@ int main(int argc, char** argv)
 	style.FrameRounding = 2;
 	style.FramePadding = { 4, 4 };
 
-	ImVec4* colors = ImGui::GetStyle().Colors;
-
 	colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 	colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-	colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.25f);
+	colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.5f);
 	colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 	colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
 	colors[ImGuiCol_Border] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 	colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	colors[ImGuiCol_FrameBg] = ImVec4(0.43f, 0.43f, 0.43f, 0.54f);
+	colors[ImGuiCol_FrameBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.0f);
 	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.64f, 0.64f, 0.64f, 0.40f);
 	colors[ImGuiCol_FrameBgActive] = ImVec4(0.58f, 0.58f, 0.58f, 0.67f);
 	colors[ImGuiCol_TitleBg] = ImVec4(0.04f, 0.04f, 0.04f, 1.00f);
@@ -1037,8 +1046,8 @@ int main(int argc, char** argv)
 	colors[ImGuiCol_Tab] = ImVec4(0.47f, 0.47f, 0.47f, 0.86f);
 	colors[ImGuiCol_TabHovered] = ImVec4(0.35f, 0.35f, 0.35f, 0.80f);
 	colors[ImGuiCol_TabActive] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
-	colors[ImGuiCol_TabUnfocused] = ImVec4(0.07f, 0.10f, 0.15f, 0.97f);
-	colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.14f, 0.26f, 0.42f, 1.00f);
+	colors[ImGuiCol_TabUnfocused] = ImVec4(0.17f, 0.17f, 0.17f, 0.97f);
+	colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
 	colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
 	colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
 	colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
@@ -1054,7 +1063,7 @@ int main(int argc, char** argv)
 	colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
 	colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 	colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
-
+	
 	ImGui_ImplSDL2_InitForOpenGL(loopdata.mWindow, loopdata.mGLContext);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
