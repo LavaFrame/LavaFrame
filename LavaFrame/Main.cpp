@@ -981,7 +981,7 @@ int main(int argc, char** argv)
 	// Setup Dear ImGui context and style
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", nativeScreenWidth / 122); //Make the font not-eyesore 
+	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", nativeScreenWidth / 121); //Make the font not-eyesore 
 	if (GlobalState.useDebug) {
 		io.IniFilename = "guiconfig.ini";
 	}
