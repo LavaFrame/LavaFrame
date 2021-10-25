@@ -28,7 +28,7 @@ void main(void)
     jitter.x = r1 < 1.0 ? sqrt(r1) - 1.0 : 1.0 - sqrt(2.0 - r1);
     jitter.y = r2 < 1.0 ? sqrt(r2) - 1.0 : 1.0 - sqrt(2.0 - r2);
 
-    jitter /= (screenResolution * 0.5);
+    jitter /= screenResolution;
     vec2 d = (2.0 * TexCoords - 1.0) + jitter;
 
     float scale = tan(camera.fov * 0.5);
@@ -45,6 +45,7 @@ void main(void)
     Ray ray = Ray(camera.position + randomAperturePos, finalRayDir);
 
     vec3 pixelColor = PathTrace(ray);
+    //pixelColor = mix(pixelColor, PathTrace(ray), 0.5);
 
     color = pixelColor;
 }

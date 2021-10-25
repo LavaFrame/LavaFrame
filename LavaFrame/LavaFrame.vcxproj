@@ -218,7 +218,7 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
     <None Include="..\shaders\common\vertex.glsl" />
     <None Include="..\shaders\output.glsl" />
     <None Include="..\shaders\postprocess.glsl" />
-    <None Include="..\shaders\progressive.glsl" />
+    <None Include="..\shaders\preview.glsl" />
     <None Include="..\shaders\tiled_renderer.glsl" />
     <None Include="..\shaders_amd\accumulation.glsl" />
     <None Include="..\shaders_amd\common\anyhit.glsl" />

@@ -60,13 +60,10 @@ bool viewport_window_override_pos = true;
 
 bool no_titlebar = true;
 bool no_menu = false;
-bool no_move = false;
+bool no_move = true;
 bool no_resize = true;
 bool window_override_size = true;
 bool window_override_pos = true;
-
-bool window_override_size_p2 = true;
-bool window_override_pos_p2 = true;
 
 struct LoopData
 {
@@ -149,26 +146,21 @@ void Render()
 
 	bool no_titlebar = false;
 	bool no_menu = true;
-	bool no_move = false;
-	bool no_resize = false;
+	bool no_move = true;
+	bool no_resize = true;
 	bool no_collapse = true;
 
 	style.WindowPadding = { 0, 0 };
 
-	if (!viewportHovered) no_move = false;
-	else no_move = true;
-
 	if (viewport_window_override_pos) {
 		ImGui::SetNextWindowPos({ static_cast<float>(GlobalState.displayX / 5), 0 });
 	}
-	viewport_window_override_pos = false;
+	//viewport_window_override_pos = false;
 
 	if (viewport_window_override_size) {
 		ImGui::SetNextWindowSize({ static_cast<float>((GlobalState.displayX / 5) * 3),  static_cast<float>(GlobalState.displayY) });
 	}
-	viewport_window_override_size = false;
-
-	printf(std::to_string(viewportClicked).c_str());
+	//viewport_window_override_size = false;
 
 	ImGuiWindowFlags window_flags = 0;
 	if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -352,6 +344,19 @@ void EditTransform(const float* view, const float* projection, float* matrix)
 	ImGuizmo::Manipulate(view, projection, mCurrentGizmoOperation, mCurrentGizmoMode, matrix, NULL, NULL);
 }
 
+static void HelpMarker(const char* desc)
+{
+	ImGui::TextDisabled("(?)");
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::BeginTooltip();
+		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+		ImGui::TextUnformatted(desc);
+		ImGui::PopTextWrapPos();
+		ImGui::EndTooltip();
+	}
+}
+
 void MainLoop(void* arg) // Its the main loop !
 {
 	LoopData& loopdata = *(LoopData*)arg;
@@ -405,12 +410,12 @@ void MainLoop(void* arg) // Its the main loop !
 			if (window_override_pos) {
 				ImGui::SetNextWindowPos({ 0, 0 });
 			}
-			window_override_pos = false;
+			//window_override_pos = false;
 			
 			if (window_override_size) {
 				ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
 			}
-			window_override_size = false;
+			//window_override_size = false;
 
 			ImGui::Begin("Panel1", nullptr, window_flags); //Main panel
 
@@ -537,7 +542,8 @@ void MainLoop(void* arg) // Its the main loop !
 				optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
 				ImGui::Separator();
 				ImGui::Checkbox("Enable denoiser", &renderOptions.enableDenoiser);
-				ImGui::SliderInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 1, 250);
+				ImGui::InputInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 10, 50);
+				if (renderOptions.denoiserFrameCnt < 1) renderOptions.denoiserFrameCnt = 1;
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Run the denoiser and update the view every x samples.");
 				ImGui::Separator();
@@ -554,19 +560,28 @@ void MainLoop(void* arg) // Its the main loop !
 				GlobalState.scene->renderOptions.useAces = renderOptions.useAces;
 			}
 
+			if (ImGui::CollapsingHeader("Preview Settings")) {
+				// For integrating more preview engines in the future
+				static int current_preview_engine = 0;
+				ImGui::Combo("Preview Engine", &current_preview_engine, "Gemini", 1);
+				ImGui::SameLine(); HelpMarker(
+					"Selects the preview engine to use (currently only Gemini).\nGemini is an interactive viewport engine based on the same\npath-tracing backend as the LavaFrame renderer.");
+
+				if (current_preview_engine == 0) optionsChanged |= ImGui::InputFloat("Preview Scale", &GlobalState.previewScale, 0.1, 0.25);
+				if (GlobalState.previewScale > 2.0) GlobalState.previewScale = 2.0;
+				if (GlobalState.previewScale < 0.1) GlobalState.previewScale = 0.1;
+			}
+
 			ImGui::End();
 
 			// PANEL 2
-
-			if (window_override_pos_p2) {
+			if (window_override_pos) {
 				ImGui::SetNextWindowPos({ (static_cast<float>(GlobalState.displayX) / 5) * 4, 0 });
 			};
-			window_override_pos_p2 = false;
 			
-			if (window_override_size_p2) {
+			if (window_override_size) {
 				ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
 			}
-			window_override_size_p2 = false;
 
 			ImGui::Begin("Panel2", nullptr, window_flags);
 
@@ -580,7 +595,7 @@ void MainLoop(void* arg) // Its the main loop !
 				GlobalState.scene->camera->SetFov(fov);
 				optionsChanged |= ImGui::SliderFloat("Aperture", &aperture, 0.0f, 10.8f);
 				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Aperture of the camera. Rule of thumb : The larger this is, the more depth of field you will get. Set to 0 to disable.");
+					ImGui::SetTooltip("Aperture of the camera.");
 				GlobalState.scene->camera->aperture = aperture / 1000.0f;
 				optionsChanged |= ImGui::SliderFloat("Focal Distance", &GlobalState.scene->camera->focalDist, 0.01f, 50.0f);
 				if (ImGui::IsItemHovered())
@@ -729,7 +744,7 @@ void MainLoop(void* arg) // Its the main loop !
 	double presentTime = SDL_GetTicks();
 	Update((float)(presentTime - lastTime));
 	lastTime = presentTime;
-	glClearColor(0.25, 0.25, 0.25, 1.0);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // OpenGL clearing.
 	glDisable(GL_DEPTH_TEST);
 	Render();

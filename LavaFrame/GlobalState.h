@@ -6,7 +6,7 @@ struct LavaFrameState {
 	Scene* scene;
 	Renderer* renderer;
 	float mouseSensitivity = 0.005f;
-	float previewScale = 0.5f;
+	float previewScale = 1.0f;
 	bool keyPressed = false;
 	bool done = false;
 	bool noUi = false;
