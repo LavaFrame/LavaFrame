@@ -15,6 +15,7 @@
 * Based on the original software by Alif Ali (knightcrawler25)
 */
 #define _USE_MATH_DEFINES
+#define IMGUI_DEFINE_MATH_OPERATORS
 
 #include <SDL2/SDL.h>
 #include <GL/gl3w.h>
@@ -64,6 +65,8 @@ bool no_move = true;
 bool no_resize = true;
 bool window_override_size = true;
 bool window_override_pos = true;
+
+float scaler;
 
 struct LoopData
 {
@@ -167,20 +170,15 @@ void Render()
 	if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
 	if (no_move)            window_flags |= ImGuiWindowFlags_NoMove;
 	if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
-	if (no_collapse)          window_flags |= ImGuiWindowFlags_NoCollapse;
+	if (no_collapse)        window_flags |= ImGuiWindowFlags_NoCollapse;
 
 	ImGui::Begin("Viewport", NULL, window_flags);
 	{
 		viewportFocused = ImGui::IsWindowFocused();
 		viewportPanelSize = ImGui::GetContentRegionAvail();
 
-		if (GlobalState.scene->renderOptions.resolution.x != viewportPanelSize.x || GlobalState.scene->renderOptions.resolution.y != viewportPanelSize.y)
-		{
-			GlobalState.scene->renderOptions.resolution.x = viewportPanelSize.x;
-			GlobalState.scene->renderOptions.resolution.y = viewportPanelSize.y;
-			GlobalState.scene->camera->isMoving = true;
-			InitRenderer();
-		}
+		viewportPanelSize.x = GlobalState.scene->renderOptions.resolution.x;
+		viewportPanelSize.y = GlobalState.scene->renderOptions.resolution.y;
 
 		if (GlobalState.scene->camera->isMoving)
 		{
@@ -190,8 +188,14 @@ void Render()
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, viewportPanelSize.x, viewportPanelSize.y);
 		uint32_t tex = GlobalState.renderer->SetViewport(10, 10);
-		//ImGui::SetCursorPos({ ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.5f });
-		ImGui::Image((void*)tex, { viewportPanelSize.x, viewportPanelSize.y}, ImVec2(0, 1), ImVec2(1, 0));
+
+	    scaler = std::min(ImGui::GetContentRegionAvail().x / GlobalState.scene->renderOptions.resolution.x, ImGui::GetContentRegionAvail().y / GlobalState.scene->renderOptions.resolution.y);
+		//printf("%f\n", scaler);
+		printf("%f\n", viewportPanelSize.x * scaler);
+		printf("%f\n", viewportPanelSize.y * scaler);
+
+		ImGui::SetCursorPos((ImGui::GetContentRegionAvail() * 0.5f) - ((viewportPanelSize * scaler) * 0.5));
+		ImGui::Image((void*)tex, { viewportPanelSize.x * scaler, viewportPanelSize.y * scaler}, ImVec2(0, 1), ImVec2(1, 0));
 		viewportHovered = ImGui::IsItemHovered();
 		viewportClicked = ImGui::IsItemClicked();
 
@@ -562,12 +566,11 @@ void MainLoop(void* arg) // Its the main loop !
 
 			if (ImGui::CollapsingHeader("Preview Settings")) {
 				// For integrating more preview engines in the future
-				static int current_preview_engine = 0;
-				ImGui::Combo("Preview Engine", &current_preview_engine, "Gemini", 1);
+				ImGui::Combo("Preview Engine", &GlobalState.previewEngineIndex, "Flareon\0", 2);
 				ImGui::SameLine(); HelpMarker(
-					"Selects the preview engine to use (currently only Gemini).\nGemini is an interactive viewport engine based on the same\npath-tracing backend as the LavaFrame renderer.");
+					"Selects the preview engine to use (currently only Flareon).\nFlareon is an interactive viewport engine based on the same\npath-tracing backend as the LavaFrame renderer.");
 
-				if (current_preview_engine == 0) optionsChanged |= ImGui::InputFloat("Preview Scale", &GlobalState.previewScale, 0.1, 0.25);
+				if (&GlobalState.previewEngineIndex == 0) optionsChanged |= ImGui::InputFloat("Preview Scale", &GlobalState.previewScale, 0.1, 0.25);
 				if (GlobalState.previewScale > 2.0) GlobalState.previewScale = 2.0;
 				if (GlobalState.previewScale < 0.1) GlobalState.previewScale = 0.1;
 			}

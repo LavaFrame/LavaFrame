@@ -140,7 +140,7 @@
     <None Include="..\shaders\postprocess.glsl">
       <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="..\shaders\preview.glsl">
+    <None Include="..\shaders\preview_flareon.glsl">
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="..\shaders\tiled_renderer.glsl">

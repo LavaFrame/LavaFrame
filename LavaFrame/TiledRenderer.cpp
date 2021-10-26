@@ -69,7 +69,7 @@ namespace LavaFrame
 
         ShaderInclude::ShaderSource vertexShaderSrcObj = ShaderInclude::load(shadersDirectory + "common/vertex.glsl");
         ShaderInclude::ShaderSource pathTraceShaderSrcObj = ShaderInclude::load(shadersDirectory + "tiled_renderer.glsl");
-        ShaderInclude::ShaderSource pathTraceShaderLowResSrcObj = ShaderInclude::load(shadersDirectory + "preview.glsl");
+        ShaderInclude::ShaderSource previewEngineSrcObj = ShaderInclude::load(shadersDirectory + "preview_flareon.glsl");
         ShaderInclude::ShaderSource outputShaderSrcObj = ShaderInclude::load(shadersDirectory + "output.glsl");
         ShaderInclude::ShaderSource tonemapShaderSrcObj = ShaderInclude::load(shadersDirectory + "postprocess.glsl");
 
@@ -97,16 +97,16 @@ namespace LavaFrame
                 idx = 0;
             pathTraceShaderSrcObj.src.insert(idx + 1, defines);
 
-            idx = pathTraceShaderLowResSrcObj.src.find("#version");
+            idx = previewEngineSrcObj.src.find("#version");
             if (idx != -1)
-                idx = pathTraceShaderLowResSrcObj.src.find("\n", idx);
+                idx = previewEngineSrcObj.src.find("\n", idx);
             else
                 idx = 0;
-            pathTraceShaderLowResSrcObj.src.insert(idx + 1, defines);
+            previewEngineSrcObj.src.insert(idx + 1, defines);
         }
 
         pathTraceShader = LoadShaders(vertexShaderSrcObj, pathTraceShaderSrcObj);
-        pathTraceShaderLowRes = LoadShaders(vertexShaderSrcObj, pathTraceShaderLowResSrcObj);
+        pathTraceShaderLowRes = LoadShaders(vertexShaderSrcObj, previewEngineSrcObj);
         outputShader = LoadShaders(vertexShaderSrcObj, outputShaderSrcObj);
         tonemapShader = LoadShaders(vertexShaderSrcObj, tonemapShaderSrcObj);
 

@@ -23,6 +23,7 @@ struct LavaFrameState {
 	int displayY;
 	int nativeScreenWidth;
 	int nativeScreenHeight;
+	int previewEngineIndex = 0;
 	const char* output_path = "output\\";
 	std::string exportName = "";
 	std::string exportType = "png";
