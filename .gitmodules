@@ -1,0 +1,6 @@
+[submodule "LavaFrame/thirdparty/oidn_git"]
+	path = LavaFrame/thirdparty/oidn_git
+	url = https://github.com/OpenImageDenoise/oidn.git
+[submodule "LavaFrame/thirdparty/SDL"]
+	path = LavaFrame/thirdparty/SDL
+	url = https://github.com/libsdl-org/SDL
