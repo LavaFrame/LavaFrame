@@ -25,17 +25,18 @@ file(GLOB LAVAFRAME_HEADERS
 )
 
 file(GLOB THIRDPARTY_SOURCES
+    
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/RadeonRays/*.h
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/gl3w/GL/*.h
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/imgui/*.h
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/tinydir/*.h
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/stb/*.h
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/imguizmo/*.h
+
     ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/imgui/*.cpp
     ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/RadeonRays/*.cpp
     ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/imguizmo/*.cpp    
     ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/gl3w/*.c
-
-    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/gl3w/*.h
-    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/imgui/*.h
-    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/tinydir/*.h
-    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/stb/*.h
-    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/RadeonRays/*.h
-    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/imguizmo/*.h
 )
 
 
@@ -43,6 +44,12 @@ add_executable(Main ${LAVAFRAME_SOURCES} ${THIRDPARTY_SOURCES})
 target_include_directories(Main PUBLIC    
     ${CMAKE_SOURCE_DIR}/LavaFrame/Headers
     ${CMAKE_SOURCE_DIR}/LavaFrame/Headers/math
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/RadeonRays
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/gl3w
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/imgui
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/tinydir
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/stb
+    ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/imguizmo
 )
 target_link_libraries(Main OpenImageDenoise GL SDL2::SDL2 ${CMAKE_DL_LIBS})
 
