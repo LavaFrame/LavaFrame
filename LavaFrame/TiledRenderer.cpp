@@ -395,7 +395,7 @@ namespace LavaFrame
         Renderer::Update(secondsElapsed);
 
         // Denoise Image
-        if (scene->renderOptions.enableDenoiser && frameCounter % (scene->renderOptions.denoiserFrameCnt * (numTilesX * numTilesY)) == 0)
+        /*if (scene->renderOptions.enableDenoiser && frameCounter % (scene->renderOptions.denoiserFrameCnt * (numTilesX * numTilesY)) == 0)
         {
             glBindTexture(GL_TEXTURE_2D, tileOutputTexture[1 - currentBuffer]);
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, denoiserInputFramePtr);
@@ -423,7 +423,7 @@ namespace LavaFrame
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, screenSize.x, screenSize.y, 0, GL_RGB, GL_FLOAT, frameOutputPtr);
 
             denoised = true;
-        }
+        }*/
 
         if (scene->camera->isMoving || scene->instancesModified)
         {
@@ -514,5 +514,39 @@ namespace LavaFrame
         {
             return tileOutputTexture[1 - currentBuffer];
         }
+    }
+
+    uint32_t TiledRenderer::Denoise() {
+        ////For Denoiser
+        auto denoiserInputFramePtr = new Vec3[screenSize.x * screenSize.y];
+        auto frameOutputPtr = new Vec3[screenSize.x * screenSize.y];
+
+        glBindTexture(GL_TEXTURE_2D, tileOutputTexture[1 - currentBuffer]);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, denoiserInputFramePtr);
+
+        // Create an Intel Open Image Denoise device
+        oidn::DeviceRef device = oidn::newDevice();
+        device.commit();
+
+        // Create a denoising filter
+        oidn::FilterRef filter = device.newFilter("RT"); // generic ray tracing filter
+        filter.setImage("color", denoiserInputFramePtr, oidn::Format::Float3, screenSize.x, screenSize.y);
+        filter.setImage("output", frameOutputPtr, oidn::Format::Float3, screenSize.x, screenSize.y);
+        filter.set("hdr", false);
+        filter.commit();
+
+        // Filter the image
+        filter.execute();
+
+        // Check for errors
+        const char* errorMessage;
+        if (device.getError(errorMessage) != oidn::Error::None)
+            std::cout << "Error: " << errorMessage << std::endl;
+
+        // Copy the denoised data to denoisedTexture
+        glBindTexture(GL_TEXTURE_2D, denoisedTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, screenSize.x, screenSize.y, 0, GL_RGB, GL_FLOAT, frameOutputPtr);
+
+        return denoisedTexture;
     }
 }

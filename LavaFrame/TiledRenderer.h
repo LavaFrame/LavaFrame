@@ -63,6 +63,7 @@ namespace LavaFrame
         void Present() const;
         void Update(float secondsElapsed);
         uint32_t SetViewport(int width, int height);
+        uint32_t Denoise();
         float GetProgress() const;
         int GetSampleCount() const;
         void GetOutputBuffer(unsigned char**, int& w, int& h);

@@ -51,7 +51,6 @@ LavaFrameState GlobalState;
 RenderOptions renderOptions;
 
 ImVec2 viewportPanelSize;
-ImVec2 viewportPanelMaxSize;
 bool viewportFocused = false;
 bool viewportHovered = false;
 bool viewportClicked = false;
@@ -66,7 +65,11 @@ bool no_resize = true;
 bool window_override_size = true;
 bool window_override_pos = true;
 
-float scaler;
+float viewport_scaler;
+bool showDenoise = false;
+uint32_t viewportTexture;
+uint32_t traceTexture;
+uint32_t denoiseTexture;
 
 struct LoopData
 {
@@ -133,7 +136,7 @@ bool InitRenderer() // Create the tiled renderer and inform the user that the pr
 	if (!GlobalState.threadMode) {
 		if (GlobalState.useDebug) printf("Renderer started.\n");
 	}
-	else { 
+	else {
 		printf(("\nLavaFrame thread " + GlobalState.threadID + " started, " + GlobalState.releaseVersion).c_str());
 	}
 
@@ -147,7 +150,7 @@ void Render()
 
 	ImGuiStyle& style = ImGui::GetStyle();
 
-	bool no_titlebar = false;
+	bool no_titlebar = true;
 	bool no_menu = true;
 	bool no_move = true;
 	bool no_resize = true;
@@ -158,12 +161,10 @@ void Render()
 	if (viewport_window_override_pos) {
 		ImGui::SetNextWindowPos({ static_cast<float>(GlobalState.displayX / 5), 0 });
 	}
-	//viewport_window_override_pos = false;
 
 	if (viewport_window_override_size) {
 		ImGui::SetNextWindowSize({ static_cast<float>((GlobalState.displayX / 5) * 3),  static_cast<float>(GlobalState.displayY) });
 	}
-	//viewport_window_override_size = false;
 
 	ImGuiWindowFlags window_flags = 0;
 	if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -187,15 +188,14 @@ void Render()
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, viewportPanelSize.x, viewportPanelSize.y);
-		uint32_t tex = GlobalState.renderer->SetViewport(10, 10);
+		traceTexture = GlobalState.renderer->SetViewport(viewportPanelSize.x, viewportPanelSize.y);
+		if (showDenoise) viewportTexture = denoiseTexture;
+		else viewportTexture = traceTexture;
 
-	    scaler = std::min(ImGui::GetContentRegionAvail().x / GlobalState.scene->renderOptions.resolution.x, ImGui::GetContentRegionAvail().y / GlobalState.scene->renderOptions.resolution.y);
-		//printf("%f\n", scaler);
-		printf("%f\n", viewportPanelSize.x * scaler);
-		printf("%f\n", viewportPanelSize.y * scaler);
+		viewport_scaler = std::min(ImGui::GetContentRegionAvail().x / GlobalState.scene->renderOptions.resolution.x, ImGui::GetContentRegionAvail().y / GlobalState.scene->renderOptions.resolution.y);
 
-		ImGui::SetCursorPos((ImGui::GetContentRegionAvail() * 0.5f) - ((viewportPanelSize * scaler) * 0.5));
-		ImGui::Image((void*)tex, { viewportPanelSize.x * scaler, viewportPanelSize.y * scaler}, ImVec2(0, 1), ImVec2(1, 0));
+		ImGui::SetCursorPos((ImGui::GetContentRegionAvail() * 0.5f) - ((viewportPanelSize * viewport_scaler) * 0.5));
+		ImGui::Image((void*)viewportTexture, { viewportPanelSize.x * viewport_scaler, viewportPanelSize.y * viewport_scaler }, ImVec2(0, 1), ImVec2(1, 0));
 		viewportHovered = ImGui::IsItemHovered();
 		viewportClicked = ImGui::IsItemClicked();
 
@@ -414,12 +414,10 @@ void MainLoop(void* arg) // Its the main loop !
 			if (window_override_pos) {
 				ImGui::SetNextWindowPos({ 0, 0 });
 			}
-			//window_override_pos = false;
-			
+
 			if (window_override_size) {
 				ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
 			}
-			//window_override_size = false;
 
 			ImGui::Begin("Panel1", nullptr, window_flags); //Main panel
 
@@ -469,7 +467,6 @@ void MainLoop(void* arg) // Its the main loop !
 			}
 			ImGui::EndMenuBar();
 
-
 			if (GlobalState.useDebug) { // Some debug stats, --debug / -db
 				ImGui::Text("- Debug Mode -");
 				ImGui::Text("Debug enabled : %d", GlobalState.useDebug);
@@ -495,7 +492,7 @@ void MainLoop(void* arg) // Its the main loop !
 					if (GlobalState.exportName == "") {
 						printf("Empty exportname.\n");
 					}
-					else { 
+					else {
 						printf((GlobalState.exportName + "\n").c_str());
 					};
 				}
@@ -515,18 +512,20 @@ void MainLoop(void* arg) // Its the main loop !
 				if (ImGui::Combo("Active scene", &GlobalState.sampleSceneIndex, scenes.data(), scenes.size(), scenes.size()))
 				{
 					LoadScene(sceneFiles[GlobalState.sampleSceneIndex]);
-					//SDL_RestoreWindow(loopdata.mWindow);
-					//SDL_SetWindowSize(loopdata.mWindow, renderOptions.resolution.x, renderOptions.resolution.y);
 					InitRenderer();
 				}
 				ImGui::InputText("Export filename", &GlobalState.exportName);
 				ImGui::SliderInt("JPG export quality", &GlobalState.currentJpgQuality, 1, 200);
 				optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &GlobalState.mouseSensitivity, 0.001f, 1.0f);
+				ImGui::Text("\n");
+				if (ImGui::Button("Denoise")) denoiseTexture = GlobalState.renderer->Denoise();
+				ImGui::Checkbox("Show denoise", &showDenoise);
 			}
+
+			bool requiresReload = false;
 
 			if (ImGui::CollapsingHeader("Render Settings"))
 			{
-				bool requiresReload = false;
 				Vec3* bgCol = &renderOptions.bgColor;
 
 				optionsChanged |= ImGui::SliderInt("Max ray-depth", &renderOptions.maxDepth, 1, 20);
@@ -553,12 +552,6 @@ void MainLoop(void* arg) // Its the main loop !
 				ImGui::Separator();
 				ImGui::Checkbox("Use ACES tonemapping", &renderOptions.useAces);
 
-				if (requiresReload)
-				{
-					GlobalState.scene->renderOptions = renderOptions;
-					InitRenderer(); // When the options change, restart the render proccess. 
-				}
-
 				GlobalState.scene->renderOptions.enableDenoiser = renderOptions.enableDenoiser;
 				GlobalState.scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
 				GlobalState.scene->renderOptions.useAces = renderOptions.useAces;
@@ -566,13 +559,19 @@ void MainLoop(void* arg) // Its the main loop !
 
 			if (ImGui::CollapsingHeader("Preview Settings")) {
 				// For integrating more preview engines in the future
-				ImGui::Combo("Preview Engine", &GlobalState.previewEngineIndex, "Flareon\0", 2);
+				ImGui::Combo("Preview Engine", &GlobalState.previewEngineIndex, "Flareon\0", 1);
 				ImGui::SameLine(); HelpMarker(
 					"Selects the preview engine to use (currently only Flareon).\nFlareon is an interactive viewport engine based on the same\npath-tracing backend as the LavaFrame renderer.");
 
-				if (&GlobalState.previewEngineIndex == 0) optionsChanged |= ImGui::InputFloat("Preview Scale", &GlobalState.previewScale, 0.1, 0.25);
+				if (GlobalState.previewEngineIndex == 0) requiresReload |= ImGui::InputFloat("Preview Scale", &GlobalState.previewScale, 0.1, 0.25);
 				if (GlobalState.previewScale > 2.0) GlobalState.previewScale = 2.0;
 				if (GlobalState.previewScale < 0.1) GlobalState.previewScale = 0.1;
+			}
+
+			if (requiresReload)
+			{
+				GlobalState.scene->renderOptions = renderOptions;
+				InitRenderer(); // When the options change, restart the render proccess. 
 			}
 
 			ImGui::End();
@@ -581,7 +580,7 @@ void MainLoop(void* arg) // Its the main loop !
 			if (window_override_pos) {
 				ImGui::SetNextWindowPos({ (static_cast<float>(GlobalState.displayX) / 5) * 4, 0 });
 			};
-			
+
 			if (window_override_size) {
 				ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
 			}
@@ -702,7 +701,6 @@ void MainLoop(void* arg) // Its the main loop !
 				}
 			}
 			ImGui::End();
-
 		}
 		if (GlobalState.noUi == true) {
 			GlobalState.scene->camera->isMoving = false;
@@ -755,7 +753,7 @@ void MainLoop(void* arg) // Its the main loop !
 }
 
 int main(int argc, char** argv)
-{	 
+{
 	srand((unsigned int)time(0));
 
 	std::string sceneFile;
@@ -1025,15 +1023,15 @@ int main(int argc, char** argv)
 	style.WindowRounding = 0;
 	style.GrabRounding = 1;
 	style.GrabMinSize = 20;
-	style.FrameRounding = 2;
+	style.FrameRounding = 2.5;
 	style.FramePadding = { 4, 4 };
 
 	colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 	colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-	colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.5f);
+	colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
 	colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 	colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
-	colors[ImGuiCol_Border] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	colors[ImGuiCol_Border] = ImVec4(1.00f, 1.00f, 1.00f, 0.1f);
 	colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 	colors[ImGuiCol_FrameBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.0f);
 	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.64f, 0.64f, 0.64f, 0.40f);
@@ -1081,7 +1079,7 @@ int main(int argc, char** argv)
 	colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
 	colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 	colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
-	
+
 	ImGui_ImplSDL2_InitForOpenGL(loopdata.mWindow, loopdata.mGLContext);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
