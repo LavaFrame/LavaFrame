@@ -14,10 +14,10 @@
  * Check license.txt for more information on licensing
  * Based on the original software by Alif Ali (knightcrawler25)
  */
-#define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINE
 
 #include <GL/gl3w.h>
-#include <SDL2/SDL.h>
+#include "SDL.h"
 #include <iostream>
 
 #include <math.h>
@@ -39,6 +39,8 @@
 #include "ImGuizmo.h"
 #include "Loader.h"
 #include "tinydir.h"
+
+#include <Windows.h>
 
 using namespace LavaFrame;
 
@@ -713,7 +715,7 @@ void MainLoop(void* arg) // Its the main loop !
     SDL_GL_SwapWindow(loopdata.mWindow);
 }
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
     srand((unsigned int)time(0));
 

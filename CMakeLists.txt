@@ -3,15 +3,13 @@ project(LavaFrame)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/SDL)
-add_subdirectory(${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/oidn_git)
+set( SDL_STATIC ON CACHE BOOL "" FORCE )
+set( SDL_SHARED OFF CACHE BOOL "" FORCE )
+set( OIDN_STATIC_LIB ON )
+set( BUILD_SHARED_LIBS OFF )
 
-set_target_properties(
-    SDL2 OpenImageDenoise oidnBenchmark
-    oidnDenoise oidnTest uninstall utils
-    common SDL2-static SDL2main dnnl 
-    PROPERTIES FOLDER Deps
-)
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 file(GLOB LAVAFRAME_SOURCES
     ${CMAKE_SOURCE_DIR}/LavaFrame/Sources/*.cpp
@@ -19,7 +17,8 @@ file(GLOB LAVAFRAME_SOURCES
     ${CMAKE_SOURCE_DIR}/LavaFrame/Sources/loaders/*.cpp
 )
 
-file(GLOB LAVAFRAME_HEADERS
+file(GLOB imgui
+
     ${CMAKE_SOURCE_DIR}/LavaFrame/Headers/*.h
     ${CMAKE_SOURCE_DIR}/LavaFrame/Headers/math/*.h
 )
@@ -39,8 +38,20 @@ file(GLOB THIRDPARTY_SOURCES
     ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/gl3w/*.c
 )
 
+add_executable(Main ${LAVAFRAME_SOURCES} ${LAVAFRAME_HEADERS} ${THIRDPARTY_SOURCES})
 
-add_executable(Main ${LAVAFRAME_SOURCES} ${THIRDPARTY_SOURCES})
+add_subdirectory(${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/SDL)
+add_subdirectory(${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/oidn_git)
+
+add_library(SDL2::SDL2 ALIAS SDL2-static)
+
+set_target_properties(
+    OpenImageDenoise oidnBenchmark
+    oidnDenoise oidnTest uninstall utils
+    common SDL2-static SDL2main dnnl 
+    PROPERTIES FOLDER Deps
+)
+
 target_include_directories(Main PUBLIC    
     ${CMAKE_SOURCE_DIR}/LavaFrame/Headers
     ${CMAKE_SOURCE_DIR}/LavaFrame/Headers/math
@@ -51,7 +62,7 @@ target_include_directories(Main PUBLIC
     ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/stb
     ${CMAKE_SOURCE_DIR}/LavaFrame/thirdparty/imguizmo
 )
-target_link_libraries(Main OpenImageDenoise GL SDL2::SDL2 ${CMAKE_DL_LIBS})
+target_link_libraries(Main SDL2main SDL2-static OpenImageDenoise opengl32 ${CMAKE_DL_LIBS})
 
 source_group(
     TREE ${CMAKE_SOURCE_DIR}
