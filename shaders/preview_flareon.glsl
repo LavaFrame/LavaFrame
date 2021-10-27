@@ -15,7 +15,7 @@ in vec2 TexCoords;
 #include common/anyhit.glsl
 #include common/closest_hit.glsl
 #include common/disney.glsl
-#include common/pathtrace.glsl
+#include common/flareon_backend.glsl
 
 void main(void)
 {

@@ -210,6 +210,7 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
     <None Include="..\shaders\common\anyhit.glsl" />
     <None Include="..\shaders\common\closest_hit.glsl" />
     <None Include="..\shaders\common\disney.glsl" />
+    <None Include="..\shaders\common\flareon_backend.glsl" />
     <None Include="..\shaders\common\globals.glsl" />
     <None Include="..\shaders\common\intersection.glsl" />
     <None Include="..\shaders\common\pathtrace.glsl" />
@@ -219,7 +220,7 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
     <None Include="..\shaders\output.glsl" />
     <None Include="..\shaders\postprocess.glsl" />
     <None Include="..\shaders\preview_flareon.glsl" />
-    <None Include="..\shaders\tiled_renderer.glsl" />
+    <None Include="..\shaders\renderer.glsl" />
     <None Include="..\shaders_amd\accumulation.glsl" />
     <None Include="..\shaders_amd\common\anyhit.glsl" />
     <None Include="..\shaders_amd\common\closest_hit.glsl" />

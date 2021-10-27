@@ -143,7 +143,7 @@
     <None Include="..\shaders\preview_flareon.glsl">
       <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="..\shaders\tiled_renderer.glsl">
+    <None Include="..\shaders\renderer.glsl">
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="..\shaders\common\anyhit.glsl">
@@ -232,6 +232,9 @@
     </None>
     <None Include="..\shaders_amd\common\vertex.glsl">
       <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\shaders\common\flareon_backend.glsl">
+      <Filter>Source Files\shaders\common</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
