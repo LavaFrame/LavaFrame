@@ -173,35 +173,37 @@ void Render()
 	if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
 	if (no_collapse)        window_flags |= ImGuiWindowFlags_NoCollapse;
 
-	ImGui::Begin("Viewport", NULL, window_flags);
-	{
-		viewportFocused = ImGui::IsWindowFocused();
-		viewportPanelSize = ImGui::GetContentRegionAvail();
-
-		viewportPanelSize.x = GlobalState.scene->renderOptions.resolution.x;
-		viewportPanelSize.y = GlobalState.scene->renderOptions.resolution.y;
-
-		if (GlobalState.scene->camera->isMoving)
+	if (!GlobalState.noUi) {
+		ImGui::Begin("Viewport", NULL, window_flags);
 		{
-			GlobalState.renderer->Present();
+			viewportFocused = ImGui::IsWindowFocused();
+			viewportPanelSize = ImGui::GetContentRegionAvail();
+
+			viewportPanelSize.x = GlobalState.scene->renderOptions.resolution.x;
+			viewportPanelSize.y = GlobalState.scene->renderOptions.resolution.y;
+
+			if (GlobalState.scene->camera->isMoving)
+			{
+				GlobalState.renderer->Present();
+			}
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glViewport(0, 0, viewportPanelSize.x, viewportPanelSize.y);
+			traceTexture = GlobalState.renderer->SetViewport(viewportPanelSize.x, viewportPanelSize.y);
+			if (showDenoise) viewportTexture = denoiseTexture;
+			else viewportTexture = traceTexture;
+
+			viewport_scaler = std::min(ImGui::GetContentRegionAvail().x / GlobalState.scene->renderOptions.resolution.x, ImGui::GetContentRegionAvail().y / GlobalState.scene->renderOptions.resolution.y);
+
+			ImGui::SetCursorPos((ImGui::GetContentRegionAvail() * 0.5f) - ((viewportPanelSize * viewport_scaler) * 0.5));
+			ImGui::Image((void*)viewportTexture, { viewportPanelSize.x * viewport_scaler, viewportPanelSize.y * viewport_scaler }, ImVec2(0, 1), ImVec2(1, 0));
+			viewportHovered = ImGui::IsItemHovered();
+			viewportClicked = ImGui::IsItemClicked();
+
+			ImGui::End();
+
+			style.WindowPadding = { static_cast<float>(GlobalState.nativeScreenWidth / 200), static_cast<float>(GlobalState.nativeScreenWidth / 200) };
 		}
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, viewportPanelSize.x, viewportPanelSize.y);
-		traceTexture = GlobalState.renderer->SetViewport(viewportPanelSize.x, viewportPanelSize.y);
-		if (showDenoise) viewportTexture = denoiseTexture;
-		else viewportTexture = traceTexture;
-
-		viewport_scaler = std::min(ImGui::GetContentRegionAvail().x / GlobalState.scene->renderOptions.resolution.x, ImGui::GetContentRegionAvail().y / GlobalState.scene->renderOptions.resolution.y);
-
-		ImGui::SetCursorPos((ImGui::GetContentRegionAvail() * 0.5f) - ((viewportPanelSize * viewport_scaler) * 0.5));
-		ImGui::Image((void*)viewportTexture, { viewportPanelSize.x * viewport_scaler, viewportPanelSize.y * viewport_scaler }, ImVec2(0, 1), ImVec2(1, 0));
-		viewportHovered = ImGui::IsItemHovered();
-		viewportClicked = ImGui::IsItemClicked();
-
-		ImGui::End();
-
-		style.WindowPadding = { static_cast<float>(GlobalState.nativeScreenWidth / 200), static_cast<float>(GlobalState.nativeScreenWidth / 200) };
 	}
 	ImGui::Render();
 	ImGui::UpdatePlatformWindows();
@@ -518,8 +520,6 @@ void MainLoop(void* arg) // Its the main loop !
 				ImGui::SliderInt("JPG export quality", &GlobalState.currentJpgQuality, 1, 200);
 				optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &GlobalState.mouseSensitivity, 0.001f, 1.0f);
 				ImGui::Text("\n");
-				if (ImGui::Button("Denoise")) denoiseTexture = GlobalState.renderer->Denoise();
-				ImGui::Checkbox("Show denoise", &showDenoise);
 			}
 
 			bool requiresReload = false;
@@ -544,11 +544,13 @@ void MainLoop(void* arg) // Its the main loop !
 					ImGui::SetTooltip("Creates a constant surrounding color lighting the scene.");
 				optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
 				ImGui::Separator();
-				ImGui::Checkbox("Enable denoiser", &renderOptions.enableDenoiser);
+				/*ImGui::Checkbox("Enable denoiser", &renderOptions.enableDenoiser);
 				ImGui::InputInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 10, 50);
 				if (renderOptions.denoiserFrameCnt < 1) renderOptions.denoiserFrameCnt = 1;
 				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Run the denoiser and update the view every x samples.");
+					ImGui::SetTooltip("Run the denoiser and update the view every x samples.");*/
+				if (ImGui::Button("Run denoise")) denoiseTexture = GlobalState.renderer->Denoise();
+				ImGui::Checkbox("Show denoise", &showDenoise);
 				ImGui::Separator();
 				ImGui::Checkbox("Use ACES tonemapping", &renderOptions.useAces);
 
@@ -566,6 +568,8 @@ void MainLoop(void* arg) // Its the main loop !
 				if (GlobalState.previewEngineIndex == 0) requiresReload |= ImGui::InputFloat("Preview Scale", &GlobalState.previewScale, 0.1, 0.25);
 				if (GlobalState.previewScale > 2.0) GlobalState.previewScale = 2.0;
 				if (GlobalState.previewScale < 0.1) GlobalState.previewScale = 0.1;
+
+				if (GlobalState.previewEngineIndex == 0) requiresReload |= ImGui::Checkbox("Use Aperture in Preview", &GlobalState.useDofInPreview);
 			}
 
 			if (requiresReload)
@@ -599,7 +603,7 @@ void MainLoop(void* arg) // Its the main loop !
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Aperture of the camera.");
 				GlobalState.scene->camera->aperture = aperture / 1000.0f;
-				optionsChanged |= ImGui::SliderFloat("Focal Distance", &GlobalState.scene->camera->focalDist, 0.01f, 50.0f);
+				optionsChanged |= ImGui::SliderFloat("Focal Distance", &GlobalState.scene->camera->focalDist, 0.1f, 50.0f);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Focus distance of the camera.");
 				ImGui::Text("Pos: %.2f, %.2f, %.2f", GlobalState.scene->camera->position.x, GlobalState.scene->camera->position.y, GlobalState.scene->camera->position.z);

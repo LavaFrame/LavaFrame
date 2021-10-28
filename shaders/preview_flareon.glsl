@@ -17,6 +17,8 @@ in vec2 TexCoords;
 #include common/disney.glsl
 #include common/flareon_backend.glsl
 
+uniform sampler2D imgTex;
+
 void main(void)
 {
     InitRNG(gl_FragCoord.xy, 1);
@@ -39,13 +41,22 @@ void main(void)
     vec3 focalPoint = camera.focalDist * rayDir;
     float cam_r1 = rand() * TWO_PI;
     float cam_r2 = rand() * camera.aperture;
+#ifdef USE_DOF
     vec3 randomAperturePos = (cos(cam_r1) * camera.right + sin(cam_r1) * camera.up) * sqrt(cam_r2);
     vec3 finalRayDir = normalize(focalPoint - randomAperturePos);
+#endif
+#ifndef USE_DOF
+	vec3 finalRayDir = normalize(focalPoint);
+#endif
 
+#ifdef USE_DOF
     Ray ray = Ray(camera.position + randomAperturePos, finalRayDir);
+#endif
+#ifndef USE_DOF
+	Ray ray = Ray(camera.position, finalRayDir);
+#endif
 
     vec3 pixelColor = PathTrace(ray);
-    //pixelColor = mix(pixelColor, PathTrace(ray), 0.5);
 
     color = pixelColor;
 }

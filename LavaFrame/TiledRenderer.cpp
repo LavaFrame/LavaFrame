@@ -87,6 +87,8 @@ namespace LavaFrame
         }
         if (scene->renderOptions.useConstantBg)
             defines += "#define CONSTANT_BG\n";
+        if (GlobalState.useDofInPreview)
+            defines += "#define USE_DOF\n";
 
         if (defines.size() > 0)
         {
