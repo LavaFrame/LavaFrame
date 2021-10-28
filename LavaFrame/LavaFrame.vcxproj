@@ -368,6 +368,9 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
   <ItemGroup>
     <Image Include="icon.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\x64\Release\output\readme.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -93,6 +93,9 @@
     <Filter Include="Source Files\shaders_amd\common">
       <UniqueIdentifier>{da942b6c-56a6-4d61-b8e2-e4ff7d7b19b6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\build_include\output">
+      <UniqueIdentifier>{fb4bd270-06be-4e8a-897c-a244e08d2ead}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\build_include\OpenImageDenoise.dll">
@@ -488,5 +491,10 @@
     <Image Include="icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\x64\Release\output\readme.txt">
+      <Filter>Resource Files\build_include\output</Filter>
+    </Text>
   </ItemGroup>
 </Project>
