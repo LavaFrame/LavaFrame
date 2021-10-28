@@ -87,11 +87,11 @@
     <Filter Include="Source Files\shaders_amd">
       <UniqueIdentifier>{4be3399b-62e4-4037-9d99-81c7415d7866}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\shaders_amd\common">
-      <UniqueIdentifier>{e4404cae-5ef7-4ec8-a18c-e6560501c3fc}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\math">
       <UniqueIdentifier>{a20bec6e-d032-45f4-a379-2cda8981a0c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shaders_amd\common">
+      <UniqueIdentifier>{da942b6c-56a6-4d61-b8e2-e4ff7d7b19b6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -188,8 +188,8 @@
     <None Include="thirdparty\SDL2\lib\x86\SDL2.dll">
       <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
     </None>
-    <None Include="..\shaders_amd\accumulation.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
+    <None Include="..\shaders\common\flareon_backend.glsl">
+      <Filter>Source Files\shaders\common</Filter>
     </None>
     <None Include="..\shaders_amd\output.glsl">
       <Filter>Source Files\shaders_amd</Filter>
@@ -197,22 +197,13 @@
     <None Include="..\shaders_amd\postprocess.glsl">
       <Filter>Source Files\shaders_amd</Filter>
     </None>
-    <None Include="..\shaders_amd\postprocess_neutral.glsl">
+    <None Include="..\shaders_amd\preview_flareon.glsl">
       <Filter>Source Files\shaders_amd</Filter>
     </None>
-    <None Include="..\shaders_amd\progressive.glsl">
+    <None Include="..\shaders_amd\renderer.glsl">
       <Filter>Source Files\shaders_amd</Filter>
     </None>
-    <None Include="..\shaders_amd\tiled_renderer.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\anyhit.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\closest_hit.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\disney.glsl">
+    <None Include="..\shaders_amd\common\flareon_backend.glsl">
       <Filter>Source Files\shaders_amd\common</Filter>
     </None>
     <None Include="..\shaders_amd\common\globals.glsl">
@@ -233,8 +224,14 @@
     <None Include="..\shaders_amd\common\vertex.glsl">
       <Filter>Source Files\shaders_amd\common</Filter>
     </None>
-    <None Include="..\shaders\common\flareon_backend.glsl">
-      <Filter>Source Files\shaders\common</Filter>
+    <None Include="..\shaders_amd\common\anyhit.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\shaders_amd\common\closest_hit.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
+    </None>
+    <None Include="..\shaders_amd\common\disney.glsl">
+      <Filter>Source Files\shaders_amd\common</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

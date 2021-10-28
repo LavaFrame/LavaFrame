@@ -221,10 +221,10 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
     <None Include="..\shaders\postprocess.glsl" />
     <None Include="..\shaders\preview_flareon.glsl" />
     <None Include="..\shaders\renderer.glsl" />
-    <None Include="..\shaders_amd\accumulation.glsl" />
     <None Include="..\shaders_amd\common\anyhit.glsl" />
     <None Include="..\shaders_amd\common\closest_hit.glsl" />
     <None Include="..\shaders_amd\common\disney.glsl" />
+    <None Include="..\shaders_amd\common\flareon_backend.glsl" />
     <None Include="..\shaders_amd\common\globals.glsl" />
     <None Include="..\shaders_amd\common\intersection.glsl" />
     <None Include="..\shaders_amd\common\pathtrace.glsl" />
@@ -233,9 +233,8 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
     <None Include="..\shaders_amd\common\vertex.glsl" />
     <None Include="..\shaders_amd\output.glsl" />
     <None Include="..\shaders_amd\postprocess.glsl" />
-    <None Include="..\shaders_amd\postprocess_neutral.glsl" />
-    <None Include="..\shaders_amd\progressive.glsl" />
-    <None Include="..\shaders_amd\tiled_renderer.glsl" />
+    <None Include="..\shaders_amd\preview_flareon.glsl" />
+    <None Include="..\shaders_amd\renderer.glsl" />
     <None Include="thirdparty\oidn\lib\OpenImageDenoise.dll" />
     <None Include="thirdparty\oidn\lib\tbb.dll" />
     <None Include="thirdparty\oidn\lib\tbbmalloc.dll" />

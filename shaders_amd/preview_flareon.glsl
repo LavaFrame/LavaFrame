@@ -1,25 +1,6 @@
 /*
- * MIT License
- *
- * Copyright(c) 2019-2021 Asif Ali
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this softwareand associated documentation files(the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions :
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Read license.txt for license information.
+ * This is based on the original GLSL-PathTracer by Asif Ali.
  */
 
 #version 330
@@ -34,7 +15,9 @@ in vec2 TexCoords;
 #include common/anyhit.glsl
 #include common/closest_hit.glsl
 #include common/disney.glsl
-#include common/pathtrace.glsl
+#include common/flareon_backend.glsl
+
+uniform sampler2D imgTex;
 
 void main(void)
 {
@@ -47,7 +30,7 @@ void main(void)
     jitter.x = r1 < 1.0 ? sqrt(r1) - 1.0 : 1.0 - sqrt(2.0 - r1);
     jitter.y = r2 < 1.0 ? sqrt(r2) - 1.0 : 1.0 - sqrt(2.0 - r2);
 
-    jitter /= (screenResolution * 0.5);
+    jitter /= screenResolution;
     vec2 d = (2.0 * TexCoords - 1.0) + jitter;
 
     float scale = tan(camera.fov * 0.5);
@@ -58,10 +41,20 @@ void main(void)
     vec3 focalPoint = camera.focalDist * rayDir;
     float cam_r1 = rand() * TWO_PI;
     float cam_r2 = rand() * camera.aperture;
+#ifdef USE_DOF
     vec3 randomAperturePos = (cos(cam_r1) * camera.right + sin(cam_r1) * camera.up) * sqrt(cam_r2);
     vec3 finalRayDir = normalize(focalPoint - randomAperturePos);
+#endif
+#ifndef USE_DOF
+	vec3 finalRayDir = normalize(focalPoint);
+#endif
 
+#ifdef USE_DOF
     Ray ray = Ray(camera.position + randomAperturePos, finalRayDir);
+#endif
+#ifndef USE_DOF
+	Ray ray = Ray(camera.position, finalRayDir);
+#endif
 
     vec3 pixelColor = PathTrace(ray);
 
