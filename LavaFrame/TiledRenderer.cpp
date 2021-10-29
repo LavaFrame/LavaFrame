@@ -379,7 +379,7 @@ namespace LavaFrame
 
         glActiveTexture(GL_TEXTURE0);
 
-        if (scene->renderOptions.enableAutomaticDenoise && denoised)
+        if (denoised)
             glBindTexture(GL_TEXTURE_2D, denoisedTexture);
         else
             glBindTexture(GL_TEXTURE_2D, tileOutputTexture[1 - currentBuffer]);
@@ -548,6 +548,8 @@ namespace LavaFrame
         // Copy the denoised data to denoisedTexture
         glBindTexture(GL_TEXTURE_2D, denoisedTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, screenSize.x, screenSize.y, 0, GL_RGB, GL_FLOAT, frameOutputPtr);
+
+        denoised = true;
 
         return denoisedTexture;
     }

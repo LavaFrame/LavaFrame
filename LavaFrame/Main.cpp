@@ -546,7 +546,6 @@ void MainLoop(void* arg) // Its the main loop !
 				ImGui::Separator();
 				ImGui::Checkbox("Use ACES tonemapping", &renderOptions.useAces);
 
-				GlobalState.scene->renderOptions.enableAutomaticDenoise = renderOptions.enableAutomaticDenoise;
 				GlobalState.scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
 				GlobalState.scene->renderOptions.useAces = renderOptions.useAces;
 			}
