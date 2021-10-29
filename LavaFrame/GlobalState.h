@@ -33,4 +33,7 @@ struct LavaFrameState {
 	std::string assetsDir = "./assets/";
 	std::string releaseVersion = "Version 0.6.0";
 	std::string versionString = "LavaFrame - " + releaseVersion;
+	uint32_t viewportTexture;
+	uint32_t traceTexture;
+	uint32_t denoiseTexture;
 };

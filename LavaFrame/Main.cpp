@@ -67,9 +67,6 @@ bool window_override_pos = true;
 
 float viewport_scaler;
 bool showDenoise = false;
-uint32_t viewportTexture;
-uint32_t traceTexture;
-uint32_t denoiseTexture;
 
 struct LoopData
 {
@@ -189,14 +186,14 @@ void Render()
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glViewport(0, 0, viewportPanelSize.x, viewportPanelSize.y);
-			traceTexture = GlobalState.renderer->SetViewport(viewportPanelSize.x, viewportPanelSize.y);
-			if (showDenoise) viewportTexture = denoiseTexture;
-			else viewportTexture = traceTexture;
+			GlobalState.traceTexture = GlobalState.renderer->SetViewport(viewportPanelSize.x, viewportPanelSize.y);
+			if (showDenoise) GlobalState.viewportTexture = GlobalState.denoiseTexture;
+			else GlobalState.viewportTexture = GlobalState.traceTexture;
 
 			viewport_scaler = std::min(ImGui::GetContentRegionAvail().x / GlobalState.scene->renderOptions.resolution.x, ImGui::GetContentRegionAvail().y / GlobalState.scene->renderOptions.resolution.y);
 
 			ImGui::SetCursorPos((ImGui::GetContentRegionAvail() * 0.5f) - ((viewportPanelSize * viewport_scaler) * 0.5));
-			ImGui::Image((void*)viewportTexture, { viewportPanelSize.x * viewport_scaler, viewportPanelSize.y * viewport_scaler }, ImVec2(0, 1), ImVec2(1, 0));
+			ImGui::Image((void*)GlobalState.viewportTexture, { viewportPanelSize.x * viewport_scaler, viewportPanelSize.y * viewport_scaler }, ImVec2(0, 1), ImVec2(1, 0));
 			viewportHovered = ImGui::IsItemHovered();
 			viewportClicked = ImGui::IsItemClicked();
 
@@ -544,17 +541,9 @@ void MainLoop(void* arg) // Its the main loop !
 					ImGui::SetTooltip("Creates a constant surrounding color lighting the scene.");
 				optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
 				ImGui::Separator();
-				/*ImGui::Checkbox("Enable denoiser", &renderOptions.enableDenoiser);
-				ImGui::InputInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 10, 50);
-				if (renderOptions.denoiserFrameCnt < 1) renderOptions.denoiserFrameCnt = 1;
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Run the denoiser and update the view every x samples.");*/
-				if (ImGui::Button("Run denoise")) denoiseTexture = GlobalState.renderer->Denoise();
-				ImGui::Checkbox("Show denoise", &showDenoise);
-				ImGui::Separator();
 				ImGui::Checkbox("Use ACES tonemapping", &renderOptions.useAces);
 
-				GlobalState.scene->renderOptions.enableDenoiser = renderOptions.enableDenoiser;
+				GlobalState.scene->renderOptions.enableAutomaticDenoise = renderOptions.enableAutomaticDenoise;
 				GlobalState.scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
 				GlobalState.scene->renderOptions.useAces = renderOptions.useAces;
 			}
@@ -570,6 +559,17 @@ void MainLoop(void* arg) // Its the main loop !
 				if (GlobalState.previewScale < 0.1) GlobalState.previewScale = 0.1;
 
 				if (GlobalState.previewEngineIndex == 0) requiresReload |= ImGui::Checkbox("Use Aperture in Preview", &GlobalState.useDofInPreview);
+			}
+
+			if (ImGui::CollapsingHeader("Denoiser")) {
+				if (ImGui::Button("Run denoise")) GlobalState.denoiseTexture = GlobalState.renderer->Denoise();
+				ImGui::Checkbox("Show denoise", &showDenoise);
+				ImGui::Separator();
+				ImGui::Checkbox("Enable automatic denoise", &GlobalState.scene->renderOptions.enableAutomaticDenoise);
+				ImGui::InputInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 10, 50);
+				if (renderOptions.denoiserFrameCnt < 1) renderOptions.denoiserFrameCnt = 1;
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Run the denoiser and update the view every x samples.");
 			}
 
 			if (requiresReload)
@@ -857,11 +857,11 @@ int main(int argc, char** argv)
 			break;
 
 		case strint("-dn"):
-			renderOptions.enableDenoiser = true;
+			renderOptions.enableAutomaticDenoise = true;
 			break;
 
 		case strint("--denoise"):
-			renderOptions.enableDenoiser = true;
+			renderOptions.enableAutomaticDenoise = true;
 			break;
 
 		case strint("-db"):

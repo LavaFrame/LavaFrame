@@ -356,7 +356,7 @@ namespace LavaFrame
         }
         else
         {
-            if (scene->renderOptions.enableDenoiser && denoised)
+            if (scene->renderOptions.enableAutomaticDenoise && denoised)
                 glBindTexture(GL_TEXTURE_2D, denoisedTexture);
             else
                 glBindTexture(GL_TEXTURE_2D, tileOutputTexture[1 - currentBuffer]);
@@ -379,7 +379,7 @@ namespace LavaFrame
 
         glActiveTexture(GL_TEXTURE0);
 
-        if (scene->renderOptions.enableDenoiser && denoised)
+        if (scene->renderOptions.enableAutomaticDenoise && denoised)
             glBindTexture(GL_TEXTURE_2D, denoisedTexture);
         else
             glBindTexture(GL_TEXTURE_2D, tileOutputTexture[1 - currentBuffer]);
@@ -396,8 +396,8 @@ namespace LavaFrame
     {
         Renderer::Update(secondsElapsed);
 
-        // Denoise Image
-        /*if (scene->renderOptions.enableDenoiser && frameCounter % (scene->renderOptions.denoiserFrameCnt * (numTilesX * numTilesY)) == 0)
+        // Denoise Image automatically if requested by user
+        if (scene->renderOptions.enableAutomaticDenoise && frameCounter % (scene->renderOptions.denoiserFrameCnt * (numTilesX * numTilesY)) == 0)
         {
             glBindTexture(GL_TEXTURE_2D, tileOutputTexture[1 - currentBuffer]);
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, denoiserInputFramePtr);
@@ -424,8 +424,10 @@ namespace LavaFrame
             glBindTexture(GL_TEXTURE_2D, denoisedTexture);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, screenSize.x, screenSize.y, 0, GL_RGB, GL_FLOAT, frameOutputPtr);
 
+            GlobalState.denoiseTexture = denoisedTexture;
+
             denoised = true;
-        }*/
+        }
 
         if (scene->camera->isMoving || scene->instancesModified)
         {

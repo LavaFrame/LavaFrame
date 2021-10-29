@@ -30,7 +30,7 @@ namespace LavaFrame
             RRDepth = 2;
             bgColor = Vec3(0.5f, 0.5f, 0.5f);
             denoiserFrameCnt = 50;
-            enableDenoiser = false;
+            enableAutomaticDenoise = false;
             useAces = true;
         }
         iVec2 resolution;
@@ -39,7 +39,7 @@ namespace LavaFrame
         int tileHeight;
         bool useEnvMap;
         bool enableRR;
-        bool enableDenoiser;
+        bool enableAutomaticDenoise;
         bool useConstantBg;
         bool useAces;
         int RRDepth;
