@@ -155,12 +155,17 @@ void Render()
 
 	style.WindowPadding = { 0, 0 };
 
-	if (viewport_window_override_pos) {
+	if (viewport_window_override_pos and !GlobalState.noUi) {
 		ImGui::SetNextWindowPos({ static_cast<float>(GlobalState.displayX / 5), 0 });
 	}
 
-	if (viewport_window_override_size) {
+	if (viewport_window_override_size and !GlobalState.noUi) {
 		ImGui::SetNextWindowSize({ static_cast<float>((GlobalState.displayX / 5) * 3),  static_cast<float>(GlobalState.displayY) });
+	}
+
+	if (GlobalState.noUi) {
+		ImGui::SetNextWindowPos({ 0, 0 });
+		ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX), static_cast<float>(GlobalState.displayY) });
 	}
 
 	ImGuiWindowFlags window_flags = 0;
@@ -170,38 +175,39 @@ void Render()
 	if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
 	if (no_collapse)        window_flags |= ImGuiWindowFlags_NoCollapse;
 
-	if (!GlobalState.noUi) {
-		ImGui::Begin("Viewport", NULL, window_flags);
+	ImGui::Begin("Viewport", NULL, window_flags);
+	{
+		viewportFocused = ImGui::IsWindowFocused();
+		viewportPanelSize = ImGui::GetContentRegionAvail();
+
+		viewportPanelSize.x = GlobalState.scene->renderOptions.resolution.x;
+		viewportPanelSize.y = GlobalState.scene->renderOptions.resolution.y;
+
+		if (GlobalState.scene->camera->isMoving)
 		{
-			viewportFocused = ImGui::IsWindowFocused();
-			viewportPanelSize = ImGui::GetContentRegionAvail();
-
-			viewportPanelSize.x = GlobalState.scene->renderOptions.resolution.x;
-			viewportPanelSize.y = GlobalState.scene->renderOptions.resolution.y;
-
-			if (GlobalState.scene->camera->isMoving)
-			{
-				GlobalState.renderer->Present();
-			}
-
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glViewport(0, 0, viewportPanelSize.x, viewportPanelSize.y);
-			GlobalState.traceTexture = GlobalState.renderer->SetViewport(viewportPanelSize.x, viewportPanelSize.y);
-			if (showDenoise) GlobalState.viewportTexture = GlobalState.denoiseTexture;
-			else GlobalState.viewportTexture = GlobalState.traceTexture;
-
-			viewport_scaler = std::min(ImGui::GetContentRegionAvail().x / GlobalState.scene->renderOptions.resolution.x, ImGui::GetContentRegionAvail().y / GlobalState.scene->renderOptions.resolution.y);
-
-			ImGui::SetCursorPos((ImGui::GetContentRegionAvail() * 0.5f) - ((viewportPanelSize * viewport_scaler) * 0.5));
-			ImGui::Image((void*)GlobalState.viewportTexture, { viewportPanelSize.x * viewport_scaler, viewportPanelSize.y * viewport_scaler }, ImVec2(0, 1), ImVec2(1, 0));
-			viewportHovered = ImGui::IsItemHovered();
-			viewportClicked = ImGui::IsItemClicked();
-
-			ImGui::End();
-
-			style.WindowPadding = { static_cast<float>(GlobalState.nativeScreenWidth / 200), static_cast<float>(GlobalState.nativeScreenWidth / 200) };
+			GlobalState.renderer->Present();
 		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, viewportPanelSize.x, viewportPanelSize.y);
+		GlobalState.traceTexture = GlobalState.renderer->SetViewport(viewportPanelSize.x, viewportPanelSize.y);
+		if (showDenoise) GlobalState.viewportTexture = GlobalState.denoiseTexture;
+		else GlobalState.viewportTexture = GlobalState.traceTexture;
+
+		viewport_scaler = std::min(ImGui::GetContentRegionAvail().x / GlobalState.scene->renderOptions.resolution.x, ImGui::GetContentRegionAvail().y / GlobalState.scene->renderOptions.resolution.y);
+
+		ImGui::SetCursorPos((ImGui::GetContentRegionAvail() * 0.5f) - ((viewportPanelSize * viewport_scaler) * 0.5));
+		if (!GlobalState.noUi) ImGui::Image((void*)GlobalState.viewportTexture, { viewportPanelSize.x * viewport_scaler, viewportPanelSize.y * viewport_scaler }, ImVec2(0, 1), ImVec2(1, 0));
+		else ImGui::Image((void*)GlobalState.viewportTexture, { viewportPanelSize.x, viewportPanelSize.y}, ImVec2(0, 1), ImVec2(1, 0));
+		viewportHovered = ImGui::IsItemHovered();
+		viewportClicked = ImGui::IsItemClicked();
+
+		ImGui::End();
+
+		if (!GlobalState.noUi) style.WindowPadding = { static_cast<float>(GlobalState.nativeScreenWidth / 200), static_cast<float>(GlobalState.nativeScreenWidth / 200) };
+		else style.WindowPadding = { 0, 0 };
 	}
+
 	ImGui::Render();
 	ImGui::UpdatePlatformWindows();
 
@@ -211,7 +217,7 @@ void Render()
 void Update(float secondsElapsed)
 {
 	GlobalState.keyPressed = false;
-	if (ImGui::IsAnyMouseDown())
+	if (ImGui::IsAnyMouseDown() and !GlobalState.noMove)
 	{
 		ImVec2 mousePos = ImGui::GetMousePos();
 		if (viewportHovered) // Chech if mouse is on viewport TODO(PIXEL): object mouse picking
@@ -241,9 +247,8 @@ void Update(float secondsElapsed)
 		}
 	}
 
-
 	// Maximum sample auto export
-	if (GlobalState.maxSamples == GlobalState.renderer->GetSampleCount()) {
+	if (GlobalState.maxSamples + 1 == GlobalState.renderer->GetSampleCount()) {
 		if (GlobalState.exportType == "png") {
 			if (GlobalState.exportName == "") {
 				SaveFrame("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".png");
@@ -378,7 +383,7 @@ void MainLoop(void* arg) // Its the main loop !
 			if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 			{
 				//GlobalState.scene->renderOptions.resolution = iVec2(event.window.data1, event.window.data2);
-				//InitRenderer(); // Restart renderer on window resize. 
+				//InitRenderer(); // Restart renderer on window resize.
 			}
 
 			if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(loopdata.mWindow))
@@ -392,14 +397,13 @@ void MainLoop(void* arg) // Its the main loop !
 	ImGui_ImplSDL2_NewFrame(loopdata.mWindow);
 	ImGui::NewFrame();
 	ImGuizmo::SetOrthographic(false);
-	ImGui::DockSpaceOverViewport();
+	//ImGui::DockSpaceOverViewport();
 	ImGuizmo::BeginFrame();
 	{
 		// io.Fonts->GetTexDataAsAlpha8(); Old font handling
 		bool optionsChanged = false;
 
 		if (GlobalState.noUi == false) {
-
 			// Window flags
 
 			ImGuiWindowFlags window_flags = 0;
@@ -459,7 +463,6 @@ void MainLoop(void* arg) // Its the main loop !
 							}
 						}
 						ImGui::EndMenu();
-
 					}
 					ImGui::EndMenu();
 				}
@@ -575,7 +578,7 @@ void MainLoop(void* arg) // Its the main loop !
 			if (requiresReload)
 			{
 				GlobalState.scene->renderOptions = renderOptions;
-				InitRenderer(); // When the options change, restart the render proccess. 
+				InitRenderer(); // When the options change, restart the render proccess.
 			}
 
 			ImGui::End();
@@ -614,7 +617,6 @@ void MainLoop(void* arg) // Its the main loop !
 				GlobalState.scene->renderOptions = renderOptions;
 				GlobalState.scene->camera->isMoving = true;
 			}
-
 
 			if (ImGui::CollapsingHeader("Objects"))
 			{
@@ -709,7 +711,7 @@ void MainLoop(void* arg) // Its the main loop !
 		if (GlobalState.noUi == true) {
 			GlobalState.scene->camera->isMoving = false;
 		}
-		if (GlobalState.noUi == true && GlobalState.displaySampleCounter == true) {
+		if (GlobalState.noUi == true and GlobalState.displaySampleCounter == true) {
 			// Window flags
 			static bool no_titlebar = true;
 			static bool no_menu = true;
@@ -717,32 +719,23 @@ void MainLoop(void* arg) // Its the main loop !
 			static bool no_resize = true;
 			static bool window_override_size = false;
 
-
 			ImVec4* colors = ImGui::GetStyle().Colors;
 			colors[ImGuiCol_Border] = ImVec4(0.01f, 0.01f, 0.01f, 0.00f);
-			colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.00f);
+			colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.1f);
 
-			ImGuiWindowFlags window_flags = 0;
-			if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
-			if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
-			if (no_move)            window_flags |= ImGuiWindowFlags_NoMove;
-			if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
+			ImGuiWindowFlags window_flags_samplecounter = 0;
+			if (no_titlebar)        window_flags_samplecounter |= ImGuiWindowFlags_NoTitleBar;
+			if (!no_menu)           window_flags_samplecounter |= ImGuiWindowFlags_MenuBar;
+			if (no_move)            window_flags_samplecounter |= ImGuiWindowFlags_NoMove;
+			if (no_resize)          window_flags_samplecounter |= ImGuiWindowFlags_NoResize;
 
 			GlobalState.scene->camera->isMoving = false;
 
 			ImGui::SetNextWindowSize({ 340, 64 });
 			ImGui::SetNextWindowPos({ 0, 1 });
-			ImGui::Begin("samplecount", nullptr, window_flags);
-
+			ImGui::Begin("samplecount", nullptr, window_flags_samplecounter);
 			ImGui::Text("Rendered samples: %d ", GlobalState.renderer->GetSampleCount());
 			ImGui::End();
-
-			if (optionsChanged)
-			{
-				GlobalState.scene->renderOptions = renderOptions;
-				GlobalState.scene->camera->isMoving = true;
-			}
-
 		}
 	}
 
@@ -975,6 +968,9 @@ int main(int argc, char** argv)
 	if (GlobalState.noWindow == true) {
 		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
 	}
+	if (GlobalState.noUi == true) {
+		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
+	}
 
 	SDL_DisplayMode sdldisplaymode;
 	SDL_GetDesktopDisplayMode(0, &sdldisplaymode);
@@ -986,7 +982,8 @@ int main(int argc, char** argv)
 	int screenWidth = displayBounds.w;
 	int screenHeight = displayBounds.h;
 
-	loopdata.mWindow = SDL_CreateWindow(GlobalState.versionString.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenWidth, screenHeight, window_flags);
+	if (!GlobalState.noUi) loopdata.mWindow = SDL_CreateWindow(GlobalState.versionString.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenWidth, screenHeight, window_flags);
+	else loopdata.mWindow = SDL_CreateWindow(GlobalState.versionString.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GlobalState.scene->renderOptions.resolution.x, GlobalState.scene->renderOptions.resolution.y, window_flags);
 
 	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
@@ -1009,7 +1006,7 @@ int main(int argc, char** argv)
 	// Setup Dear ImGui context and style
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", GlobalState.nativeScreenWidth / 121); //Make the font not-eyesore 
+	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", GlobalState.nativeScreenWidth / 121); //Make the font not-eyesore
 	if (GlobalState.useDebug) {
 		io.IniFilename = "guiconfig.ini";
 	}
