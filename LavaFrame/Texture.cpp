@@ -13,7 +13,9 @@ namespace LavaFrame
     {
         name = filename;
 
-        texData = stbi_load(filename.c_str(), &width, &height, NULL, 3);
+        int img_channels = 3;
+
+        texData = stbi_load(filename.c_str(), &width, &height, &img_channels, 4);
 
         if (texData != nullptr)
             return true;

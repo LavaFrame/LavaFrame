@@ -226,7 +226,7 @@ namespace LavaFrame
             texWidth = textures[i]->width;
             texHeight = textures[i]->height;
             int texSize = texWidth * texHeight;
-            textureMapsArray.insert(textureMapsArray.end(), &textures[i]->texData[0], &textures[i]->texData[texSize * 3]);
+            textureMapsArray.insert(textureMapsArray.end(), &textures[i]->texData[0], &textures[i]->texData[texSize * 4]);
         }
     }
 }

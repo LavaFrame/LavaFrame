@@ -191,9 +191,6 @@
     <None Include="thirdparty\SDL2\lib\x86\SDL2.dll">
       <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
     </None>
-    <None Include="..\shaders\common\flareon_backend.glsl">
-      <Filter>Source Files\shaders\common</Filter>
-    </None>
     <None Include="..\shaders_amd\output.glsl">
       <Filter>Source Files\shaders_amd</Filter>
     </None>

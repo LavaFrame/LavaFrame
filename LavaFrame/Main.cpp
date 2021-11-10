@@ -552,9 +552,9 @@ void MainLoop(void* arg) // Its the main loop !
 
 			if (ImGui::CollapsingHeader("Preview Settings")) {
 				// For integrating more preview engines in the future
-				ImGui::Combo("Preview Engine", &GlobalState.previewEngineIndex, "Flareon\0", 1);
+				ImGui::Combo("Preview Engine", &GlobalState.previewEngineIndex, "Flareon\0Viewsdorf", 2);
 				ImGui::SameLine(); HelpMarker(
-					"Selects the preview engine to use (currently only Flareon).\nFlareon is an interactive viewport engine based on the same\npath-tracing backend as the LavaFrame renderer.");
+					"Selects the preview engine to use.\nFlareon is an interactive viewport engine based on the same\npath-tracing backend as the LavaFrame renderer.");
 
 				if (GlobalState.previewEngineIndex == 0) requiresReload |= ImGui::InputFloat("Preview Scale", &GlobalState.previewScale, 0.1, 0.25);
 				if (GlobalState.previewScale > 2.0) GlobalState.previewScale = 2.0;
@@ -964,11 +964,11 @@ int main(int argc, char** argv)
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
 	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
-	if (GlobalState.noWindow == true) {
-		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
-	}
 	if (GlobalState.noUi == true) {
 		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
+	}
+	if (GlobalState.noWindow == true) {
+		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
 	}
 
 	SDL_DisplayMode sdldisplaymode;

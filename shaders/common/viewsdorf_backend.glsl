@@ -257,7 +257,7 @@ vec3 PathTrace(Ray r)
         }
 #endif
 
-        // Add absorption
+        // Add absoption
         throughput *= exp(-absorption * t);
 
         radiance += DirectLight(r, state) * throughput;

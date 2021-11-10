@@ -153,7 +153,7 @@ namespace LavaFrame
             glGenTextures(1, &textureMapsArrayTex);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D_ARRAY, textureMapsArrayTex);
-            glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB8, scene->texWidth, scene->texHeight, scene->textures.size(), 0, GL_RGB, GL_UNSIGNED_BYTE, &scene->textureMapsArray[0]);
+            glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, scene->texWidth, scene->texHeight, scene->textures.size(), 0, GL_RGBA, GL_UNSIGNED_BYTE, &scene->textureMapsArray[0]);
             glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glBindTexture(GL_TEXTURE_2D_ARRAY, 0);

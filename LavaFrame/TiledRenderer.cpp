@@ -70,6 +70,7 @@ namespace LavaFrame
         ShaderInclude::ShaderSource vertexShaderSrcObj = ShaderInclude::load(shadersDirectory + "common/vertex.glsl");
         ShaderInclude::ShaderSource pathTraceShaderSrcObj = ShaderInclude::load(shadersDirectory + "renderer.glsl");
         ShaderInclude::ShaderSource previewEngineSrcObj = ShaderInclude::load(shadersDirectory + "preview_flareon.glsl");
+        //ShaderInclude::ShaderSource previewEngineSrcObj = ShaderInclude::load(shadersDirectory + "preview_viewsdorf.glsl");
         ShaderInclude::ShaderSource outputShaderSrcObj = ShaderInclude::load(shadersDirectory + "output.glsl");
         ShaderInclude::ShaderSource tonemapShaderSrcObj = ShaderInclude::load(shadersDirectory + "postprocess.glsl");
 
