@@ -51,17 +51,12 @@ LavaFrameState GlobalState;
 RenderOptions renderOptions;
 
 ImVec2 viewportPanelSize;
-bool viewportFocused = false;
 bool viewportHovered = false;
 bool viewportClicked = false;
 
 bool viewport_window_override_size = true;
 bool viewport_window_override_pos = true;
 
-bool no_titlebar = true;
-bool no_menu = false;
-bool no_move = true;
-bool no_resize = true;
 bool window_override_size = true;
 bool window_override_pos = true;
 
@@ -177,7 +172,6 @@ void Render()
 
 	ImGui::Begin("Viewport", NULL, window_flags);
 	{
-		viewportFocused = ImGui::IsWindowFocused();
 		viewportPanelSize = ImGui::GetContentRegionAvail();
 
 		viewportPanelSize.x = GlobalState.scene->renderOptions.resolution.x;
@@ -406,6 +400,11 @@ void MainLoop(void* arg) // Its the main loop !
 		if (GlobalState.noUi == false) {
 			// Window flags
 
+			bool no_titlebar = true;
+			bool no_menu = false;
+			bool no_move = true;
+			bool no_resize = true;
+
 			ImGuiWindowFlags window_flags = 0;
 			if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
 			if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
@@ -552,7 +551,7 @@ void MainLoop(void* arg) // Its the main loop !
 
 			if (ImGui::CollapsingHeader("Preview Settings")) {
 				// For integrating more preview engines in the future
-				ImGui::Combo("Preview Engine", &GlobalState.previewEngineIndex, "Flareon\0Viewsdorf", 2);
+				ImGui::Combo("Preview Engine", &GlobalState.previewEngineIndex, "Flareon\0", 2);
 				ImGui::SameLine(); HelpMarker(
 					"Selects the preview engine to use.\nFlareon is an interactive viewport engine based on the same\npath-tracing backend as the LavaFrame renderer.");
 
@@ -1026,59 +1025,67 @@ int main(int argc, char** argv)
 	style.FrameRounding = 2.5;
 	style.FramePadding = { 4, 4 };
 
-	colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-	colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-	colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
-	colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
-	colors[ImGuiCol_Border] = ImVec4(1.00f, 1.00f, 1.00f, 0.1f);
-	colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	colors[ImGuiCol_FrameBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.0f);
-	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.64f, 0.64f, 0.64f, 0.40f);
-	colors[ImGuiCol_FrameBgActive] = ImVec4(0.58f, 0.58f, 0.58f, 0.67f);
-	colors[ImGuiCol_TitleBg] = ImVec4(0.04f, 0.04f, 0.04f, 1.00f);
-	colors[ImGuiCol_TitleBgActive] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-	colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
-	colors[ImGuiCol_MenuBarBg] = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
-	colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
-	colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
-	colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
-	colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
-	colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
-	colors[ImGuiCol_SliderGrab] = ImVec4(0.1f, 0.1f, 0.1f, 1.00f);
-	colors[ImGuiCol_SliderGrabActive] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
-	colors[ImGuiCol_Button] = ImVec4(0.00f, 0.00f, 0.00f, 0.38f);
-	colors[ImGuiCol_ButtonHovered] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
-	colors[ImGuiCol_ButtonActive] = ImVec4(1.00f, 0.42f, 0.06f, 1.00f);
-	colors[ImGuiCol_Header] = ImVec4(0.00f, 0.00f, 0.00f, 0.31f);
-	colors[ImGuiCol_HeaderHovered] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
-	colors[ImGuiCol_HeaderActive] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
-	colors[ImGuiCol_Separator] = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
-	colors[ImGuiCol_SeparatorHovered] = ImVec4(0.00f, 0.00f, 0.00f, 0.78f);
-	colors[ImGuiCol_SeparatorActive] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-	colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 1.00f, 1.00f, 0.20f);
-	colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.98f, 0.59f, 0.26f, 1.00f);
-	colors[ImGuiCol_ResizeGripActive] = ImVec4(0.98f, 0.65f, 0.26f, 1.00f);
-	colors[ImGuiCol_Tab] = ImVec4(0.47f, 0.47f, 0.47f, 0.86f);
-	colors[ImGuiCol_TabHovered] = ImVec4(0.35f, 0.35f, 0.35f, 0.80f);
-	colors[ImGuiCol_TabActive] = ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
-	colors[ImGuiCol_TabUnfocused] = ImVec4(0.17f, 0.17f, 0.17f, 0.97f);
-	colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
-	colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
-	colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-	colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-	colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-	colors[ImGuiCol_TableHeaderBg] = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
-	colors[ImGuiCol_TableBorderStrong] = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);
-	colors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);
-	colors[ImGuiCol_TableRowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
-	colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
-	colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
-	colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
-	colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
-	colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+#define THEME_NONE ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+#define THEME_COLOR_WHITE ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+#define THEME_COLOR_GRAY ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+#define THEME_BACKGROUND_DARK ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
+#define THEME_BACKGROUND_DARKER ImVec4(0.05f, 0.05f, 0.05f, 1.00f);
+#define THEME_BACKGROUND_DARKER_TRANSPARENT ImVec4(0.0f, 0.0f, 0.0f, 0.8f);
+#define THEME_BACKGROUND_DARK_TRANSPARENT ImVec4(0.0f, 0.0f, 0.0f, 0.25f);
+#define THEME_BACKGROUND_LIGHT ImVec4(0.25f, 0.25f, 0.25f, 1.0f);
+#define THEME_COLOR_ORANGE ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
+#define THEME_SUBDUED_TRANSPARENT ImVec4(0.00f, 0.00f, 0.00f, 0.5f);
+#define THEME_ENLIGHTEN_TRANSPARENT ImVec4(0.43f, 0.43f, 0.43f, 0.50f);
+
+	colors[ImGuiCol_Text] = THEME_COLOR_WHITE;
+	colors[ImGuiCol_TextDisabled] = THEME_COLOR_GRAY;
+	colors[ImGuiCol_WindowBg] = THEME_BACKGROUND_DARK;
+	colors[ImGuiCol_ChildBg] = THEME_BACKGROUND_DARK_TRANSPARENT;
+	colors[ImGuiCol_PopupBg] = THEME_BACKGROUND_DARKER_TRANSPARENT;
+	colors[ImGuiCol_Border] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_BorderShadow] = THEME_NONE;
+	colors[ImGuiCol_FrameBg] = THEME_BACKGROUND_LIGHT;
+	colors[ImGuiCol_FrameBgHovered] = THEME_BACKGROUND_LIGHT;
+	colors[ImGuiCol_FrameBgActive] = THEME_BACKGROUND_LIGHT;
+	colors[ImGuiCol_TitleBg] = THEME_NONE;
+	colors[ImGuiCol_TitleBgActive] = THEME_NONE;
+	colors[ImGuiCol_TitleBgCollapsed] = THEME_NONE;
+	colors[ImGuiCol_MenuBarBg] = THEME_BACKGROUND_DARKER;
+	colors[ImGuiCol_ScrollbarBg] = THEME_BACKGROUND_DARKER_TRANSPARENT;
+	colors[ImGuiCol_ScrollbarGrab] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_ScrollbarGrabHovered] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_ScrollbarGrabActive] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_CheckMark] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_SliderGrab] = THEME_BACKGROUND_DARKER_TRANSPARENT;
+	colors[ImGuiCol_SliderGrabActive] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_Button] = THEME_SUBDUED_TRANSPARENT;
+	colors[ImGuiCol_ButtonHovered] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_ButtonActive] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_Header] = THEME_SUBDUED_TRANSPARENT;
+	colors[ImGuiCol_HeaderHovered] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_HeaderActive] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_Separator] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_SeparatorHovered] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_SeparatorActive] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_ResizeGrip] = THEME_NONE;
+	colors[ImGuiCol_ResizeGripHovered] = THEME_NONE;
+	colors[ImGuiCol_ResizeGripActive] = THEME_NONE;
+	colors[ImGuiCol_Tab] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_TabHovered] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_TabActive] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_TabUnfocused] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_TabUnfocusedActive] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_TableHeaderBg] = THEME_BACKGROUND_DARKER;
+	colors[ImGuiCol_TableBorderStrong] = THEME_BACKGROUND_DARKER;
+	colors[ImGuiCol_TableBorderLight] = THEME_BACKGROUND_LIGHT;
+	colors[ImGuiCol_TableRowBg] = THEME_BACKGROUND_DARK;
+	colors[ImGuiCol_TableRowBgAlt] = THEME_BACKGROUND_DARK;
+	colors[ImGuiCol_TextSelectedBg] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_DragDropTarget] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_NavHighlight] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_NavWindowingHighlight] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_NavWindowingDimBg] = THEME_BACKGROUND_DARK_TRANSPARENT;
+	colors[ImGuiCol_ModalWindowDimBg] = THEME_BACKGROUND_DARK_TRANSPARENT;
 
 	ImGui_ImplSDL2_InitForOpenGL(loopdata.mWindow, loopdata.mGLContext);
 	ImGui_ImplOpenGL3_Init(glsl_version);
