@@ -579,8 +579,9 @@ void MainLoop(void* arg) // Its the main loop !
 					ImGui::Checkbox("Use CA distortion", &renderOptions.useCADistortion);
 					ImGui::SliderFloat("CA Distance", &renderOptions.caDistance, 0, 5);
 					if (renderOptions.useCADistortion) ImGui::SliderFloat("CA Angularity", &renderOptions.caP1, 0, 10);
-					if (renderOptions.useCADistortion) ImGui::SliderFloat("CA Center", &renderOptions.caP3, -1, 1);
+					if (renderOptions.useCADistortion) ImGui::SliderFloat("CA Center", &renderOptions.caP3, 0, 1);
 					ImGui::SliderFloat("CA Directionality", &renderOptions.caP2, -1, 1);
+					ImGui::Separator();
 				}
 			}
 			GlobalState.scene->renderOptions.useCA = renderOptions.useCA;
