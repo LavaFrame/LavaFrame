@@ -16,6 +16,7 @@ out vec4 color;
 in vec2 TexCoords;
 
 uniform sampler2D pathTraceTexture;
+uniform bool isInPreview;
 uniform float invSampleCounter;
 uniform float caDistance;
 uniform float caP1;
@@ -70,8 +71,11 @@ vec4 chromaticAberration() {
 
 void main()
 {
-    if (!useCA) color = texture(pathTraceTexture, TexCoords) * invSampleCounter;
-    if (useCA) color = chromaticAberration();
+    if (!isInPreview) {
+        if (!useCA) color = texture(pathTraceTexture, TexCoords) * invSampleCounter;
+        if (useCA) color = chromaticAberration();
+    }
+    else color = texture(pathTraceTexture, TexCoords) * invSampleCounter;
     
     if (useAces) {
         color = pow(tonemapACES(color, 1.5), vec4(1.0 / 2.2));
