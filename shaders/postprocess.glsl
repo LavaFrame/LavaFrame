@@ -17,7 +17,13 @@ in vec2 TexCoords;
 
 uniform sampler2D pathTraceTexture;
 uniform float invSampleCounter;
+uniform float caDistance;
+uniform float caP1;
+uniform float caP2;
+uniform float caP3;
 uniform bool useAces;
+uniform bool useCA;
+uniform bool useCADistortion;
 
 vec4 tonemapACES(in vec4 c, float limit)
 {
@@ -39,17 +45,39 @@ vec4 tonemap(in vec4 c, float limit)
     return c * 1.0 / (1.0 + luminance / limit);
 }
 
+vec4 chromaticAberration() {
+
+    float offset = caDistance;
+
+	vec4 chromColor = vec4(0.0, 0.0, 0.0, 0.0);
+		
+	float dist = 0 + (pow(distance(TexCoords, vec2(caP3)), caP1) * caP2);
+
+    if (useCADistortion) {
+	    chromColor.r = texture(pathTraceTexture, TexCoords + vec2(offset * dist)).r * invSampleCounter;
+	    chromColor.g = texture(pathTraceTexture, TexCoords).g * invSampleCounter;
+	    chromColor.b = texture(pathTraceTexture, TexCoords - vec2(offset * dist)).b * invSampleCounter;
+    }
+    else {
+        offset = offset * 0.025;
+        chromColor.r = texture(pathTraceTexture, TexCoords + (offset * caP2)).r * invSampleCounter;
+	    chromColor.g = texture(pathTraceTexture, TexCoords).g * invSampleCounter;
+	    chromColor.b = texture(pathTraceTexture, TexCoords - (offset * caP2)).b * invSampleCounter;
+    }
+    
+	return chromColor;
+}
+
 void main()
 {
-    color = texture(pathTraceTexture, TexCoords) * invSampleCounter;
+    if (!useCA) color = texture(pathTraceTexture, TexCoords) * invSampleCounter;
+    if (useCA) color = chromaticAberration();
     
     if (useAces) {
         color = pow(tonemapACES(color, 1.5), vec4(1.0 / 2.2));
     }
     
-    
     if (!useAces) {
         color = pow(tonemap(color, 1.5), vec4(1.0 / 2.2));
     }
-    
 }

@@ -32,6 +32,12 @@ namespace LavaFrame
             denoiserFrameCnt = 50;
             enableAutomaticDenoise = false;
             useAces = true;
+            useCA = false;
+            caDistance = 0.05;
+            caP1 = 5;
+            caP2 = -0.5;
+            caP3 = 0.5;
+            useCADistortion = false;
         }
         iVec2 resolution;
         int maxDepth;
@@ -42,9 +48,15 @@ namespace LavaFrame
         bool enableAutomaticDenoise;
         bool useConstantBg;
         bool useAces;
+        bool useCA;
+        bool useCADistortion;
         int RRDepth;
         int denoiserFrameCnt;
         float hdrMultiplier;
+        float caDistance;
+        float caP1;
+        float caP2;
+        float caP3;
         Vec3 bgColor;
     };
 
