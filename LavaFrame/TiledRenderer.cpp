@@ -512,7 +512,7 @@ namespace LavaFrame
         shaderObject = tonemapShader->getObject();
         glUniform1i(glGetUniformLocation(shaderObject, "isInPreview"), scene->camera->isMoving);
         glUniform1f(glGetUniformLocation(shaderObject, "invSampleCounter"), 1.0f / (sampleCounter));
-        glUniform1i(glGetUniformLocation(shaderObject, "useAces"), scene->renderOptions.useAces);
+        glUniform1i(glGetUniformLocation(shaderObject, "tonemapIndex"), scene->renderOptions.tonemapIndex);
         glUniform1i(glGetUniformLocation(shaderObject, "useCA"), scene->renderOptions.useCA);
         glUniform1i(glGetUniformLocation(shaderObject, "useCADistortion"), scene->renderOptions.useCADistortion);
         glUniform1f(glGetUniformLocation(shaderObject, "caDistance"), scene->renderOptions.caDistance);

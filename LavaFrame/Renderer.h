@@ -31,7 +31,7 @@ namespace LavaFrame
             bgColor = Vec3(0.5f, 0.5f, 0.5f);
             denoiserFrameCnt = 50;
             enableAutomaticDenoise = false;
-            useAces = true;
+            tonemapIndex = 1;
             useCA = false;
             caDistance = 0.05;
             caP1 = 5;
@@ -47,11 +47,11 @@ namespace LavaFrame
         bool enableRR;
         bool enableAutomaticDenoise;
         bool useConstantBg;
-        bool useAces;
         bool useCA;
         bool useCADistortion;
         int RRDepth;
         int denoiserFrameCnt;
+        int tonemapIndex;
         float hdrMultiplier;
         float caDistance;
         float caP1;

@@ -543,10 +543,12 @@ void MainLoop(void* arg) // Its the main loop !
 					ImGui::SetTooltip("Creates a constant surrounding color lighting the scene.");
 				optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
 				ImGui::Separator();
-				ImGui::Checkbox("Use ACES tonemapping", &renderOptions.useAces);
 
-				GlobalState.scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
-				GlobalState.scene->renderOptions.useAces = renderOptions.useAces;
+				const char* tonemappers[] = { "None", "ACES", "Reinhard", "Kanjero" };
+				ImGui::Combo("Tonemapper", &renderOptions.tonemapIndex, tonemappers, 4);
+
+				GlobalState.scene->renderOptions.tonemapIndex = renderOptions.tonemapIndex;
+
 			}
 
 			if (ImGui::CollapsingHeader("Preview Settings")) {
@@ -571,6 +573,8 @@ void MainLoop(void* arg) // Its the main loop !
 				if (renderOptions.denoiserFrameCnt < 1) renderOptions.denoiserFrameCnt = 1;
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Run the denoiser and update the view every x samples.");
+
+				GlobalState.scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
 			}
 
 			if (ImGui::CollapsingHeader("Effects")) {
@@ -808,11 +812,11 @@ int main(int argc, char** argv)
 			break;
 
 		case strint("-n"):
-			renderOptions.useAces = false;
+			renderOptions.tonemapIndex = 0;
 			break;
 
 		case strint("--neutral"):
-			renderOptions.useAces = false;
+			renderOptions.tonemapIndex = 0;
 			break;
 
 		case strint("-ms"):
@@ -921,6 +925,20 @@ int main(int argc, char** argv)
 		{
 			std::string::size_type sz;
 			GlobalState.currentJpgQuality = std::stoi(argv[++i], &sz);
+			break;
+		}
+
+		case strint("-tn"):
+		{
+			std::string::size_type sz;
+			renderOptions.tonemapIndex = std::stoi(argv[++i], &sz);
+			break;
+		}
+
+		case strint("--tonemap"):
+		{
+			std::string::size_type sz;
+			renderOptions.tonemapIndex = std::stoi(argv[++i], &sz);
 			break;
 		}
 

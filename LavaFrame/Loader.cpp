@@ -37,6 +37,7 @@ namespace LavaFrame
 {
     static const int kMaxLineLength = 2048;
     int(*Log)(const char* szFormat, ...) = printf;
+    int legacyAcesOverride = 2;
 
     bool LoadSceneFromFile(const std::string& filename, Scene* scene, RenderOptions& renderOptions)
     {
@@ -243,7 +244,14 @@ namespace LavaFrame
                     sscanf(line, " tileHeight %i", &renderOptions.tileHeight);
                     sscanf(line, " enableRR %s", enableRR);
                     sscanf(line, " RRDepth %i", &renderOptions.RRDepth);
-                    sscanf(line, " useAces %s", &renderOptions.useAces);
+                    sscanf(line, " tonemapIndex %i", &renderOptions.tonemapIndex);
+                    sscanf(line, " useAces %i", &legacyAcesOverride);
+                    if (legacyAcesOverride == 1) {
+                        renderOptions.tonemapIndex = 1;
+                    }
+                    if (legacyAcesOverride == 0) {
+                        renderOptions.tonemapIndex = 0;
+                    }
                 }
 
                 if (strcmp(envMap, "None") != 0)
