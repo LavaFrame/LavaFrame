@@ -26,6 +26,6 @@ The LavaFrame project is based on [this](https://github.com/knightcrawler25/GLSL
 - CLI parameter control
 - Tonemapping
 - OIDN upgrade
-- [Blender Integration (WIP)](https://github.com/LavaFrame/LavaFrame-Blender-Integration-Addon)
+- [Blender Integration (WIP)](https://github.com/LavaFrame/Blender-LavaFrame)
 - Build automation (currently only on MSBuild - this will be changed later on.)
 - Native AMD support
