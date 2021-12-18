@@ -4,6 +4,7 @@
 ![showcase1](showcase.jpg)
 ![showcase2](showcase2.jpg)
 (Currently only supports Windows - Linux support coming in the future)
+For in-development versions, please check the according dev branch.
 
 ## Installation
 Download one of the releases from the [releases tab](https://github.com/LavaFrame/LavaFrame/releases) on the right.
