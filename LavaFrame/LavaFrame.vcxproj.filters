@@ -203,9 +203,6 @@
     <None Include="..\shaders_amd\renderer.glsl">
       <Filter>Source Files\shaders_amd</Filter>
     </None>
-    <None Include="..\shaders_amd\common\flareon_backend.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
     <None Include="..\shaders_amd\common\globals.glsl">
       <Filter>Source Files\shaders_amd\common</Filter>
     </None>

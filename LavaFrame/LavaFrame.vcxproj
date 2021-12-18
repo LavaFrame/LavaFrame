@@ -223,7 +223,6 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
     <None Include="..\shaders_amd\common\anyhit.glsl" />
     <None Include="..\shaders_amd\common\closest_hit.glsl" />
     <None Include="..\shaders_amd\common\disney.glsl" />
-    <None Include="..\shaders_amd\common\flareon_backend.glsl" />
     <None Include="..\shaders_amd\common\globals.glsl" />
     <None Include="..\shaders_amd\common\intersection.glsl" />
     <None Include="..\shaders_amd\common\pathtrace.glsl" />

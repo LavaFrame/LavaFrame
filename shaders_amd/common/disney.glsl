@@ -143,6 +143,7 @@ vec3 DisneySample(inout State state, vec3 V, vec3 N, inout vec3 L, inout float p
     vec3 Ctint = Cdlum > 0.0 ? Cdlin / Cdlum : vec3(1.0f); // normalize lum. to isolate hue+sat
     vec3 Cspec0 = mix(state.mat.specular * 0.08 * mix(vec3(1.0), Ctint, state.mat.specularTint), Cdlin, state.mat.metallic);
     vec3 Csheen = mix(vec3(1.0), Ctint, state.mat.sheenTint);
+    float F0 = state.eta < 1.0 ? (1.0 - state.mat.ior) / (1.0 + state.mat.ior) : (state.mat.ior - 1.0) / (state.mat.ior + 1.0);
 
     // TODO: Reuse random numbers and reduce so many calls to rand()
     if (rand() < transWeight)
@@ -270,6 +271,7 @@ vec3 DisneyEval(State state, vec3 V, vec3 N, vec3 L, inout float pdf)
         vec3 Ctint = Cdlum > 0.0 ? Cdlin / Cdlum : vec3(1.0f); // normalize lum. to isolate hue+sat
         vec3 Cspec0 = mix(state.mat.specular * 0.08 * mix(vec3(1.0), Ctint, state.mat.specularTint), Cdlin, state.mat.metallic);
         vec3 Csheen = mix(vec3(1.0), Ctint, state.mat.sheenTint);
+        float F0 = state.eta < 1.0 ? (1.0 - state.mat.ior) / (1.0 + state.mat.ior) : (state.mat.ior - 1.0) / (state.mat.ior + 1.0);
 
         // Diffuse
         brdf += EvalDiffuse(state, Csheen, V, N, L, H, m_pdf);
