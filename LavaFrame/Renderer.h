@@ -38,6 +38,9 @@ namespace LavaFrame
             caP2 = -0.5;
             caP3 = 0.5;
             useCADistortion = false;
+            bool useVignette = false;
+            float vignetteIntensity = 0;
+            float vignettePower = 1;
         }
         iVec2 resolution;
         int maxDepth;
@@ -49,6 +52,7 @@ namespace LavaFrame
         bool useConstantBg;
         bool useCA;
         bool useCADistortion;
+        bool useVignette;
         int RRDepth;
         int denoiserFrameCnt;
         int tonemapIndex;
@@ -57,6 +61,8 @@ namespace LavaFrame
         float caP1;
         float caP2;
         float caP3;
+        float vignetteIntensity;
+        float vignettePower;
         Vec3 bgColor;
     };
 

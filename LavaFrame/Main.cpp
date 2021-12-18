@@ -581,15 +581,33 @@ void MainLoop(void* arg) // Its the main loop !
 			}
 
 			if (ImGui::CollapsingHeader("Effects")) {
+				// Chromatic Aberration
 				ImGui::Checkbox("Chromatic Abberation", &renderOptions.useCA);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Adds a chromatic abberation effect to the scene, simulating the RGB-split of a lens.");
 				if (renderOptions.useCA) {
 					ImGui::Checkbox("Use CA distortion", &renderOptions.useCADistortion);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Enables spherical distortion of the chromatic abberation effect, which is closer to the distortion of a real lens.");
 					ImGui::SliderFloat("CA Distance", &renderOptions.caDistance, 0, 5);
 					if (renderOptions.useCADistortion) ImGui::SliderFloat("CA Angularity", &renderOptions.caP1, 0, 10);
 					if (renderOptions.useCADistortion) ImGui::SliderFloat("CA Center", &renderOptions.caP3, 0, 1);
 					ImGui::SliderFloat("CA Directionality", &renderOptions.caP2, -1, 1);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Controls the chromatic abberation direction.");
 					ImGui::Separator();
 				}
+
+				// Vignette, with intensity and power controls
+				ImGui::Checkbox("Vignette", &renderOptions.useVignette);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Adds a vignette effect to the scene.");
+				if (renderOptions.useVignette) {
+					ImGui::SliderFloat("Vignette Intensity", &renderOptions.vignetteIntensity, 0, 1);
+					ImGui::SliderFloat("Vignette Falloff", &renderOptions.vignettePower, 0, 5);
+					ImGui::Separator();
+				}
+				
 			}
 			GlobalState.scene->renderOptions.useCA = renderOptions.useCA;
 			GlobalState.scene->renderOptions.useCADistortion = renderOptions.useCADistortion;
@@ -597,6 +615,9 @@ void MainLoop(void* arg) // Its the main loop !
 			GlobalState.scene->renderOptions.caP1 = renderOptions.caP1;
 			GlobalState.scene->renderOptions.caP2 = renderOptions.caP2;
 			GlobalState.scene->renderOptions.caP3 = renderOptions.caP3;
+			GlobalState.scene->renderOptions.useVignette = renderOptions.useVignette;
+			GlobalState.scene->renderOptions.vignetteIntensity = renderOptions.vignetteIntensity;
+			GlobalState.scene->renderOptions.vignettePower = renderOptions.vignettePower;
 
 			if (requiresReload)
 			{

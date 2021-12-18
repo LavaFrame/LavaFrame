@@ -519,6 +519,9 @@ namespace LavaFrame
         glUniform1f(glGetUniformLocation(shaderObject, "caP1"), scene->renderOptions.caP1);
         glUniform1f(glGetUniformLocation(shaderObject, "caP2"), scene->renderOptions.caP2);
         glUniform1f(glGetUniformLocation(shaderObject, "caP3"), scene->renderOptions.caP3);
+        glUniform1i(glGetUniformLocation(shaderObject, "useVignette"), scene->renderOptions.useVignette);
+        glUniform1f(glGetUniformLocation(shaderObject, "vignetteIntensity"), scene->renderOptions.vignetteIntensity);
+        glUniform1f(glGetUniformLocation(shaderObject, "vignettePower"), scene->renderOptions.vignettePower);
         tonemapShader->StopUsing();
     }
 
