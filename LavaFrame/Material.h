@@ -42,7 +42,7 @@ namespace LavaFrame
             albedoTexID = -1.0f;
             metallicRoughnessTexID = -1.0f;
             normalmapTexID = -1.0f;
-            padding3 = 0.0f;
+            emissionmapTexID = -1.0f;
         };
 
         Vec3 albedo;
@@ -72,6 +72,6 @@ namespace LavaFrame
         float albedoTexID;
         float metallicRoughnessTexID;
         float normalmapTexID;
-        float padding3;
+        float emissionmapTexID;
     };
 }

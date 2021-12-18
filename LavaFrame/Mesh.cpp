@@ -11,6 +11,17 @@
 
 namespace LavaFrame
 {
+    float sphericalTheta(const Vec3& v)
+    {
+        return acosf(Math::Clamp(v.y, -1.f, 1.f));
+    }
+
+    float sphericalPhi(const Vec3& v)
+    {
+        float p = atan2f(v.z, v.x);
+        return (p < 0.f) ? p + 2.f * PI : p;
+    }
+
     bool Mesh::LoadFromFile(const std::string& filename)
     {
         name = filename;

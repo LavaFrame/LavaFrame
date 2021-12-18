@@ -74,29 +74,29 @@ void GetMaterialsAndTextures(inout State state, in Ray r)
 
     mat.extinction     = param6.xyz;
 
-    mat.texIDs         = param7.xyz;
+    mat.texIDs         = vec4(param7);
 
     vec2 texUV = state.texCoord;
     texUV.y = 1.0 - texUV.y;
 
     // Albedo Map
     if (int(mat.texIDs.x) >= 0)
-        mat.albedo *= pow(texture(textureMapsArrayTex, vec3(texUV, int(mat.texIDs.x))).xyz, vec3(2.2));
+        mat.albedo *= pow(texture(textureMapsArrayTex, vec3(texUV, int(mat.texIDs.x))).rgb, vec3(2.2));
 
     // Metallic Roughness Map
     if (int(mat.texIDs.y) >= 0)
     {
         vec2 matRgh;
         // TODO: Change metallic roughness maps in repo to linear space and remove gamma correction
-        matRgh = pow(texture(textureMapsArrayTex, vec3(texUV, int(mat.texIDs.y))).xy, vec2(2.2));
+        vec2 matRgh = texture(textureMapsArrayTex, vec3(texUV, texIDs.y)).rg;
         mat.metallic = matRgh.x;
-        mat.roughness = max(matRgh.y, 0.001);
+        mat.roughness = max(matRgh.y * matRgh.y, 0.001);
     }
 
     // Normal Map
     if (int(mat.texIDs.z) >= 0)
     {
-        vec3 nrm = texture(textureMapsArrayTex, vec3(texUV, int(mat.texIDs.z))).xyz;
+        vec3 nrm = texture(textureMapsArrayTex, vec3(texUV, int(mat.texIDs.z))).rgb;
         nrm = normalize(nrm * 2.0 - 1.0);
 
         vec3 T, B;
@@ -109,6 +109,10 @@ void GetMaterialsAndTextures(inout State state, in Ray r)
         Onb(state.normal, state.tangent, state.bitangent);
     }
 
+        // Emission Map
+    if (texIDs.w >= 0)
+        mat.emission = pow(texture(textureMapsArrayTex, vec3(texUV, texIDs.w)).rgb, vec3(2.2));
+
     // Commented out the following as anisotropic param is temporarily unused.
     // Calculate anisotropic roughness along the tangent and bitangent directions
     // float aspect = sqrt(1.0 - mat.anisotropic * 0.9);
@@ -116,7 +120,7 @@ void GetMaterialsAndTextures(inout State state, in Ray r)
     // mat.ay = max(0.001, mat.roughness * aspect);
 
     state.mat = mat;
-    state.eta = dot(state.normal, state.ffnormal) > 0.0 ? (1.0 / mat.ior) : mat.ior;
+    state.eta = dot(r.direction, state.normal) < 0.0 ? (1.0 / mat.ior) : mat.ior;
 }
 
 //-----------------------------------------------------------------------

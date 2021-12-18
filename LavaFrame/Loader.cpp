@@ -90,6 +90,7 @@ namespace LavaFrame
                 char albedoTexName[100] = "None";
                 char metallicRoughnessTexName[100] = "None";
                 char normalTexName[100] = "None";
+                char emissionTexName[100] = "None";
 
                 while (fgets(line, kMaxLineLength, file))
                 {
@@ -119,6 +120,7 @@ namespace LavaFrame
                     sscanf(line, " albedoTexture %s", albedoTexName);
                     sscanf(line, " metallicRoughnessTexture %s", metallicRoughnessTexName);
                     sscanf(line, " normalTexture %s", normalTexName);
+                    sscanf(line, " emissionTexture %s", emissionTexName);
                 }
 
                 // Albedo Texture
@@ -132,6 +134,10 @@ namespace LavaFrame
                 // Normal Map Texture
                 if (strcmp(normalTexName, "None") != 0)
                     material.normalmapTexID = scene->AddTexture(path + normalTexName);
+
+                // Emission Map Texture
+                if (strcmp(emissionTexName, "None") != 0)
+                    material.emissionmapTexID = scene->AddTexture(path + emissionTexName);
 
                 // add material to map
                 if (materialMap.find(name) == materialMap.end()) // New material
