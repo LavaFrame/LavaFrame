@@ -46,6 +46,7 @@ namespace LavaFrame
 
         if (!file)
         {
+            if (GlobalState.isWindows) MessageBox(NULL, "Scene file could not be opened for reading !", "Loading failed", MB_ICONERROR);
             Log("Couldn't open scene file %s for reading\n", filename.c_str());
             return false;
         }

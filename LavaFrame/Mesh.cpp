@@ -5,9 +5,11 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
-
 #include "Mesh.h"
 #include <iostream>
+#include "GlobalState.h"
+
+extern LavaFrameState GlobalState;
 
 namespace LavaFrame
 {
@@ -34,6 +36,7 @@ namespace LavaFrame
         if (!ret)
         {
             printf("Unable to load geometry.\n");
+            if (GlobalState.isWindows) MessageBox(NULL, "Failed to load geometry.", "Loading failed", MB_ICONERROR);
             return false;
         }
 

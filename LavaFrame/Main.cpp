@@ -41,6 +41,9 @@
 #include "Loader.h"
 #include "ImGuizmo.h"
 #include "tinydir.h"
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 using namespace LavaFrame;
 
@@ -952,6 +955,12 @@ int main(int argc, char** argv)
 		}
 	}
 
+#if defined(_WIN32)
+	GlobalState.isWindows = true;
+#else
+	GlobalState.isWindows = false;
+#endif
+
 	if (!GlobalState.threadMode) { Log(("--- " + GlobalState.versionString + " ---\n").c_str()); }
 
 	if (!sceneFile.empty())
@@ -1027,6 +1036,7 @@ int main(int argc, char** argv)
 	if (!loopdata.mGLContext)
 	{
 		fprintf(stderr, "Failed to initialize OpenGL context!\n");
+		if (GlobalState.isWindows) MessageBox(NULL, "Failed to initialize OpenGL.", "Error", MB_ICONERROR);
 		return 1;
 	}
 	SDL_GL_SetSwapInterval(0); // Disable vsync
@@ -1036,6 +1046,7 @@ int main(int argc, char** argv)
 	if (err)
 	{
 		fprintf(stderr, "Failed to initialize OpenGL loader!\n");
+		if (GlobalState.isWindows) MessageBox(NULL, "", "Failed to initialize OpenGL loader.", MB_ICONERROR);
 		return 1;
 	}
 
