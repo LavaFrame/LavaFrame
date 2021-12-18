@@ -252,6 +252,12 @@ namespace LavaFrame
                     if (legacyAcesOverride == 0) {
                         renderOptions.tonemapIndex = 0;
                     }
+                    sscanf(line, " useChromaticAberration %i", &renderOptions.useCA);
+                    sscanf(line, " CADistance %f", &renderOptions.caDistance);
+                    sscanf(line, " useCAdistortion %i", &renderOptions.useCADistortion);
+                    sscanf(line, " CAAngularity %f", &renderOptions.caP1);
+                    sscanf(line, " CADirectionality %f", &renderOptions.caP2);
+                    sscanf(line, " CACenter %f", &renderOptions.caP3);
                 }
 
                 if (strcmp(envMap, "None") != 0)
