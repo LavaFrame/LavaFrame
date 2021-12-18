@@ -700,6 +700,9 @@ void MainLoop(void* arg) // Its the main loop !
 				objectPropChanged |= ImGui::ColorEdit3("Extinction", (float*)extinction, 0);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Light extinction of the transmission.");
+				objectPropChanged |= ImGui::ColorEdit3("Emission", (float *)emission, 0);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Emission color of the object.");
 
 				// Transform properties
 				ImGui::Separator();

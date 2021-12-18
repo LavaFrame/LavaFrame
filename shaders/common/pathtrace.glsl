@@ -86,9 +86,8 @@ void GetMaterialsAndTextures(inout State state, in Ray r)
     // Metallic Roughness Map
     if (int(mat.texIDs.y) >= 0)
     {
-        vec2 matRgh;
         // TODO: Change metallic roughness maps in repo to linear space and remove gamma correction
-        vec2 matRgh = texture(textureMapsArrayTex, vec3(texUV, texIDs.y)).rg;
+        vec2 matRgh = texture(textureMapsArrayTex, vec3(texUV, mat.texIDs.y)).xy;
         mat.metallic = matRgh.x;
         mat.roughness = max(matRgh.y * matRgh.y, 0.001);
     }
@@ -110,8 +109,8 @@ void GetMaterialsAndTextures(inout State state, in Ray r)
     }
 
         // Emission Map
-    if (texIDs.w >= 0)
-        mat.emission = pow(texture(textureMapsArrayTex, vec3(texUV, texIDs.w)).rgb, vec3(2.2));
+    if (mat.texIDs.w >= 0)
+        mat.emission = pow(texture(textureMapsArrayTex, vec3(texUV, mat.texIDs.w)).rgb, vec3(2.2));
 
     // Commented out the following as anisotropic param is temporarily unused.
     // Calculate anisotropic roughness along the tangent and bitangent directions
