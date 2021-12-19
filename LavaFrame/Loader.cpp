@@ -22,7 +22,7 @@ freely, subject to the following restrictions:
     This is a modified version of the original code from the tinsel renderer.
     Link to original code: https://github.com/mmacklin/tinsel
 */
-
+#pragma warning( disable : 6031 )
 #include "Loader.h"
 #include "GlobalState.h"
 #include <tiny_obj_loader.h>
@@ -46,7 +46,9 @@ namespace LavaFrame
 
         if (!file)
         {
-            if (GlobalState.isWindows) MessageBox(NULL, "Scene file could not be opened for reading !", "Loading failed", MB_ICONERROR);
+#if defined(_WIN32)
+            MessageBox(NULL, "Scene file could not be opened for reading !", "Loading failed", MB_ICONERROR);
+#endif
             Log("Couldn't open scene file %s for reading\n", filename.c_str());
             return false;
         }
@@ -259,12 +261,18 @@ namespace LavaFrame
                     if (legacyAcesOverride == 0) {
                         renderOptions.tonemapIndex = 0;
                     }
+                    // Chromatic Aberration controls
                     sscanf(line, " useChromaticAberration %i", &renderOptions.useCA);
                     sscanf(line, " CADistance %f", &renderOptions.caDistance);
                     sscanf(line, " useCAdistortion %i", &renderOptions.useCADistortion);
                     sscanf(line, " CAAngularity %f", &renderOptions.caP1);
                     sscanf(line, " CADirectionality %f", &renderOptions.caP2);
                     sscanf(line, " CACenter %f", &renderOptions.caP3);
+                    // Vignette controls : useVignette, vignetteIntensity, vignettePower
+                    sscanf(line, " useVignette %i", &renderOptions.useVignette);
+                    sscanf(line, " vignetteIntensity %f", &renderOptions.vignetteIntensity);
+                    sscanf(line, " vignettePower %f", &renderOptions.vignettePower);
+
                 }
 
                 if (strcmp(envMap, "None") != 0)

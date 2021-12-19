@@ -36,7 +36,9 @@ namespace LavaFrame
         if (!ret)
         {
             printf("Unable to load geometry.\n");
-            if (GlobalState.isWindows) MessageBox(NULL, "Failed to load geometry.", "Loading failed", MB_ICONERROR);
+#if defined(_WIN32)
+            MessageBox(NULL, "Failed to load geometry.", "Loading failed", MB_ICONERROR);
+#endif
             return false;
         }
 
