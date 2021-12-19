@@ -184,9 +184,7 @@
     </CustomBuildStep>
     <PostBuildEvent>
       <Command>Xcopy /y /r /q /c /s "$(SolutionDir)build_include\." "$(OutDirFullPath)"
-Xcopy /y /r /q /c /S "$(OutDir)." "$(OutDirFullPath.TrimEnd('\'))_AMD\"
-Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"
-Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'))_AMD\shaders\"</Command>
+Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>
@@ -220,19 +218,6 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders_amd\." "$(OutDirFullPath.TrimEnd('\'
     <None Include="..\shaders\postprocess.glsl" />
     <None Include="..\shaders\preview_flareon.glsl" />
     <None Include="..\shaders\renderer.glsl" />
-    <None Include="..\shaders_amd\common\anyhit.glsl" />
-    <None Include="..\shaders_amd\common\closest_hit.glsl" />
-    <None Include="..\shaders_amd\common\disney.glsl" />
-    <None Include="..\shaders_amd\common\globals.glsl" />
-    <None Include="..\shaders_amd\common\intersection.glsl" />
-    <None Include="..\shaders_amd\common\pathtrace.glsl" />
-    <None Include="..\shaders_amd\common\sampling.glsl" />
-    <None Include="..\shaders_amd\common\uniforms.glsl" />
-    <None Include="..\shaders_amd\common\vertex.glsl" />
-    <None Include="..\shaders_amd\output.glsl" />
-    <None Include="..\shaders_amd\postprocess.glsl" />
-    <None Include="..\shaders_amd\preview_flareon.glsl" />
-    <None Include="..\shaders_amd\renderer.glsl" />
     <None Include="thirdparty\oidn\lib\OpenImageDenoise.dll" />
     <None Include="thirdparty\oidn\lib\tbb.dll" />
     <None Include="thirdparty\oidn\lib\tbbmalloc.dll" />

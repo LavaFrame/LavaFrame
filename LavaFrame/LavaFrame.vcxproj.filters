@@ -84,14 +84,8 @@
     <Filter Include="Source Files\thirdparty\sdl2\lib\x86">
       <UniqueIdentifier>{b76bfda8-5a2a-4d1d-951f-3099724c244e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\shaders_amd">
-      <UniqueIdentifier>{4be3399b-62e4-4037-9d99-81c7415d7866}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\math">
       <UniqueIdentifier>{a20bec6e-d032-45f4-a379-2cda8981a0c2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\shaders_amd\common">
-      <UniqueIdentifier>{da942b6c-56a6-4d61-b8e2-e4ff7d7b19b6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource Files\build_include\output">
       <UniqueIdentifier>{fb4bd270-06be-4e8a-897c-a244e08d2ead}</UniqueIdentifier>
@@ -190,45 +184,6 @@
     </None>
     <None Include="thirdparty\SDL2\lib\x86\SDL2.dll">
       <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
-    </None>
-    <None Include="..\shaders_amd\output.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\postprocess.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\preview_flareon.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\renderer.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\globals.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\intersection.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\pathtrace.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\sampling.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\uniforms.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\vertex.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\anyhit.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\closest_hit.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\disney.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
