@@ -25,6 +25,9 @@ uniform float caP3;
 uniform int tonemapIndex;
 uniform bool useCA;
 uniform bool useCADistortion;
+uniform bool useVignette;
+uniform float vignetteIntensity;
+uniform float vignettePower;
 
 // Linear tonemapping
 vec4 tonemap(in vec4 c, float limit)
@@ -109,26 +112,31 @@ vec4 tonemapKanjero(in vec4 c)
 }
 
 vec4 chromaticAberration() {
-
     float offset = caDistance;
 
-	vec4 chromColor = vec4(0.0, 0.0, 0.0, 0.0);
+	vec4 colorBuffer = vec4(0.0, 0.0, 0.0, 0.0);
 		
 	float dist = 0 + (pow(distance(TexCoords, vec2(caP3)), caP1) * caP2);
 
     if (useCADistortion) {
-	    chromColor.r = texture(pathTraceTexture, TexCoords + vec2(offset * dist)).r * invSampleCounter;
-	    chromColor.g = texture(pathTraceTexture, TexCoords).g * invSampleCounter;
-	    chromColor.b = texture(pathTraceTexture, TexCoords - vec2(offset * dist)).b * invSampleCounter;
+	    colorBuffer.r = texture(pathTraceTexture, TexCoords + vec2(offset * dist)).r * invSampleCounter;
+	    colorBuffer.g = texture(pathTraceTexture, TexCoords).g * invSampleCounter;
+	    colorBuffer.b = texture(pathTraceTexture, TexCoords - vec2(offset * dist)).b * invSampleCounter;
     }
     else {
         offset = offset * 0.025;
-        chromColor.r = texture(pathTraceTexture, TexCoords + (offset * caP2)).r * invSampleCounter;
-	    chromColor.g = texture(pathTraceTexture, TexCoords).g * invSampleCounter;
-	    chromColor.b = texture(pathTraceTexture, TexCoords - (offset * caP2)).b * invSampleCounter;
+        colorBuffer.r = texture(pathTraceTexture, TexCoords + (offset * caP2)).r * invSampleCounter;
+	    colorBuffer.g = texture(pathTraceTexture, TexCoords).g * invSampleCounter;
+	    colorBuffer.b = texture(pathTraceTexture, TexCoords - (offset * caP2)).b * invSampleCounter;
     }
     
-	return chromColor;
+	return colorBuffer;
+}
+
+// Vignette, intensity and sharpness are adjustable. Sharpness adjusts the shape/falloff of the vignette.
+vec4 vignette(vec4 c, float intensity, float sharpness) {
+	float dist = 1.0 - pow(distance(TexCoords, vec2(0.5)), sharpness) * intensity;
+	return c * dist;
 }
 
 void main()
@@ -153,5 +161,10 @@ void main()
 
     if (tonemapIndex == 3) {
         color = pow(tonemapKanjero(color), vec4(1.0 / 2.2));
+    }
+
+    // Apply vignette
+    if (useVignette) {
+        color = vignette(color, vignetteIntensity, vignettePower);
     }
 }
