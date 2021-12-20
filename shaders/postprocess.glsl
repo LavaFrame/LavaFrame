@@ -48,30 +48,6 @@ vec4 tonemapReinhard(in vec4 c, float limit)
     return clamp(c / (c + limit), 0.0, 1.0);
 }
 
-// Filmic tonemapping
-vec4 tonemapFilmic(in vec4 c, float limit)
-{
-    float a = 2.51f;
-    float b = 0.03f;
-    float y = 2.43f;
-    float d = 0.59f;
-    float e = 0.14f;
-
-    return clamp((c * (a * c + b)) / (c * (y * c + d) + e), 0.0, 1.0);
-}
-
-// Reinhard tonemapping
-vec4 tonemapReinhardFilmic(in vec4 c, float limit)
-{
-    float a = 2.51f;
-    float b = 0.03f;
-    float y = 2.43f;
-    float d = 0.59f;
-    float e = 0.14f;
-
-    return clamp(c / (c + limit) * (c * (a * c + b) + y * d) / (c * (y * c + d) + e), 0.0, 1.0);
-}
-
 float gamma(float c, float gamma)
 {
     return pow(c, 1.0 / gamma);
