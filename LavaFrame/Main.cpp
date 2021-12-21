@@ -547,7 +547,7 @@ void MainLoop(void* arg) // Its the main loop !
 				optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
 				ImGui::Separator();
 
-				const char* tonemappers[] = { "None", "ACES", "Reinhard", "Kanjero" };
+				const char* tonemappers[] = { "None", "ACES", "Reinhard", "Kanjero"};
 				ImGui::Combo("Tonemapper", &renderOptions.tonemapIndex, tonemappers, 4);
 
 				GlobalState.scene->renderOptions.tonemapIndex = renderOptions.tonemapIndex;

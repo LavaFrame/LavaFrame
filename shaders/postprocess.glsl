@@ -43,14 +43,9 @@ vec4 tonemapACES(in vec4 c, float limit)
 }
 
 // Reinhard tonemapping
-vec4 tonemapReinhard(in vec4 c, float limit)
+vec4 tonemapReinhard(in vec4 c)
 {
-    return clamp(c / (c + limit), 0.0, 1.0);
-}
-
-float gamma(float c, float gamma)
-{
-    return pow(c, 1.0 / gamma);
+    return clamp(c / (c + 1), 0.0, 1.0);
 }
 
 float linearToSRGB(float c)
@@ -67,14 +62,15 @@ vec4 linearToSRGB(vec4 c)
 vec4 tonemapKanjero(in vec4 c)
 {	
 	vec3 colorBuffer = c.rgb;
-    float a = 1.1295;
-	float b = 0.0135;
-	float y = 1.0935;
-	float d = 0.2655;
-	float e = 0.063;
+    float a = 1.2295;
+	float b = 0.3135;
+	float y = 1.1935;
+	float d = 0.4655;
+	float e = 0.073;
 
-	c = pow((c * (c * (a * c + b) + y * d) / (c * (y * c + d) + e)), vec4(1.6, 1.6, 1.6, 1.0)) * 1.5;
-	c.rgb = pow(c.rgb, vec3(1.0/0.9));
+	c = pow((c * (c * (a * c + b) + y * d) / (c * (y * c + d) + e)), vec4(1.7));
+	c.rgb = pow(c.rgb, vec3(1.0/0.8));
+	c *= 0.8;
 	c = clamp(c, 0.0, 1.0);
 	
 	return c;
@@ -125,7 +121,7 @@ void main()
     }
 
     if (tonemapIndex == 2) {
-        color = pow(tonemapReinhard(color, 2), vec4(1.0 / 2.2));
+        color = pow(tonemapReinhard(color), vec4(1.0 / 2.2));
     }
 
     if (tonemapIndex == 3) {
