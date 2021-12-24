@@ -10,7 +10,6 @@ struct LavaFrameState {
 	bool keyPressed = false;
 	bool done = false;
 	bool noUi = false;
-	bool threadMode = false;
 	bool noMove = false;
 	bool noWindow = false;
 	bool useDebug = false;

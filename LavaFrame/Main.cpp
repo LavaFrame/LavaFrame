@@ -128,12 +128,7 @@ bool InitRenderer() // Create the tiled renderer and inform the user that the pr
 	GlobalState.renderer->Init();
 	viewportPanelSize.x = GlobalState.scene->renderOptions.resolution.x;
 	viewportPanelSize.y = GlobalState.scene->renderOptions.resolution.y;
-	if (!GlobalState.threadMode) {
-		if (GlobalState.useDebug) printf("Renderer started.\n");
-	}
-	else {
-		printf(("\nLavaFrame thread " + GlobalState.threadID + " started, " + GlobalState.releaseVersion).c_str());
-	}
+	printf(("\nLavaFrame thread " + GlobalState.threadID + " started, " + GlobalState.releaseVersion).c_str());
 
 	return true;
 }
@@ -278,9 +273,7 @@ void Update(float secondsElapsed)
 				SaveFrameBMP("./" + GlobalState.exportName + ".bmp");
 			}
 		}
-
-		if (!GlobalState.threadMode) { printf("Render finished\n"); }
-		else { printf(("\nThread " + GlobalState.threadID + " render finished").c_str()); }
+		printf("Render finished\n");
 		exit(0);
 	}
 	GlobalState.renderer->Update(secondsElapsed);
@@ -908,13 +901,6 @@ int main(int argc, char** argv)
 			GlobalState.useDebug = true;
 			break;
 
-		case strint(".lt-threadmode"):
-		{
-			GlobalState.threadMode = true;
-			GlobalState.threadID = argv[++i];
-			break;
-		}
-
 		case strint("-sc"):
 			GlobalState.displaySampleCounter = true;
 			break;
@@ -1000,7 +986,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	if (!GlobalState.threadMode) { Log(("--- " + GlobalState.versionString + " ---\n").c_str()); }
+	Log(("--- " + GlobalState.versionString + " ---\n").c_str());
 
 	if (!sceneFile.empty())
 	{
@@ -1010,7 +996,7 @@ int main(int argc, char** argv)
 			exit(0);
 
 		GlobalState.scene->renderOptions = renderOptions;
-		if (!GlobalState.threadMode) { std::cout << "Scene loaded\n"; }
+		std::cout << "Scene loaded\n";
 	}
 	else
 	{
