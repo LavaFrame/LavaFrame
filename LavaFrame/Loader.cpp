@@ -52,7 +52,7 @@ namespace LavaFrame
             Log("Couldn't open scene file %s for reading\n", filename.c_str());
             return false;
         }
-        if (!GlobalState.threadMode) { Log("Loading Scene...\n"); }
+        Log("Loading Scene...\n");
 
         struct MaterialData
         {

@@ -128,7 +128,6 @@ bool InitRenderer() // Create the tiled renderer and inform the user that the pr
 	GlobalState.renderer->Init();
 	viewportPanelSize.x = GlobalState.scene->renderOptions.resolution.x;
 	viewportPanelSize.y = GlobalState.scene->renderOptions.resolution.y;
-	printf(("\nLavaFrame thread " + GlobalState.threadID + " started, " + GlobalState.releaseVersion).c_str());
 
 	return true;
 }

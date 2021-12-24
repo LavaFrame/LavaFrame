@@ -27,7 +27,6 @@ struct LavaFrameState {
 	const char* output_path = "output\\";
 	std::string exportName = "";
 	std::string exportType = "png";
-	std::string threadID = "0";
 	std::string shadersDir = "./shaders/";
 	std::string assetsDir = "./assets/";
 	std::string releaseVersion = "Version 0.6.0";
