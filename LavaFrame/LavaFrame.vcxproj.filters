@@ -407,6 +407,9 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Colors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="thirdparty\oidn\lib\OpenImageDenoise.lib">

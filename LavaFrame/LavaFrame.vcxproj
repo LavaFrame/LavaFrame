@@ -290,6 +290,7 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"</Comm
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Colors.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Export.h" />
     <ClInclude Include="GlobalState.h" />

@@ -6,8 +6,6 @@
 * extending another project and building it into something I can
 * use for my own projects.
 *
-* THIS SOURCE CODE CAN BE A BIT MESSY AT TIMES ! PLEASE BEWARE AND FEEL FREE TO IMPROVE ON IT !
-*
 * - Nolram
 *
 * MIT License
@@ -37,9 +35,10 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
+#include "ImGuizmo.h"
+#include "Colors.h"
 
 #include "Loader.h"
-#include "ImGuizmo.h"
 #include "tinydir.h"
 #if defined(_WIN32)
 #include <windows.h>
@@ -52,19 +51,10 @@ std::vector<std::string> sceneFiles;
 
 LavaFrameState GlobalState;
 RenderOptions renderOptions;
-
 ImVec2 viewportPanelSize;
+
 bool viewportHovered = false;
-bool viewportClicked = false;
-
-bool viewport_window_override_size = true;
-bool viewport_window_override_pos = true;
-
-bool window_override_size = true;
-bool window_override_pos = true;
-
-float viewport_scaler;
-bool showDenoise = false;
+bool gizmoUsed = false;
 
 struct LoopData
 {
@@ -135,37 +125,26 @@ bool InitRenderer() // Create the tiled renderer and inform the user that the pr
 void Render()
 {
 	GlobalState.renderer->Render();
+
 	//Viewport Setup
+	float viewport_scaler;
 
 	ImGuiStyle& style = ImGui::GetStyle();
-
-	bool no_titlebar = true;
-	bool no_menu = true;
-	bool no_move = true;
-	bool no_resize = true;
-	bool no_collapse = true;
-
 	style.WindowPadding = { 0, 0 };
 
-	if (viewport_window_override_pos and !GlobalState.noUi) {
-		ImGui::SetNextWindowPos({ static_cast<float>(GlobalState.displayX / 5), 0 });
-	}
+	ImGuiWindowFlags window_flags{};
+	window_flags += ImGuiWindowFlags_NoDecoration;
+	window_flags += ImGuiWindowFlags_NoFocusOnAppearing;
+	window_flags += ImGuiWindowFlags_NoBringToFrontOnFocus;
+	window_flags += ImGuiWindowFlags_NoMove;
 
-	if (viewport_window_override_size and !GlobalState.noUi) {
-		ImGui::SetNextWindowSize({ static_cast<float>((GlobalState.displayX / 5) * 3),  static_cast<float>(GlobalState.displayY) });
-	}
+	ImGui::SetNextWindowPos({ static_cast<float>(GlobalState.displayX / 5), 0 });
+	ImGui::SetNextWindowSize({ static_cast<float>((GlobalState.displayX / 5) * 3),  static_cast<float>(GlobalState.displayY) });
 
 	if (GlobalState.noUi) {
 		ImGui::SetNextWindowPos({ 0, 0 });
 		ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX), static_cast<float>(GlobalState.displayY) });
 	}
-
-	ImGuiWindowFlags window_flags = 0;
-	if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
-	if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
-	if (no_move)            window_flags |= ImGuiWindowFlags_NoMove;
-	if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
-	if (no_collapse)        window_flags |= ImGuiWindowFlags_NoCollapse;
 
 	ImGui::Begin("Viewport", NULL, window_flags);
 	{
@@ -182,7 +161,7 @@ void Render()
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, viewportPanelSize.x, viewportPanelSize.y);
 		GlobalState.traceTexture = GlobalState.renderer->SetViewport(viewportPanelSize.x, viewportPanelSize.y);
-		if (showDenoise) GlobalState.viewportTexture = GlobalState.denoiseTexture;
+		if (GlobalState.showDenoise) GlobalState.viewportTexture = GlobalState.denoiseTexture;
 		else GlobalState.viewportTexture = GlobalState.traceTexture;
 
 		viewport_scaler = std::min(ImGui::GetContentRegionAvail().x / GlobalState.scene->renderOptions.resolution.x, ImGui::GetContentRegionAvail().y / GlobalState.scene->renderOptions.resolution.y);
@@ -191,7 +170,6 @@ void Render()
 		if (!GlobalState.noUi) ImGui::Image((void*)GlobalState.viewportTexture, { viewportPanelSize.x * viewport_scaler, viewportPanelSize.y * viewport_scaler }, ImVec2(0, 1), ImVec2(1, 0));
 		else ImGui::Image((void*)GlobalState.viewportTexture, { viewportPanelSize.x, viewportPanelSize.y}, ImVec2(0, 1), ImVec2(1, 0));
 		viewportHovered = ImGui::IsItemHovered();
-		viewportClicked = ImGui::IsItemClicked();
 
 		ImGui::End();
 
@@ -208,10 +186,12 @@ void Render()
 void Update(float secondsElapsed)
 {
 	GlobalState.keyPressed = false;
+
 	if (ImGui::IsAnyMouseDown() and !GlobalState.noMove)
 	{
 		ImVec2 mousePos = ImGui::GetMousePos();
-		if (viewportHovered) // Chech if mouse is on viewport TODO(PIXEL): object mouse picking
+		if (gizmoUsed) GlobalState.scene->camera->isMoving = true;
+		if (viewportHovered && !gizmoUsed) // Check if mouse is on viewport and not over gizmo
 		{
 			if (ImGui::IsMouseDown(0))
 			{
@@ -219,6 +199,7 @@ void Update(float secondsElapsed)
 				ImVec2 mouseDelta = ImGui::GetMouseDragDelta(0, 0);
 				GlobalState.scene->camera->OffsetOrientation(mouseDelta.x, mouseDelta.y);
 				ImGui::ResetMouseDragDelta(0);
+				
 			}
 			else if (ImGui::IsMouseDown(1))
 			{
@@ -282,6 +263,7 @@ void EditTransform(const float* view, const float* projection, float* matrix)
 {
 	static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
 	static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::WORLD);
+	gizmoUsed = ImGuizmo::IsUsing();
 
 	if (ImGui::IsKeyPressed(90))  // Hotkeys for object translation
 	{
@@ -386,35 +368,23 @@ void MainLoop(void* arg) // Its the main loop !
 	ImGui_ImplSDL2_NewFrame(loopdata.mWindow);
 	ImGui::NewFrame();
 	ImGuizmo::SetOrthographic(false);
-	//ImGui::DockSpaceOverViewport();
 	ImGuizmo::BeginFrame();
 	{
-		// io.Fonts->GetTexDataAsAlpha8(); Old font handling
 		bool optionsChanged = false;
 
 		if (GlobalState.noUi == false) {
+
 			// Window flags
-
-			bool no_titlebar = true;
-			bool no_menu = false;
-			bool no_move = true;
-			bool no_resize = true;
-
 			ImGuiWindowFlags window_flags = 0;
-			if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
-			if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
-			if (no_move)            window_flags |= ImGuiWindowFlags_NoMove;
-			if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
+			window_flags |= ImGuiWindowFlags_NoTitleBar;
+			window_flags |= ImGuiWindowFlags_MenuBar;
+			window_flags |= ImGuiWindowFlags_NoMove;
+			window_flags |= ImGuiWindowFlags_NoResize;
 
 			GlobalState.scene->camera->isMoving = false;
 
-			if (window_override_pos) {
-				ImGui::SetNextWindowPos({ 0, 0 });
-			}
-
-			if (window_override_size) {
-				ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
-			}
+			ImGui::SetNextWindowPos({ 0, 0 });
+			ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
 
 			ImGui::Begin("Panel1", nullptr, window_flags); //Main panel
 
@@ -525,7 +495,7 @@ void MainLoop(void* arg) // Its the main loop !
 				optionsChanged |= ImGui::SliderInt("Max ray-depth", &renderOptions.maxDepth, 1, 20);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Limits the amount of times a ray is allowed to bounce. Causes longer render times for better quality.");
-				//requiresReload |= ImGui::Checkbox("Enable RR", &renderOptions.enableRR); Seems to currently do nothing, left it disabled for UI clarity. Can be set from scene file.
+				//requiresReload |= ImGui::Checkbox("Enable RR", &renderOptions.enableRR); Russian roulette filtering. 2 is basically the only sensible option here, so its only setable from the scene file now.
 				//requiresReload |= ImGui::SliderInt("RR depth", &renderOptions.RRDepth, 1, 10);
 				ImGui::Separator();
 				requiresReload |= ImGui::Checkbox("Enable HDRI", &renderOptions.useEnvMap);
@@ -561,7 +531,7 @@ void MainLoop(void* arg) // Its the main loop !
 
 			if (ImGui::CollapsingHeader("Denoiser")) {
 				if (ImGui::Button("Run denoise")) GlobalState.denoiseTexture = GlobalState.renderer->Denoise();
-				ImGui::Checkbox("Show denoise", &showDenoise);
+				ImGui::Checkbox("Show denoise", &GlobalState.showDenoise);
 				ImGui::Separator();
 				ImGui::Checkbox("Enable automatic denoise", &GlobalState.scene->renderOptions.enableAutomaticDenoise);
 				ImGui::InputInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 10, 50);
@@ -620,13 +590,8 @@ void MainLoop(void* arg) // Its the main loop !
 			ImGui::End();
 
 			// PANEL 2
-			if (window_override_pos) {
-				ImGui::SetNextWindowPos({ (static_cast<float>(GlobalState.displayX) / 5) * 4, 0 });
-			};
-
-			if (window_override_size) {
-				ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
-			}
+			ImGui::SetNextWindowPos({ (static_cast<float>(GlobalState.displayX) / 5) * 4, 0 });
+			ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
 
 			ImGui::Begin("Panel2", nullptr, window_flags);
 
@@ -751,28 +716,23 @@ void MainLoop(void* arg) // Its the main loop !
 			GlobalState.scene->camera->isMoving = false;
 		}
 		if (GlobalState.noUi == true and GlobalState.displaySampleCounter == true) {
+			
 			// Window flags
-			static bool no_titlebar = true;
-			static bool no_menu = true;
-			static bool no_move = false;
-			static bool no_resize = true;
-			static bool window_override_size = false;
-
 			ImVec4* colors = ImGui::GetStyle().Colors;
 			colors[ImGuiCol_Border] = ImVec4(0.01f, 0.01f, 0.01f, 0.00f);
-			colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.1f);
+			colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.0f);
 
 			ImGuiWindowFlags window_flags_samplecounter = 0;
-			if (no_titlebar)        window_flags_samplecounter |= ImGuiWindowFlags_NoTitleBar;
-			if (!no_menu)           window_flags_samplecounter |= ImGuiWindowFlags_MenuBar;
-			if (no_move)            window_flags_samplecounter |= ImGuiWindowFlags_NoMove;
-			if (no_resize)          window_flags_samplecounter |= ImGuiWindowFlags_NoResize;
+			window_flags_samplecounter |= ImGuiWindowFlags_NoDecoration;
+			window_flags_samplecounter |= ImGuiWindowFlags_NoMove;
+			window_flags_samplecounter |= ImGuiWindowFlags_NoResize;
 
 			GlobalState.scene->camera->isMoving = false;
 
-			ImGui::SetNextWindowSize({ 340, 64 });
-			ImGui::SetNextWindowPos({ 0, 1 });
-			ImGui::Begin("samplecount", nullptr, window_flags_samplecounter);
+			ImGui::SetNextWindowSize({ 256, 0 });
+			ImGui::SetNextWindowPos({ 8, 8 });
+			ImGui::SetNextWindowFocus();
+			ImGui::Begin("samplecount", NULL, window_flags_samplecounter);
 			ImGui::Text("Rendered samples: %d ", GlobalState.renderer->GetSampleCount());
 			ImGui::End();
 		}
@@ -1012,21 +972,13 @@ int main(int argc, char** argv)
 
 	LoopData loopdata;
 
-#ifdef __APPLE__ // Broken apple support
-	// GL 3.2 Core + GLSL 150
-	const char* glsl_version = "#version 150";
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#else
 	// GL 3.0 + GLSL 330
 	const char* glsl_version = "#version 330";
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#endif
+
 	// Create window with graphics context
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -1101,18 +1053,6 @@ int main(int argc, char** argv)
 	style.GrabMinSize = 20;
 	style.FrameRounding = 2.5;
 	style.FramePadding = { 4, 4 };
-
-#define THEME_NONE ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-#define THEME_COLOR_WHITE ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-#define THEME_COLOR_GRAY ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-#define THEME_BACKGROUND_DARK ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
-#define THEME_BACKGROUND_DARKER ImVec4(0.05f, 0.05f, 0.05f, 1.00f);
-#define THEME_BACKGROUND_DARKER_TRANSPARENT ImVec4(0.0f, 0.0f, 0.0f, 0.8f);
-#define THEME_BACKGROUND_DARK_TRANSPARENT ImVec4(0.0f, 0.0f, 0.0f, 0.25f);
-#define THEME_BACKGROUND_LIGHT ImVec4(0.25f, 0.25f, 0.25f, 1.0f);
-#define THEME_COLOR_ORANGE ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
-#define THEME_SUBDUED_TRANSPARENT ImVec4(0.00f, 0.00f, 0.00f, 0.5f);
-#define THEME_ENLIGHTEN_TRANSPARENT ImVec4(0.43f, 0.43f, 0.43f, 0.50f);
 
 	colors[ImGuiCol_Text] = THEME_COLOR_WHITE;
 	colors[ImGuiCol_TextDisabled] = THEME_COLOR_GRAY;
