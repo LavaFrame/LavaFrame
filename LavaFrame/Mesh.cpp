@@ -6,7 +6,6 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #define TINYOBJLOADER_USE_MAPBOX_EARCUT
 #include <tiny_obj_loader.h>
-#include <tinyobj_loader_opt.h>
 #include "Mesh.h"
 #include <iostream>
 #include "GlobalState.h"
