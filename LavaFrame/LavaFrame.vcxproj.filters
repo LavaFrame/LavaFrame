@@ -93,9 +93,6 @@
     <Filter Include="Header Files\mapbox">
       <UniqueIdentifier>{b2f93952-5285-49ba-80d4-e952f9572fba}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\lpfalloc">
-      <UniqueIdentifier>{5359fa34-1f78-463b-9dce-055341ca5626}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\build_include\OpenImageDenoise.dll">
@@ -190,9 +187,6 @@
     </None>
     <None Include="thirdparty\SDL2\lib\x86\SDL2.dll">
       <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
-    </None>
-    <None Include="lfpAlloc\LICENSE">
-      <Filter>Header Files\lpfalloc</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -421,24 +415,6 @@
     </ClInclude>
     <ClInclude Include="earcut.hpp">
       <Filter>Header Files\mapbox</Filter>
-    </ClInclude>
-    <ClInclude Include="tinyobj_loader_opt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lfpAlloc\Allocator.hpp">
-      <Filter>Header Files\lpfalloc</Filter>
-    </ClInclude>
-    <ClInclude Include="lfpAlloc\ChunkList.hpp">
-      <Filter>Header Files\lpfalloc</Filter>
-    </ClInclude>
-    <ClInclude Include="lfpAlloc\Pool.hpp">
-      <Filter>Header Files\lpfalloc</Filter>
-    </ClInclude>
-    <ClInclude Include="lfpAlloc\PoolDispatcher.hpp">
-      <Filter>Header Files\lpfalloc</Filter>
-    </ClInclude>
-    <ClInclude Include="lfpAlloc\Utils.hpp">
-      <Filter>Header Files\lpfalloc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

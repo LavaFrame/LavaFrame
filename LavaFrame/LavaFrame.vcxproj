@@ -218,7 +218,6 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"</Comm
     <None Include="..\shaders\postprocess.glsl" />
     <None Include="..\shaders\preview_flareon.glsl" />
     <None Include="..\shaders\renderer.glsl" />
-    <None Include="lfpAlloc\LICENSE" />
     <None Include="thirdparty\oidn\lib\OpenImageDenoise.dll" />
     <None Include="thirdparty\oidn\lib\tbb.dll" />
     <None Include="thirdparty\oidn\lib\tbbmalloc.dll" />
@@ -297,11 +296,6 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"</Comm
     <ClInclude Include="Export.h" />
     <ClInclude Include="GlobalState.h" />
     <ClInclude Include="hdrloader.h" />
-    <ClInclude Include="lfpAlloc\Allocator.hpp" />
-    <ClInclude Include="lfpAlloc\ChunkList.hpp" />
-    <ClInclude Include="lfpAlloc\Pool.hpp" />
-    <ClInclude Include="lfpAlloc\PoolDispatcher.hpp" />
-    <ClInclude Include="lfpAlloc\Utils.hpp" />
     <ClInclude Include="Loader.h" />
     <ClInclude Include="Mat4.h" />
     <ClInclude Include="Material.h" />
@@ -339,7 +333,6 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"</Comm
     <ClInclude Include="thirdparty\stb\stb_image_write.h" />
     <ClInclude Include="thirdparty\tinydir\tinydir.h" />
     <ClInclude Include="TiledRenderer.h" />
-    <ClInclude Include="tinyobj_loader_opt.h" />
     <ClInclude Include="tiny_obj_loader.h" />
     <ClInclude Include="Vec2.h" />
     <ClInclude Include="Vec3.h" />
