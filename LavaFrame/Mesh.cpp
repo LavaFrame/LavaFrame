@@ -4,7 +4,9 @@
  */
 
 #define TINYOBJLOADER_IMPLEMENTATION
+#define TINYOBJLOADER_USE_MAPBOX_EARCUT
 #include <tiny_obj_loader.h>
+#include <tinyobj_loader_opt.h>
 #include "Mesh.h"
 #include <iostream>
 #include "GlobalState.h"
@@ -30,12 +32,14 @@ namespace LavaFrame
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
+        std::string warn;
         std::string err;
-        bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filename.c_str(), 0, true);
+        bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str(), 0, true);
 
         if (!ret)
         {
             printf("Unable to load geometry.\n");
+            printf(err.c_str());
 #if defined(_WIN32)
             MessageBox(NULL, "Failed to load geometry.", "Loading failed", MB_ICONERROR);
 #endif
