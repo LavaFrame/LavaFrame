@@ -20,14 +20,14 @@ namespace LavaFrame
         , tileHeight(scene->renderOptions.tileHeight)
         , maxDepth(scene->renderOptions.maxDepth)
         , pathTraceFBO(0)
-        , pathTraceFBOLowRes(0)
+        , previewFBO(0)
         , accumFBO(0)
         , outputFBO(0)
         , pathTraceShader(nullptr)
-        , pathTraceShaderLowRes(nullptr)
+        , previewEngineShader(nullptr)
         , accumShader(nullptr)
         , outputShader(nullptr)
-        , tonemapShader(nullptr)
+        , postShader(nullptr)
         , pathTraceTexture(0)
         , pathTraceTextureLowRes(0)
         , accumTexture(0)
@@ -70,7 +70,6 @@ namespace LavaFrame
         ShaderInclude::ShaderSource vertexShaderSrcObj = ShaderInclude::load(shadersDirectory + "common/vertex.glsl");
         ShaderInclude::ShaderSource pathTraceShaderSrcObj = ShaderInclude::load(shadersDirectory + "renderer.glsl");
         ShaderInclude::ShaderSource previewEngineSrcObj = ShaderInclude::load(shadersDirectory + "preview_flareon.glsl");
-        //ShaderInclude::ShaderSource previewEngineSrcObj = ShaderInclude::load(shadersDirectory + "preview_viewsdorf.glsl");
         ShaderInclude::ShaderSource outputShaderSrcObj = ShaderInclude::load(shadersDirectory + "output.glsl");
         ShaderInclude::ShaderSource tonemapShaderSrcObj = ShaderInclude::load(shadersDirectory + "postprocess.glsl");
 
@@ -109,9 +108,9 @@ namespace LavaFrame
         }
 
         pathTraceShader = LoadShaders(vertexShaderSrcObj, pathTraceShaderSrcObj);
-        pathTraceShaderLowRes = LoadShaders(vertexShaderSrcObj, previewEngineSrcObj);
+        previewEngineShader = LoadShaders(vertexShaderSrcObj, previewEngineSrcObj);
         outputShader = LoadShaders(vertexShaderSrcObj, outputShaderSrcObj);
-        tonemapShader = LoadShaders(vertexShaderSrcObj, tonemapShaderSrcObj);
+        postShader = LoadShaders(vertexShaderSrcObj, tonemapShaderSrcObj);
 
         if (GlobalState.useDebug) {
             printf("Debug sizes : %d %d - %d %d\n", tileWidth, tileHeight, screenSize.x, screenSize.y);
@@ -137,12 +136,12 @@ namespace LavaFrame
         glBindTexture(GL_TEXTURE_2D, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pathTraceTexture, 0);
 
-        // Create FBOs for path trace shader (Progressive)
+        // Create FBOs for preview shader
         if (GlobalState.useDebug) {
-            printf("Buffer pathTraceFBOLowRes\n");
+            printf("Buffer previewFBO\n");
         }
-        glGenFramebuffers(1, &pathTraceFBOLowRes);
-        glBindFramebuffer(GL_FRAMEBUFFER, pathTraceFBOLowRes);
+        glGenFramebuffers(1, &previewFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, previewFBO);
 
         // Create Texture for FBO
         glGenTextures(1, &pathTraceTextureLowRes);
@@ -241,8 +240,8 @@ namespace LavaFrame
 
         pathTraceShader->StopUsing();
 
-        pathTraceShaderLowRes->Use();
-        shaderObject = pathTraceShaderLowRes->getObject();
+        previewEngineShader->Use();
+        shaderObject = previewEngineShader->getObject();
 
         glUniform1f(glGetUniformLocation(shaderObject, "hdrResolution"), scene->hdrData == nullptr ? 0 : float(scene->hdrData->width * scene->hdrData->height));
         glUniform1i(glGetUniformLocation(shaderObject, "topBVHIndex"), scene->bvhTranslator.topLevelIndex);
@@ -261,7 +260,7 @@ namespace LavaFrame
         glUniform1i(glGetUniformLocation(shaderObject, "hdrMarginalDistTex"), 10);
         glUniform1i(glGetUniformLocation(shaderObject, "hdrCondDistTex"), 11);
 
-        pathTraceShaderLowRes->StopUsing();
+        previewEngineShader->StopUsing();
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_BUFFER, BVHTex);
@@ -300,15 +299,14 @@ namespace LavaFrame
         glDeleteTextures(1, &denoisedTexture);
 
         glDeleteFramebuffers(1, &pathTraceFBO);
-        glDeleteFramebuffers(1, &pathTraceFBOLowRes);
-        glDeleteFramebuffers(1, &accumFBO);
+        glDeleteFramebuffers(1, &previewFBO);
         glDeleteFramebuffers(1, &outputFBO);
 
         delete pathTraceShader;
-        delete pathTraceShaderLowRes;
+        delete previewEngineShader;
         delete accumShader;
         delete outputShader;
-        delete tonemapShader;
+        delete postShader;
 
         delete denoiserInputFramePtr;
         delete frameOutputPtr;
@@ -328,9 +326,9 @@ namespace LavaFrame
 
         if (scene->camera->isMoving || scene->instancesModified)
         {
-            glBindFramebuffer(GL_FRAMEBUFFER, pathTraceFBOLowRes);
+            glBindFramebuffer(GL_FRAMEBUFFER, previewFBO);
             glViewport(0, 0, screenSize.x * pixelRatio, screenSize.y * pixelRatio);
-            quad->Draw(pathTraceShaderLowRes);
+            quad->Draw(previewEngineShader);
             scene->instancesModified = false;
         }
         else
@@ -349,7 +347,7 @@ namespace LavaFrame
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tileOutputTexture[currentBuffer], 0);
             glViewport(0, 0, screenSize.x, screenSize.y);
             glBindTexture(GL_TEXTURE_2D, accumTexture);
-            quad->Draw(tonemapShader);
+            quad->Draw(postShader);
         }
     }
 
@@ -363,7 +361,7 @@ namespace LavaFrame
         if (scene->camera->isMoving || sampleCounter == 1)
         {
             glBindTexture(GL_TEXTURE_2D, pathTraceTextureLowRes);
-            quad->Draw(tonemapShader);
+            quad->Draw(postShader);
         }
         else
         {
@@ -396,6 +394,23 @@ namespace LavaFrame
             glBindTexture(GL_TEXTURE_2D, tileOutputTexture[1 - currentBuffer]);
 
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, *data);
+    }
+
+    void TiledRenderer::GetOutputBufferFloat(float** data, int& w, int& h)
+    {
+        w = scene->renderOptions.resolution.x;
+        h = scene->renderOptions.resolution.y;
+
+        *data = new float[w * h * 3];
+
+        glActiveTexture(GL_TEXTURE0);
+
+        if (denoised)
+            glBindTexture(GL_TEXTURE_2D, denoisedTexture);
+        else
+            glBindTexture(GL_TEXTURE_2D, tileOutputTexture[1 - currentBuffer]);
+
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, *data);
     }
 
     int TiledRenderer::GetSampleCount() const
@@ -492,8 +507,8 @@ namespace LavaFrame
         glUniform1i(glGetUniformLocation(shaderObject, "frame"), frameCounter);
         pathTraceShader->StopUsing();
 
-        pathTraceShaderLowRes->Use();
-        shaderObject = pathTraceShaderLowRes->getObject();
+        previewEngineShader->Use();
+        shaderObject = previewEngineShader->getObject();
         glUniform3f(glGetUniformLocation(shaderObject, "camera.position"), scene->camera->position.x, scene->camera->position.y, scene->camera->position.z);
         glUniform3f(glGetUniformLocation(shaderObject, "camera.right"), scene->camera->right.x, scene->camera->right.y, scene->camera->right.z);
         glUniform3f(glGetUniformLocation(shaderObject, "camera.up"), scene->camera->up.x, scene->camera->up.y, scene->camera->up.z);
@@ -506,10 +521,10 @@ namespace LavaFrame
         glUniform1i(glGetUniformLocation(shaderObject, "maxDepth"), scene->camera->isMoving || scene->instancesModified ? 2 : scene->renderOptions.maxDepth);
         glUniform3f(glGetUniformLocation(shaderObject, "camera.position"), scene->camera->position.x, scene->camera->position.y, scene->camera->position.z);
         glUniform3f(glGetUniformLocation(shaderObject, "bgColor"), scene->renderOptions.bgColor.x, scene->renderOptions.bgColor.y, scene->renderOptions.bgColor.z);
-        pathTraceShaderLowRes->StopUsing();
+        previewEngineShader->StopUsing();
 
-        tonemapShader->Use();
-        shaderObject = tonemapShader->getObject();
+        postShader->Use();
+        shaderObject = postShader->getObject();
         glUniform1i(glGetUniformLocation(shaderObject, "isInPreview"), scene->camera->isMoving);
         glUniform1f(glGetUniformLocation(shaderObject, "invSampleCounter"), 1.0f / (sampleCounter));
         glUniform1i(glGetUniformLocation(shaderObject, "tonemapIndex"), scene->renderOptions.tonemapIndex);
@@ -522,7 +537,7 @@ namespace LavaFrame
         glUniform1i(glGetUniformLocation(shaderObject, "useVignette"), scene->renderOptions.useVignette);
         glUniform1f(glGetUniformLocation(shaderObject, "vignetteIntensity"), scene->renderOptions.vignetteIntensity);
         glUniform1f(glGetUniformLocation(shaderObject, "vignettePower"), scene->renderOptions.vignettePower);
-        tonemapShader->StopUsing();
+        postShader->StopUsing();
     }
 
     uint32_t TiledRenderer::SetViewport(int width, int height)
@@ -530,7 +545,7 @@ namespace LavaFrame
         if (GlobalState.scene->camera->isMoving || sampleCounter == 1)
         {
             glBindTexture(GL_TEXTURE_2D, pathTraceTextureLowRes);
-            quad->Draw(tonemapShader);
+            quad->Draw(postShader);
             return pathTraceTextureLowRes;
         }
         else

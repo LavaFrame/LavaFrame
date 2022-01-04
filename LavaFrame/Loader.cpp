@@ -52,7 +52,7 @@ namespace LavaFrame
             Log("Couldn't open scene file %s for reading\n", filename.c_str());
             return false;
         }
-        Log("Loading Scene...\n");
+        Log(std::string("Loading scene " + filename + " ...\n").c_str());
 
         struct MaterialData
         {
@@ -362,6 +362,8 @@ namespace LavaFrame
             scene->AddCamera(Vec3(0.0f, 0.0f, 10.0f), Vec3(0.0f, 0.0f, -10.0f), 35.0f);
 
         scene->CreateAccelerationStructures();
+
+        Log("Scene loaded.\n");
 
         return true;
     }

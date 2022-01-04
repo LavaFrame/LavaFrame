@@ -16,16 +16,16 @@ namespace LavaFrame
     private:
         // FBOs
         GLuint pathTraceFBO;
-        GLuint pathTraceFBOLowRes;
+        GLuint previewFBO;
         GLuint accumFBO;
         GLuint outputFBO;
 
         // Shaders
         Program* pathTraceShader;
-        Program* pathTraceShaderLowRes;
+        Program* previewEngineShader;
         Program* accumShader;
         Program* outputShader;
-        Program* tonemapShader;
+        Program* postShader;
 
         // Textures
         GLuint pathTraceTexture;
@@ -67,5 +67,6 @@ namespace LavaFrame
         float GetProgress() const;
         int GetSampleCount() const;
         void GetOutputBuffer(unsigned char**, int& w, int& h);
+        void GetOutputBufferFloat(float** data, int& w, int& h);
     };
 }

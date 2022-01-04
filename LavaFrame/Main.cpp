@@ -426,6 +426,14 @@ void MainLoop(void* arg) // Its the main loop !
 								SaveFrameBMP("./" + GlobalState.exportName + ".bmp");
 							}
 						}
+						if (ImGui::MenuItem("Export as EXR (BETA)", "")) {
+							if (GlobalState.exportName == "") {
+								SaveFrameEXR("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".exr");
+							}
+							else {
+								SaveFrameEXR("./" + GlobalState.exportName + ".exr");
+							}
+						}
 						ImGui::EndMenu();
 					}
 					ImGui::EndMenu();
@@ -436,6 +444,7 @@ void MainLoop(void* arg) // Its the main loop !
 			if (GlobalState.useDebug) { // Some debug stats, --debug / -db
 				ImGui::Text("- Debug Mode -");
 				ImGui::Text("Debug enabled : %d", GlobalState.useDebug);
+				ImGui::Text(std::string("Progress : " + std::to_string(GlobalState.renderer->GetProgress())).c_str());
 				ImGui::Text("Render size : %d x %d", GlobalState.renderer->GetScreenSize().x, GlobalState.renderer->GetScreenSize().y);
 				if (ImGui::Button("Reload scenes")) // Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
 				{
@@ -509,8 +518,10 @@ void MainLoop(void* arg) // Its the main loop !
 				optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
 				ImGui::Separator();
 
-				const char* tonemappers[] = { "None", "ACES", "Reinhard", "Kanjero"};
-				ImGui::Combo("Tonemapper", &renderOptions.tonemapIndex, tonemappers, 4);
+				const char* tonemappers[] = { "Linear", "ACES", "Reinhard", "Kanjero", "None" };
+				ImGui::Combo("Tonemapper", &renderOptions.tonemapIndex, tonemappers, 5);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Selects the tonemap operator. NONE is designed to be used with EXR HDR export and will look incorrect if viewed raw.");
 
 				GlobalState.scene->renderOptions.tonemapIndex = renderOptions.tonemapIndex;
 
@@ -715,7 +726,7 @@ void MainLoop(void* arg) // Its the main loop !
 		if (GlobalState.noUi == true) {
 			GlobalState.scene->camera->isMoving = false;
 		}
-		if (GlobalState.noUi == true and GlobalState.displaySampleCounter == true) {
+		if (GlobalState.noUi == true && GlobalState.displaySampleCounter == true) {
 			
 			// Window flags
 			ImVec4* colors = ImGui::GetStyle().Colors;
@@ -956,7 +967,6 @@ int main(int argc, char** argv)
 			exit(0);
 
 		GlobalState.scene->renderOptions = renderOptions;
-		std::cout << "Scene loaded\n";
 	}
 	else
 	{

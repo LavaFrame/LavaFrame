@@ -128,6 +128,10 @@ void main()
         color = pow(tonemapKanjero(color), vec4(1.0 / 2.2));
     }
 
+    if (tonemapIndex == 4) {
+        color = color;
+    }
+
     // Apply vignette
     if (useVignette) {
         color = vignette(color, vignetteIntensity, vignettePower);

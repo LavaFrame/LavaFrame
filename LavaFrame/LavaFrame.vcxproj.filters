@@ -134,14 +134,20 @@
     <None Include="..\build_include\license">
       <Filter>Resource Files\build_include</Filter>
     </None>
-    <None Include="..\shaders\output.glsl">
-      <Filter>Source Files\shaders</Filter>
+    <None Include="thirdparty\oidn\lib\OpenImageDenoise.dll">
+      <Filter>Source Files\thirdparty\oidn\lib</Filter>
     </None>
-    <None Include="..\shaders\postprocess.glsl">
-      <Filter>Source Files\shaders</Filter>
+    <None Include="thirdparty\oidn\lib\tbb.dll">
+      <Filter>Source Files\thirdparty\oidn\lib</Filter>
     </None>
-    <None Include="..\shaders\preview_flareon.glsl">
-      <Filter>Source Files\shaders</Filter>
+    <None Include="thirdparty\oidn\lib\tbbmalloc.dll">
+      <Filter>Source Files\thirdparty\oidn\lib</Filter>
+    </None>
+    <None Include="thirdparty\SDL2\lib\x64\SDL2.dll">
+      <Filter>Source Files\thirdparty\sdl2\lib\x64</Filter>
+    </None>
+    <None Include="thirdparty\SDL2\lib\x86\SDL2.dll">
+      <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
     </None>
     <None Include="..\shaders\renderer.glsl">
       <Filter>Source Files\shaders</Filter>
@@ -173,20 +179,14 @@
     <None Include="..\shaders\common\vertex.glsl">
       <Filter>Source Files\shaders\common</Filter>
     </None>
-    <None Include="thirdparty\oidn\lib\OpenImageDenoise.dll">
-      <Filter>Source Files\thirdparty\oidn\lib</Filter>
+    <None Include="..\shaders\output.glsl">
+      <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="thirdparty\oidn\lib\tbb.dll">
-      <Filter>Source Files\thirdparty\oidn\lib</Filter>
+    <None Include="..\shaders\postprocess.glsl">
+      <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="thirdparty\oidn\lib\tbbmalloc.dll">
-      <Filter>Source Files\thirdparty\oidn\lib</Filter>
-    </None>
-    <None Include="thirdparty\SDL2\lib\x64\SDL2.dll">
-      <Filter>Source Files\thirdparty\sdl2\lib\x64</Filter>
-    </None>
-    <None Include="thirdparty\SDL2\lib\x86\SDL2.dll">
-      <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
+    <None Include="..\shaders\preview_flareon.glsl">
+      <Filter>Source Files\shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -269,6 +269,9 @@
     </ClCompile>
     <ClCompile Include="thirdparty\imgui\imgui_tables.cpp">
       <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="miniz.c">
+      <Filter>Source Files\thirdparty</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -415,6 +418,12 @@
     </ClInclude>
     <ClInclude Include="earcut.hpp">
       <Filter>Header Files\mapbox</Filter>
+    </ClInclude>
+    <ClInclude Include="tinyexr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="miniz.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

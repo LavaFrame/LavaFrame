@@ -65,14 +65,5 @@ void main(void)
 
     vec3 pixelColor = PathTrace(ray);
 
-    // Anti-firefly clamp
-    float maxLuminance = 1.0;
-
-    float lum = dot(pixelColor, vec3(0.212671f, 0.715160f, 0.072169f));
-    if(lum > maxLuminance)
-    {
-        pixelColor *= maxLuminance / lum;
-    }
-
     color = pixelColor + accumColor;
 }
