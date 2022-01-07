@@ -299,9 +299,9 @@ void EditTransform(const float* view, const float* projection, float* matrix)
 
 	float matrixTranslation[3], matrixRotation[3], matrixScale[3];
 	ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
-	ImGui::InputFloat3("Tr", matrixTranslation);
-	ImGui::InputFloat3("Rt", matrixRotation);
-	ImGui::InputFloat3("Sc", matrixScale);
+	ImGui::InputFloat3("Position", matrixTranslation);
+	ImGui::InputFloat3("Rotation", matrixRotation);
+	ImGui::InputFloat3("Scale", matrixScale);
 	ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
 
 	if (mCurrentGizmoOperation != ImGuizmo::SCALE)
