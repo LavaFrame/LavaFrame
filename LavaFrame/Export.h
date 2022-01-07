@@ -53,7 +53,7 @@ void SaveFrameEXR(const std::string outfilename) {
     int height;
     float* rgb;
 
-    GlobalState.renderer->GetOutputBufferFloat(&rgb, width, height);
+    GlobalState.renderer->GetOutputBufferHDR(&rgb, width, height);
 
     EXRHeader header;
     InitEXRHeader(&header);

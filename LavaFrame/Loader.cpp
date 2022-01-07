@@ -43,6 +43,7 @@ namespace LavaFrame
     {
         FILE* file;
         file = fopen(filename.c_str(), "r");
+        GlobalState.overrideTileSize = false;
 
         if (!file)
         {
@@ -243,14 +244,18 @@ namespace LavaFrame
                     if (GlobalState.useDebug) {
                         Log("Loading scene data...\n");
                     }
-                    sscanf(line, " envMap %s", envMap);
+                    sscanf(line, " envMap %s", envMap); // Legacy
                     sscanf(line, " hdriMap %s", envMap);
                     sscanf(line, " resolution %d %d", &renderOptions.resolution.x, &renderOptions.resolution.y);
                     sscanf(line, " hdrMultiplier %f", &renderOptions.hdrMultiplier);
                     sscanf(line, " hdriMultiplier %f", &renderOptions.hdrMultiplier);
                     sscanf(line, " maxDepth %i", &renderOptions.maxDepth);
-                    sscanf(line, " tileWidth %i", &renderOptions.tileWidth);
-                    sscanf(line, " tileHeight %i", &renderOptions.tileHeight);
+                    if (sscanf(line, " tileWidth %i", &renderOptions.tileWidth) == 1) {
+                        GlobalState.overrideTileSize = true;
+                    }
+                    if (sscanf(line, " tileHeight %i", &renderOptions.tileHeight) == 1) {
+                        GlobalState.overrideTileSize = true;
+                    }
                     sscanf(line, " enableRR %s", enableRR);
                     sscanf(line, " RRDepth %i", &renderOptions.RRDepth);
                     sscanf(line, " tonemapIndex %i", &renderOptions.tonemapIndex);
@@ -357,6 +362,11 @@ namespace LavaFrame
         }
 
         fclose(file);
+
+        if (!GlobalState.overrideTileSize) {
+            renderOptions.tileHeight = renderOptions.resolution.y;
+            renderOptions.tileWidth = renderOptions.resolution.x;
+        }
 
         if (!cameraAdded)
             scene->AddCamera(Vec3(0.0f, 0.0f, 10.0f), Vec3(0.0f, 0.0f, -10.0f), 35.0f);

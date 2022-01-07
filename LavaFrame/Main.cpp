@@ -446,6 +446,7 @@ void MainLoop(void* arg) // Its the main loop !
 				ImGui::Text("Debug enabled : %d", GlobalState.useDebug);
 				ImGui::Text(std::string("Progress : " + std::to_string(GlobalState.renderer->GetProgress())).c_str());
 				ImGui::Text("Render size : %d x %d", GlobalState.renderer->GetScreenSize().x, GlobalState.renderer->GetScreenSize().y);
+				ImGui::Text("Tile size : %d x %d", GlobalState.scene->renderOptions.tileWidth, GlobalState.scene->renderOptions.tileHeight);
 				if (ImGui::Button("Reload scenes")) // Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
 				{
 					sceneFiles.clear();
@@ -510,7 +511,7 @@ void MainLoop(void* arg) // Its the main loop !
 				requiresReload |= ImGui::Checkbox("Enable HDRI", &renderOptions.useEnvMap);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Enable lighting from a 360 degree HDR image for lighting.");
-				optionsChanged |= ImGui::SliderFloat("HDRI multiplier", &renderOptions.hdrMultiplier, 0.1f, 10.0f);
+				optionsChanged |= ImGui::SliderFloat("HDRI multiplier", &renderOptions.hdrMultiplier, 0.0f, 5.0f);
 				ImGui::Separator();
 				requiresReload |= ImGui::Checkbox("Enable constant lighting", &renderOptions.useConstantBg);
 				if (ImGui::IsItemHovered())

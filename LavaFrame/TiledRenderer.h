@@ -11,6 +11,7 @@
 namespace LavaFrame
 {
     class Scene;
+
     class TiledRenderer : public Renderer
     {
     private:
@@ -67,6 +68,6 @@ namespace LavaFrame
         float GetProgress() const;
         int GetSampleCount() const;
         void GetOutputBuffer(unsigned char**, int& w, int& h);
-        void GetOutputBufferFloat(float** data, int& w, int& h);
+        void GetOutputBufferHDR(float** data, int& w, int& h);
     };
 }

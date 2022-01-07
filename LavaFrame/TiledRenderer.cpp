@@ -396,7 +396,7 @@ namespace LavaFrame
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, *data);
     }
 
-    void TiledRenderer::GetOutputBufferFloat(float** data, int& w, int& h)
+    void TiledRenderer::GetOutputBufferHDR(float** data, int& w, int& h)
     {
         w = scene->renderOptions.resolution.x;
         h = scene->renderOptions.resolution.y;
@@ -570,7 +570,20 @@ namespace LavaFrame
         oidn::FilterRef filter = device.newFilter("RT"); // generic ray tracing filter
         filter.setImage("color", denoiserInputFramePtr, oidn::Format::Float3, screenSize.x, screenSize.y);
         filter.setImage("output", frameOutputPtr, oidn::Format::Float3, screenSize.x, screenSize.y);
-        filter.set("hdr", false);
+        if (GlobalState.scene->renderOptions.tonemapIndex == 4) { 
+            filter.set("hdr", true);
+            if (GlobalState.useDebug) {
+                std::cout << GlobalState.scene->renderOptions.tonemapIndex << std::endl;
+                printf("Denoise HDR\n");
+            }
+        }
+        else {
+            filter.set("hdr", false);
+            if (GlobalState.useDebug) {
+                std::cout << GlobalState.scene->renderOptions.tonemapIndex << std::endl;
+                printf("Denoise LDR\n");
+            }
+        }
         filter.commit();
 
         // Filter the image
@@ -579,7 +592,7 @@ namespace LavaFrame
         // Check for errors
         const char* errorMessage;
         if (device.getError(errorMessage) != oidn::Error::None)
-            std::cout << "Error: " << errorMessage << std::endl;
+            std::cout << "Denoise Error: " << errorMessage << std::endl;
 
         // Copy the denoised data to denoisedTexture
         glBindTexture(GL_TEXTURE_2D, denoisedTexture);
