@@ -93,6 +93,9 @@
     <Filter Include="Header Files\mapbox">
       <UniqueIdentifier>{b2f93952-5285-49ba-80d4-e952f9572fba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\build_include\bin">
+      <UniqueIdentifier>{f56a8382-0d8f-42ea-85ca-24d371df68ad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\build_include\OpenImageDenoise.dll">
@@ -187,6 +190,15 @@
     </None>
     <None Include="..\shaders\preview_flareon.glsl">
       <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\build_include\bin\SDL2.dll">
+      <Filter>Resource Files\build_include\bin</Filter>
+    </None>
+    <None Include="..\build_include\bin\tbb.dll">
+      <Filter>Resource Files\build_include\bin</Filter>
+    </None>
+    <None Include="..\build_include\bin\OpenImageDenoise.dll">
+      <Filter>Resource Files\build_include\bin</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
