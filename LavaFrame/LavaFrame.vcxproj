@@ -53,6 +53,8 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+    <EnableASAN>
+    </EnableASAN>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -174,6 +176,11 @@
       <Version>
       </Version>
       <LinkStatus>false</LinkStatus>
+      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+      <LargeAddressAware>
+      </LargeAddressAware>
+      <IgnoreAllDefaultLibraries>
+      </IgnoreAllDefaultLibraries>
     </Link>
     <CustomBuildStep>
       <Command>Xcopy /y /r /q /c /s "$(SolutionDir)build_include\." "$(OutDirFullPath)"
@@ -204,6 +211,15 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"</Comm
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="..\build_include\assets\cornell_box.lfs" />
+    <None Include="..\build_include\bin\OpenImageDenoise.dll">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </None>
+    <None Include="..\build_include\bin\SDL2.dll">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </None>
+    <None Include="..\build_include\bin\tbb.dll">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </None>
     <None Include="..\build_include\license" />
     <None Include="..\build_include\OpenImageDenoise.dll" />
     <None Include="..\build_include\SDL2.dll" />

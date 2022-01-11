@@ -1,13 +1,4 @@
 /*
-* Hi, and welcome to the LavaFrame source code !
-* The goal of this project was to create a (somewhat) production
-* ready renderer. I used it as a
-* project to build my C++ and GLSL skills further by forking and
-* extending another project and building it into something I can
-* use for my own projects.
-*
-* - Nolram
-*
 * MIT License
 * Check license.txt for more information on licensing
 * Based on the original software by Alif Ali (knightcrawler25)
@@ -763,6 +754,9 @@ void MainLoop(void* arg) // Its the main loop !
 int main(int argc, char** argv)
 {
 	srand((unsigned int)time(0));
+#if defined(_WIN32)
+	AddDllDirectory(PCWSTR("/bin/"));
+#endif
 
 	std::string sceneFile;
 
