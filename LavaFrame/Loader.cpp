@@ -25,6 +25,7 @@ freely, subject to the following restrictions:
 #pragma warning( disable : 6031 )
 #include "Loader.h"
 #include "GlobalState.h"
+#include "ImGuizmo.h"
 #include <tiny_obj_loader.h>
 #include <iostream>
 #include <iterator>
@@ -336,6 +337,7 @@ namespace LavaFrame
 
                     sscanf(line, " position %f %f %f", &xform[3][0], &xform[3][1], &xform[3][2]);
                     sscanf(line, " scale %f %f %f", &xform[0][0], &xform[1][1], &xform[2][2]);
+                    
                 }
                 if (!filename.empty())
                 {
