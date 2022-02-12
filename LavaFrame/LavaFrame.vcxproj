@@ -158,7 +158,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)lavaframe\;$(SolutionDir)lavaframe\thirdparty\imgui;$(SolutionDir)lavaframe\thirdparty\glew\include;$(SolutionDir)lavaframe\thirdparty\stb;$(SolutionDir)lavaframe\thirdparty\gl3w;$(SolutionDir)lavaframe\thirdparty\imguizmo;$(SolutionDir)lavaframe\thirdparty\RadeonRays;$(SolutionDir)lavaframe\thirdparty\tinydir;$(SolutionDir)lavaframe\thirdparty\oidn\include\;$(SolutionDir)lavaframe\thirdparty\SDL2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)lavaframe\;$(SolutionDir)lavaframe\thirdparty\imgui;$(SolutionDir)lavaframe\thirdparty\glew\include;$(SolutionDir)lavaframe\thirdparty\stb;$(SolutionDir)lavaframe\thirdparty\gl3w;$(SolutionDir)lavaframe\thirdparty\imguizmo;$(SolutionDir)lavaframe\thirdparty\RadeonRays;$(SolutionDir)lavaframe\thirdparty\tinydir;$(SolutionDir)lavaframe\thirdparty\oidn\include\;$(SolutionDir)lavaframe\thirdparty\netimgui\;$(SolutionDir)lavaframe\thirdparty\SDL2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <Optimization>Full</Optimization>
@@ -328,6 +328,9 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"</Comm
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</TreatOutputAsContent>
     </None>
+    <None Include="thirdparty\netimgui\Private\NetImgui_Client.inl" />
+    <None Include="thirdparty\netimgui\Private\NetImgui_CmdPackets.inl" />
+    <None Include="thirdparty\netimgui\Private\NetImgui_Shared.inl" />
     <None Include="thirdparty\oidn\lib\OpenImageDenoise.dll" />
     <None Include="thirdparty\oidn\lib\tbb.dll" />
     <None Include="thirdparty\oidn\lib\tbbmalloc.dll" />
@@ -393,6 +396,12 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"</Comm
     <ClCompile Include="thirdparty\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="thirdparty\imgui\imgui_tables.cpp" />
     <ClCompile Include="thirdparty\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="thirdparty\netimgui\Private\NetImgui_Api.cpp" />
+    <ClCompile Include="thirdparty\netimgui\Private\NetImgui_Client.cpp" />
+    <ClCompile Include="thirdparty\netimgui\Private\NetImgui_CmdPackets_DrawFrame.cpp" />
+    <ClCompile Include="thirdparty\netimgui\Private\NetImgui_NetworkPosix.cpp" />
+    <ClCompile Include="thirdparty\netimgui\Private\NetImgui_NetworkUE4.cpp" />
+    <ClCompile Include="thirdparty\netimgui\Private\NetImgui_NetworkWin32.cpp" />
     <ClCompile Include="thirdparty\RadeonRays\bbox.cpp" />
     <ClCompile Include="thirdparty\RadeonRays\bvh.cpp" />
     <ClCompile Include="thirdparty\RadeonRays\bvh_translator.cpp" />
@@ -434,6 +443,17 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"</Comm
     <ClInclude Include="thirdparty\imgui\imstb_rectpack.h" />
     <ClInclude Include="thirdparty\imgui\imstb_textedit.h" />
     <ClInclude Include="thirdparty\imgui\imstb_truetype.h" />
+    <ClInclude Include="thirdparty\netimgui\NetImgui_Api.h" />
+    <ClInclude Include="thirdparty\netimgui\NetImgui_Config.h" />
+    <ClInclude Include="thirdparty\netimgui\Private\NetImgui_Client.h" />
+    <ClInclude Include="thirdparty\netimgui\Private\NetImgui_CmdPackets.h" />
+    <ClInclude Include="thirdparty\netimgui\Private\NetImgui_CmdPackets_DrawFrame.h" />
+    <ClInclude Include="thirdparty\netimgui\Private\NetImgui_Network.h" />
+    <ClInclude Include="thirdparty\netimgui\Private\NetImgui_Shared.h" />
+    <ClInclude Include="thirdparty\netimgui\Private\NetImgui_WarningDisable.h" />
+    <ClInclude Include="thirdparty\netimgui\Private\NetImgui_WarningDisableImgui.h" />
+    <ClInclude Include="thirdparty\netimgui\Private\NetImgui_WarningDisableStd.h" />
+    <ClInclude Include="thirdparty\netimgui\Private\NetImgui_WarningReenable.h" />
     <ClInclude Include="thirdparty\oidn\include\OpenImageDenoise\config.h" />
     <ClInclude Include="thirdparty\oidn\include\OpenImageDenoise\oidn.h" />
     <ClInclude Include="thirdparty\oidn\include\OpenImageDenoise\oidn.hpp" />

@@ -3,6 +3,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define TINYEXR_IMPLEMENTATION
 #define TINYEXR_USE_THREAD 1
+#include <SDL2/SDL.h>
 #include "stb_image.h"
 #include "stb_image_write.h"
 #include <tinyexr.h>
@@ -10,7 +11,7 @@
 
 extern LavaFrameState GlobalState;
 
-void SaveFrame(const std::string filename) // Saves current frame as a png
+void SaveFrame(const std::string filename, SDL_Window* window) // Saves current frame as a png
 {
 	unsigned char* data = nullptr;
 	int w, h;
@@ -18,8 +19,10 @@ void SaveFrame(const std::string filename) // Saves current frame as a png
 	stbi_flip_vertically_on_write(true);
 	stbi_write_png(std::string(GlobalState.output_path + filename).c_str(), w, h, 3, data, w * 3);
 	delete data;
+    SDL_SetWindowTitle(window, GlobalState.versionString.c_str());
 }
-void SaveFrameTGA(const std::string filename) // Saves current frame as a png
+
+void SaveFrameTGA(const std::string filename, SDL_Window* window) // Saves current frame as a png
 {
 	unsigned char* data = nullptr;
 	int w, h;
@@ -27,8 +30,10 @@ void SaveFrameTGA(const std::string filename) // Saves current frame as a png
 	stbi_flip_vertically_on_write(true);
 	stbi_write_tga(std::string(GlobalState.output_path + filename).c_str(), w, h, 3, data);
 	delete data;
+    SDL_SetWindowTitle(window, GlobalState.versionString.c_str());
 }
-void SaveFrameJPG(const std::string filename, int jpgQuality) // Saves current frame as a bitmap-JPG
+
+void SaveFrameJPG(const std::string filename, int jpgQuality, SDL_Window* window) // Saves current frame as a bitmap-JPG
 {
 	unsigned char* data = nullptr;
 	int w, h;
@@ -36,8 +41,9 @@ void SaveFrameJPG(const std::string filename, int jpgQuality) // Saves current f
 	stbi_flip_vertically_on_write(true);
 	stbi_write_jpg(std::string(GlobalState.output_path + filename).c_str(), w, h, 3, data, jpgQuality);
 	delete data;
+    SDL_SetWindowTitle(window, GlobalState.versionString.c_str());
 }
-void SaveFrameBMP(const std::string filename) // Saves current frame as a bitmap-JPG
+void SaveFrameBMP(const std::string filename, SDL_Window* window) // Saves current frame as a bitmap-JPG
 {
 	unsigned char* data = nullptr;
 	int w, h;
@@ -45,20 +51,49 @@ void SaveFrameBMP(const std::string filename) // Saves current frame as a bitmap
 	stbi_flip_vertically_on_write(true);
 	stbi_write_bmp(std::string(GlobalState.output_path + filename).c_str(), w, h, 3, data);
 	delete data;
+    SDL_SetWindowTitle(window, GlobalState.versionString.c_str());
 }
 
-void SaveFrameEXR(const std::string outfilename) {
-
+void SaveFrameEXR(const std::string outfilename, SDL_Window* window) {
     int width;
     int height;
     float* rgb;
+
 
     GlobalState.renderer->GetOutputBufferHDR(&rgb, width, height);
 
     EXRHeader header;
     InitEXRHeader(&header);
 
-    header.compression_type = TINYEXR_COMPRESSIONTYPE_ZIP;
+    switch (GlobalState.exrCompressionIndex) {
+    case (0):
+        header.compression_type = TINYEXR_COMPRESSIONTYPE_ZIP;
+        break;
+
+    case (1):
+        header.compression_type = TINYEXR_COMPRESSIONTYPE_RLE;
+        break;
+
+    case (2):
+        header.compression_type = TINYEXR_COMPRESSIONTYPE_ZIPS;
+        break;
+
+    case (3):
+        header.compression_type = TINYEXR_COMPRESSIONTYPE_ZIP;
+        break;
+
+    case (4):
+        header.compression_type = TINYEXR_COMPRESSIONTYPE_PIZ;
+        break;
+
+    case (5):
+        header.compression_type = TINYEXR_COMPRESSIONTYPE_ZFP;
+        break;
+
+    default:
+        std::cout << "EXR export error : Invalid compression type." << std::endl;
+        break;
+    }
 
     EXRImage image;
     InitEXRImage(&image);
@@ -113,4 +148,5 @@ void SaveFrameEXR(const std::string outfilename) {
     free(header.pixel_types);
     free(header.requested_pixel_types);
 
+    SDL_SetWindowTitle(window, GlobalState.versionString.c_str());
 }

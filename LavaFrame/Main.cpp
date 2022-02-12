@@ -10,7 +10,6 @@
 #include <GL/gl3w.h>
 #include <iostream>
 #include <io.h>
-
 #include <time.h>
 #include <math.h>
 #include <string>
@@ -28,11 +27,14 @@
 #include "imgui_stdlib.h"
 #include "ImGuizmo.h"
 #include "Colors.h"
-
 #include "Loader.h"
 #include "tinydir.h"
 #if defined(_WIN32)
+#pragma message("Compiling using Windows features.")
 #include <windows.h>
+// NetImgui for Remote rendering inspection
+// TODO : INCLUDE THIS IN THE LICENSE FILE !
+#include "NetImgui_Api.h"
 #endif
 
 using namespace LavaFrame;
@@ -46,6 +48,7 @@ ImVec2 viewportPanelSize;
 
 bool viewportHovered = false;
 bool gizmoUsed = false;
+bool networkMode = false;
 
 struct LoopData
 {
@@ -93,13 +96,14 @@ void GetSceneFiles() // Load and index all scene files in the assets directory.
 	tinydir_close(&dir);
 }
 
-void LoadScene(std::string sceneName) // Load scene - this is also called on startup.
+void LoadScene(std::string sceneName, SDL_Window* window, bool setWindowTitle = true) // Load scene - this is also called on startup.
 {
 	delete GlobalState.scene;
 	GlobalState.scene = new Scene();
 	LoadSceneFromFile(sceneName, GlobalState.scene, renderOptions);
 	GlobalState.selectedInstance = 0;
 	GlobalState.scene->renderOptions = renderOptions;
+	if (setWindowTitle) SDL_SetWindowTitle(window, GlobalState.versionString.c_str());
 }
 
 bool InitRenderer() // Create the tiled renderer and inform the user that the proccess has started.
@@ -174,7 +178,7 @@ void Render()
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void Update(float secondsElapsed)
+void Update(float secondsElapsed, LoopData loopdata)
 {
 	GlobalState.keyPressed = false;
 
@@ -214,34 +218,34 @@ void Update(float secondsElapsed)
 	if (GlobalState.maxSamples + 1 == GlobalState.renderer->GetSampleCount()) {
 		if (GlobalState.exportType == "png") {
 			if (GlobalState.exportName == "") {
-				SaveFrame("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".png");
+				SaveFrame("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".png", loopdata.mWindow);
 			}
 			else {
-				SaveFrame("./" + GlobalState.exportName + ".png");
+				SaveFrame("./" + GlobalState.exportName + ".png", loopdata.mWindow);
 			}
 		}
 		else if (GlobalState.exportType == "jpg") {
 			if (GlobalState.exportName == "") {
-				SaveFrameJPG("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
+				SaveFrameJPG("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality, loopdata.mWindow);
 			}
 			else {
-				SaveFrameJPG("./" + GlobalState.exportName + ".jpg", GlobalState.currentJpgQuality);
+				SaveFrameJPG("./" + GlobalState.exportName + ".jpg", GlobalState.currentJpgQuality, loopdata.mWindow);
 			}
 		}
 		else if (GlobalState.exportType == "tga") {
 			if (GlobalState.exportName == "") {
-				SaveFrameTGA("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".tga");
+				SaveFrameTGA("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".tga", loopdata.mWindow);
 			}
 			else {
-				SaveFrameTGA("./" + GlobalState.exportName + ".tga");
+				SaveFrameTGA("./" + GlobalState.exportName + ".tga", loopdata.mWindow);
 			}
 		}
 		else if (GlobalState.exportType == "bmp") {
 			if (GlobalState.exportName == "") {
-				SaveFrameBMP("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".bmp");
+				SaveFrameBMP("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".bmp", loopdata.mWindow);
 			}
 			else {
-				SaveFrameBMP("./" + GlobalState.exportName + ".bmp");
+				SaveFrameBMP("./" + GlobalState.exportName + ".bmp", loopdata.mWindow);
 			}
 		}
 		printf("Render finished\n");
@@ -374,6 +378,8 @@ void MainLoop(void* arg) // Its the main loop !
 
 			GlobalState.scene->camera->isMoving = false;
 
+			bool requiresReload = false;
+
 			ImGui::SetNextWindowPos({ 0, 0 });
 			ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
 
@@ -386,43 +392,53 @@ void MainLoop(void* arg) // Its the main loop !
 					if (ImGui::BeginMenu("Export")) {
 						if (ImGui::MenuItem("Export as JPG", "")) {
 							if (GlobalState.exportName == "") {
-								SaveFrameJPG("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality);
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameJPG("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality, loopdata.mWindow);
 							}
 							else {
-								SaveFrameJPG("./" + GlobalState.exportName + ".jpg", 80);
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameJPG("./" + GlobalState.exportName + ".jpg", GlobalState.currentJpgQuality, loopdata.mWindow);
 							}
 						}
 						if (ImGui::MenuItem("Export as PNG", "")) {
 							if (GlobalState.exportName == "") {
-								SaveFrame("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".png");
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrame("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".png", loopdata.mWindow);
 							}
 							else {
-								SaveFrame("./" + GlobalState.exportName + ".png");
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrame("./" + GlobalState.exportName + ".png", loopdata.mWindow);
 							}
 						}
 						if (ImGui::MenuItem("Export as TGA", "")) {
 							if (GlobalState.exportName == "") {
-								SaveFrameTGA("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".tga");
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameTGA("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".tga", loopdata.mWindow);
 							}
 							else {
-								SaveFrameTGA("./" + GlobalState.exportName + ".tga");
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameTGA("./" + GlobalState.exportName + ".tga", loopdata.mWindow);
 							}
 						}
 
 						if (ImGui::MenuItem("Export as BMP", "")) {
 							if (GlobalState.exportName == "") {
-								SaveFrameBMP("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".bmp");
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameBMP("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".bmp", loopdata.mWindow);
 							}
 							else {
-								SaveFrameBMP("./" + GlobalState.exportName + ".bmp");
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameBMP("./" + GlobalState.exportName + ".bmp", loopdata.mWindow);
 							}
 						}
 						if (ImGui::MenuItem("Export as EXR (BETA)", "")) {
 							if (GlobalState.exportName == "") {
-								SaveFrameEXR("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".exr");
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameEXR("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".exr", loopdata.mWindow);
 							}
 							else {
-								SaveFrameEXR("./" + GlobalState.exportName + ".exr");
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameEXR("./" + GlobalState.exportName + ".exr", loopdata.mWindow);
 							}
 						}
 						ImGui::EndMenu();
@@ -476,18 +492,19 @@ void MainLoop(void* arg) // Its the main loop !
 					scenes.push_back(sceneFiles[i].c_str());
 				}
 
-				if (ImGui::Combo("Active scene", &GlobalState.sampleSceneIndex, scenes.data(), scenes.size(), scenes.size()))
+				if (ImGui::Combo("Active scene", &GlobalState.sceneIndex, scenes.data(), scenes.size(), scenes.size()))
 				{
-					LoadScene(sceneFiles[GlobalState.sampleSceneIndex]);
+					SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + "      [Loading scene " + scenes.at(GlobalState.sceneIndex) + "]").c_str());
+					LoadScene(sceneFiles[GlobalState.sceneIndex], loopdata.mWindow);
 					InitRenderer();
 				}
 				ImGui::InputText("Export filename", &GlobalState.exportName);
 				ImGui::SliderInt("JPG export quality", &GlobalState.currentJpgQuality, 1, 200);
+				const char* exr_compression_types[] = { "None", "RLE", "ZIPS", "ZIP", "PIZ", "ZFP"};
+				ImGui::Combo("EXR Compression", &GlobalState.exrCompressionIndex, exr_compression_types, 6);
 				optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &GlobalState.mouseSensitivity, 0.001f, 1.0f);
 				ImGui::Text("\n");
 			}
-
-			bool requiresReload = false;
 
 			if (ImGui::CollapsingHeader("Render Settings"))
 			{
@@ -510,8 +527,8 @@ void MainLoop(void* arg) // Its the main loop !
 				optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
 				ImGui::Separator();
 
-				const char* tonemappers[] = { "Linear", "ACES", "Reinhard", "Kanjero", "None" };
-				ImGui::Combo("Tonemapper", &renderOptions.tonemapIndex, tonemappers, 5);
+				const char* tonemappers[] = { "None", "Linear", "ACES", "Reinhard", "Kanjero", "Hejl Richard", "Uncharted 2" };
+				ImGui::Combo("Tonemapper", &renderOptions.tonemapIndex, tonemappers, 7);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Selects the tonemap operator. NONE is designed to be used with EXR HDR export and will look incorrect if viewed raw.");
 
@@ -684,7 +701,11 @@ void MainLoop(void* arg) // Its the main loop !
 				objectPropChanged |= ImGui::ColorEdit3("Extinction", (float*)extinction, 0);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Light extinction of the transmission.");
-				objectPropChanged |= ImGui::ColorEdit3("Emission", (float *)emission, 0);
+				ImGuiColorEditFlags emission_color_edit_flags = 0;
+				emission_color_edit_flags |= ImGuiColorEditFlags_HDR;
+				emission_color_edit_flags |= ImGuiColorEditFlags_Float;
+				emission_color_edit_flags |= ImGuiColorEditFlags_DisplayHSV;
+				objectPropChanged |= ImGui::ColorEdit3("Emission", (float *)emission, emission_color_edit_flags);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Emission color of the object.");
 
@@ -742,7 +763,7 @@ void MainLoop(void* arg) // Its the main loop !
 	}
 
 	double presentTime = SDL_GetTicks();
-	Update((float)(presentTime - lastTime));
+	Update((float)(presentTime - lastTime), loopdata);
 	lastTime = presentTime;
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // OpenGL clearing.
@@ -755,10 +776,12 @@ int main(int argc, char** argv)
 {
 	srand((unsigned int)time(0));
 #if defined(_WIN32)
-	AddDllDirectory(PCWSTR("/bin/"));
+	AddDllDirectory(PCWSTR(R"(/bin/)"));
 #endif
 
 	std::string sceneFile;
+	const char* remote_ip = "";
+	int remote_port = 4269;
 
 	for (int i = 1; i < argc; ++i)
 	{
@@ -906,6 +929,54 @@ int main(int argc, char** argv)
 			break;
 		}
 
+		case strint("-rm"):
+		{
+#if defined(_WIN32)
+			networkMode = true;
+			remote_ip = argv[++i];
+			break;
+#else
+			printf("Remote networking not supported with this build.\n"); 
+			return 0;
+#endif
+		}
+
+		case strint("--remote"):
+		{
+#if defined(_WIN32)
+			networkMode = true;
+			remote_ip = argv[++i];
+			break;
+#else
+			printf("Remote networking not supported with this build.\n");
+			return 0;
+#endif
+		}
+
+		case strint("-rmp"):
+		{
+#if defined(_WIN32)
+			std::string::size_type sz;
+			remote_port = std::stoi(argv[++i], &sz);
+			break;
+#else
+			printf("Remote networking not supported with this build.\n");
+			return 0;
+#endif
+		}
+
+		case strint("--remoteport"):
+		{
+#if defined(_WIN32)
+			std::string::size_type sz;
+			remote_port = std::stoi(argv[++i], &sz);
+			break;
+#else
+			printf("Remote networking not supported with this build.\n");
+			return 0;
+#endif
+		}
+
 		case strint("-tn"):
 		{
 			std::string::size_type sz;
@@ -922,7 +993,7 @@ int main(int argc, char** argv)
 
 		case strint("-h"):
 		{
-			Log(("--- " + GlobalState.versionString + " ---\n").c_str());
+			std::cout << (("--- " + GlobalState.versionString + " ---").c_str()) << std::endl;
 			std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
 			std::cout << "Options:" << std::endl;
 			std::cout << "  -s, --scene                     Load the scene from the specified file" << std::endl;
@@ -942,6 +1013,10 @@ int main(int argc, char** argv)
 			std::cout << "  -df, --denoiseframe <int>       Set the denoiser frame count" << std::endl;
 			std::cout << "  -jpgq, --jpgquality <int>       Set the jpeg quality" << std::endl;
 			std::cout << "  -tn, --tonemap <int>            Set the tonemapper based on index" << std::endl;
+#if defined(_WIN32)
+			std::cout << "  -rm, --remote <IP>				Enable remote network render control." << std::endl;
+			std::cout << "  -rmp, --remoteport <int>		Set remote port." << std::endl;
+#endif
 			return 0;
 		}
 
@@ -966,7 +1041,7 @@ int main(int argc, char** argv)
 	else
 	{
 		GetSceneFiles();
-		LoadScene(sceneFiles[GlobalState.sampleSceneIndex]);
+		LoadScene(sceneFiles[GlobalState.sceneIndex], NULL, false);
 	}
 
 	// Setup SDL
@@ -1116,6 +1191,14 @@ int main(int argc, char** argv)
 	if (!InitRenderer())
 		return 1;
 
+#if defined(_WIN32)
+	if (networkMode) {
+		NetImgui::Startup();
+		if (NetImgui::ConnectToApp("LavaFrame Renderer Instance", remote_ip, remote_port)) { printf("Connected to remote server.\n"); }
+		else { printf("Failed to connect to server.\n"); }
+	}
+#endif
+
 	while (!GlobalState.done)
 	{
 		MainLoop(&loopdata);
@@ -1125,6 +1208,7 @@ int main(int argc, char** argv)
 	delete GlobalState.scene;
 
 	// Cleanup
+	NetImgui::Shutdown(true);
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();

@@ -31,7 +31,7 @@ namespace LavaFrame
             bgColor = Vec3(0.5f, 0.5f, 0.5f);
             denoiserFrameCnt = 50;
             enableAutomaticDenoise = false;
-            tonemapIndex = 1;
+            tonemapIndex = 2;
             useCA = false;
             caDistance = 0.05;
             caP1 = 5;

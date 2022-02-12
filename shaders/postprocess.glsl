@@ -48,6 +48,13 @@ vec4 tonemapReinhard(in vec4 c)
     return clamp(c / (c + 1), 0.0, 1.0);
 }
 
+// Hejl Richard tonemapping
+vec4 toneMapHejlRichard(vec4 color)
+{
+    color = max(vec4(0.0), color - vec4(0.004));
+    return (color*(6.2*color+.5))/(color*(6.2*color+1.7)+0.06);
+}
+
 float linearToSRGB(float c)
 {
     return c <= 0.0031308f ? 12.92f * c : 1.055f * pow(c, 1.0 / 2.4) - 0.055f;
@@ -74,6 +81,17 @@ vec4 tonemapKanjero(in vec4 c)
 	c = clamp(c, 0.0, 1.0);
 	
 	return c;
+}
+
+vec4 toneMapUncharted2(vec4 color)
+{
+    const float A = 0.15;
+    const float B = 0.50;
+    const float C = 0.10;
+    const float D = 0.20;
+    const float E = 0.02;
+    const float F = 0.30;
+    return ((color*(A*color+C*B)+D*E)/(color*(A*color+B)+D*F))-E/F;
 }
 
 vec4 chromaticAberration() {
@@ -113,23 +131,32 @@ void main()
     else color = texture(pathTraceTexture, TexCoords) * invSampleCounter;
     
     if (tonemapIndex == 0) {
-        color = pow(tonemap(color, 2), vec4(1.0 / 2.2));
+        color = color;
     }
 
     if (tonemapIndex == 1) {
-        color = pow(tonemapACES(color, 1.5), vec4(1.0 / 2.2));
+        color = pow(tonemap(color, 2), vec4(1.0 / 2.2));
     }
 
     if (tonemapIndex == 2) {
-        color = pow(tonemapReinhard(color), vec4(1.0 / 2.2));
+        color = pow(tonemapACES(color, 1.5), vec4(1.0 / 2.2));
     }
 
     if (tonemapIndex == 3) {
-        color = pow(tonemapKanjero(color), vec4(1.0 / 2.2));
+        color = pow(tonemapReinhard(color), vec4(1.0 / 2.2));
     }
 
     if (tonemapIndex == 4) {
-        color = color;
+        color = pow(tonemapKanjero(color), vec4(1.0 / 2.2));
+    }
+
+    if (tonemapIndex == 5) {
+        color =toneMapHejlRichard(color);
+    }
+
+    if (tonemapIndex == 6) {
+        color = pow(toneMapUncharted2(color), vec4(1.0 / 2.2));
+        color = color * 1.75;
     }
 
     // Apply vignette

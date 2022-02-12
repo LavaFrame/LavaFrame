@@ -17,8 +17,11 @@ struct LavaFrameState {
 	bool useDofInPreview = false;
 	bool showDenoise = false;
 	bool overrideTileSize = false;
+	bool limitGpu = false;
+	int initTileSizeX = 0;
+	int initTileSizeY = 0;
 	int maxSamples = -1;
-	int sampleSceneIndex = 0;
+	int sceneIndex = 0;
 	int selectedInstance = 0;
 	int currentJpgQuality = 95;
 	int displayX;
@@ -26,6 +29,7 @@ struct LavaFrameState {
 	int nativeScreenWidth;
 	int nativeScreenHeight;
 	int previewEngineIndex = 0;
+	int exrCompressionIndex = 0;
 	const char* output_path = "output\\";
 	std::string exportName = "";
 	std::string exportType = "png";

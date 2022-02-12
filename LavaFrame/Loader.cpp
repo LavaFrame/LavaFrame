@@ -1,4 +1,11 @@
 /*
+    This is a modified version of the original code from the tinsel renderer.
+    Link to original code: https://github.com/mmacklin/tinsel
+*/
+
+// Original license :
+
+/*
 Copyright (c) 2018 Miles Macklin
 
 This software is provided 'as-is', without any express or implied
@@ -16,11 +23,6 @@ freely, subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be
    misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
-*/
-
-/*
-    This is a modified version of the original code from the tinsel renderer.
-    Link to original code: https://github.com/mmacklin/tinsel
 */
 #pragma warning( disable : 6031 )
 #include "Loader.h"
@@ -369,6 +371,9 @@ namespace LavaFrame
             renderOptions.tileHeight = renderOptions.resolution.y;
             renderOptions.tileWidth = renderOptions.resolution.x;
         }
+
+        GlobalState.initTileSizeX = renderOptions.tileWidth;
+        GlobalState.initTileSizeY = renderOptions.tileHeight;
 
         if (!cameraAdded)
             scene->AddCamera(Vec3(0.0f, 0.0f, 10.0f), Vec3(0.0f, 0.0f, -10.0f), 35.0f);

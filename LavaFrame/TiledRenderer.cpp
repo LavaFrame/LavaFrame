@@ -436,12 +436,25 @@ namespace LavaFrame
             oidn::FilterRef filter = device.newFilter("RT"); // generic ray tracing filter
             filter.setImage("color", denoiserInputFramePtr, oidn::Format::Float3, screenSize.x, screenSize.y);
             filter.setImage("output", frameOutputPtr, oidn::Format::Float3, screenSize.x, screenSize.y);
-            filter.set("hdr", false);
+            if (GlobalState.scene->renderOptions.tonemapIndex == 4) {
+                filter.set("hdr", true);
+                if (GlobalState.useDebug) {
+                    std::cout << GlobalState.scene->renderOptions.tonemapIndex << std::endl;
+                    printf("Denoise HDR\n");
+                }
+            }
+            else {
+                filter.set("hdr", false);
+                if (GlobalState.useDebug) {
+                    std::cout << GlobalState.scene->renderOptions.tonemapIndex << std::endl;
+                    printf("Denoise LDR\n");
+                }
+            }
             filter.commit();
 
             // Filter the image
             filter.execute();
-
+            
             // Check for errors
             const char* errorMessage;
             if (device.getError(errorMessage) != oidn::Error::None)
