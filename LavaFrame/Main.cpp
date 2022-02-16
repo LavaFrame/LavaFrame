@@ -494,7 +494,8 @@ void MainLoop(void* arg) // Its the main loop !
 
 				if (ImGui::Combo("Active scene", &GlobalState.sceneIndex, scenes.data(), scenes.size(), scenes.size()))
 				{
-					SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + "      [Loading scene " + scenes.at(GlobalState.sceneIndex) + "]").c_str());
+					std::string scene_name = scenes.at(GlobalState.sceneIndex);
+					SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + "      [Loading scene " + scene_name + "]").c_str());
 					LoadScene(sceneFiles[GlobalState.sceneIndex], loopdata.mWindow);
 					InitRenderer();
 				}
@@ -734,7 +735,23 @@ void MainLoop(void* arg) // Its the main loop !
 					GlobalState.scene->RebuildInstances();
 				}
 			}
+
+			// WIP Loading window
+			/*
+			ImGuiWindowFlags window_flags_loadwindow = 0;
+			window_flags_loadwindow |= ImGuiWindowFlags_NoTitleBar;
+			window_flags_loadwindow |= ImGuiWindowFlags_NoDecoration;
+			window_flags_loadwindow |= ImGuiWindowFlags_NoMove;
+			window_flags_loadwindow |= ImGuiWindowFlags_NoResize;
+
+			ImGui::SetNextWindowPos({ static_cast<float>(GlobalState.displayX) / 2,  static_cast<float>(GlobalState.displayY) / 2 });
+
+			ImGui::Begin("Loading...", nullptr, window_flags);
+			ImGui::Text(busy_reason.c_str());
+			*/
+
 			ImGui::End();
+			
 		}
 		if (GlobalState.noUi == true) {
 			GlobalState.scene->camera->isMoving = false;
@@ -1114,6 +1131,8 @@ int main(int argc, char** argv)
 	// Setup Dear ImGui context and style
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;
 	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", GlobalState.nativeScreenWidth / 121); //Make the font not-eyesore
 	if (GlobalState.useDebug) {
 		io.IniFilename = "guiconfig.ini";
