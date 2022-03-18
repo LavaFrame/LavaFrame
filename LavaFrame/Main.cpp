@@ -736,20 +736,6 @@ void MainLoop(void* arg) // Its the main loop !
 				}
 			}
 
-			// WIP Loading window
-			/*
-			ImGuiWindowFlags window_flags_loadwindow = 0;
-			window_flags_loadwindow |= ImGuiWindowFlags_NoTitleBar;
-			window_flags_loadwindow |= ImGuiWindowFlags_NoDecoration;
-			window_flags_loadwindow |= ImGuiWindowFlags_NoMove;
-			window_flags_loadwindow |= ImGuiWindowFlags_NoResize;
-
-			ImGui::SetNextWindowPos({ static_cast<float>(GlobalState.displayX) / 2,  static_cast<float>(GlobalState.displayY) / 2 });
-
-			ImGui::Begin("Loading...", nullptr, window_flags);
-			ImGui::Text(busy_reason.c_str());
-			*/
-
 			ImGui::End();
 			
 		}
