@@ -45,7 +45,6 @@ ImVec2 viewportPanelSize;
 
 bool viewportHovered = false;
 bool gizmoUsed = false;
-bool networkMode = false;
 
 struct LoopData
 {
@@ -64,29 +63,12 @@ void GetSceneFiles() // Load and index all scene files in the assets directory.
 		tinydir_file file;
 		tinydir_readfile_n(&dir, &file, i);
 
-		if (std::string(file.extension) == "ignition") // Support for old ignition files
+		if ((std::string(file.extension) == "ignition") || (std::string(file.extension) == "scene") || (std::string(file.extension) == "lfs") || (std::string(file.extension) == "lf") || (std::string(file.extension) == "lavaframe") || (std::string(file.extension) == "lavaframescene"))
 		{
 			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
 		}
-		if (std::string(file.extension) == "scene") // Support for old scene files
-		{
-			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
-		}
-		if (std::string(file.extension) == "lfs") // LavaFrame Scene
-		{
-			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
-		}
-		if (std::string(file.extension) == "lf") // LavaFrame Scene
-		{
-			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
-		}
-		if (std::string(file.extension) == "lavaframe") // Full name file
-		{
-			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
-		}
-		if (std::string(file.extension) == "lavaframescene") // Completely typed out filename
-		{
-			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
+		else if (GlobalState.useDebug) {
+			printf((std::string("Rejected file : ") + std::string(file.name) + "\n").c_str());
 		}
 	}
 
