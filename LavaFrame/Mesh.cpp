@@ -4,25 +4,44 @@
  */
 
 #define TINYOBJLOADER_IMPLEMENTATION
+#define TINYOBJLOADER_USE_MAPBOX_EARCUT
 #include <tiny_obj_loader.h>
-
 #include "Mesh.h"
 #include <iostream>
+#include "GlobalState.h"
+
+extern LavaFrameState GlobalState;
 
 namespace LavaFrame
 {
+    float sphericalTheta(const Vec3& v)
+    {
+        return acosf(Math::Clamp(v.y, -1.f, 1.f));
+    }
+
+    float sphericalPhi(const Vec3& v)
+    {
+        float p = atan2f(v.z, v.x);
+        return (p < 0.f) ? p + 2.f * PI : p;
+    }
+
     bool Mesh::LoadFromFile(const std::string& filename)
     {
         name = filename;
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
+        std::string warn;
         std::string err;
-        bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filename.c_str(), 0, true);
+        bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str(), 0, true);
 
         if (!ret)
         {
             printf("Unable to load geometry.\n");
+            printf(err.c_str());
+#if defined(_WIN32)
+            MessageBox(NULL, "Failed to load geometry.", "Loading failed", MB_ICONERROR);
+#endif
             return false;
         }
 

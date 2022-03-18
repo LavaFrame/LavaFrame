@@ -84,14 +84,17 @@
     <Filter Include="Source Files\thirdparty\sdl2\lib\x86">
       <UniqueIdentifier>{b76bfda8-5a2a-4d1d-951f-3099724c244e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\shaders_amd">
-      <UniqueIdentifier>{4be3399b-62e4-4037-9d99-81c7415d7866}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\shaders_amd\common">
-      <UniqueIdentifier>{e4404cae-5ef7-4ec8-a18c-e6560501c3fc}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\math">
       <UniqueIdentifier>{a20bec6e-d032-45f4-a379-2cda8981a0c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\build_include\output">
+      <UniqueIdentifier>{fb4bd270-06be-4e8a-897c-a244e08d2ead}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\mapbox">
+      <UniqueIdentifier>{b2f93952-5285-49ba-80d4-e952f9572fba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\build_include\bin">
+      <UniqueIdentifier>{f56a8382-0d8f-42ea-85ca-24d371df68ad}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -134,25 +137,22 @@
     <None Include="..\build_include\license">
       <Filter>Resource Files\build_include</Filter>
     </None>
-    <None Include="..\shaders\accumulation.glsl">
-      <Filter>Source Files\shaders</Filter>
+    <None Include="thirdparty\oidn\lib\OpenImageDenoise.dll">
+      <Filter>Source Files\thirdparty\oidn\lib</Filter>
     </None>
-    <None Include="..\shaders\output.glsl">
-      <Filter>Source Files\shaders</Filter>
+    <None Include="thirdparty\oidn\lib\tbb.dll">
+      <Filter>Source Files\thirdparty\oidn\lib</Filter>
     </None>
-    <None Include="..\shaders\postprocess.glsl">
-      <Filter>Source Files\shaders</Filter>
+    <None Include="thirdparty\oidn\lib\tbbmalloc.dll">
+      <Filter>Source Files\thirdparty\oidn\lib</Filter>
     </None>
-    <None Include="..\shaders\postprocess_neutral.glsl">
-      <Filter>Source Files\shaders</Filter>
+    <None Include="thirdparty\SDL2\lib\x64\SDL2.dll">
+      <Filter>Source Files\thirdparty\sdl2\lib\x64</Filter>
     </None>
-    <None Include="..\shaders\progressive.glsl">
-      <Filter>Source Files\shaders</Filter>
+    <None Include="thirdparty\SDL2\lib\x86\SDL2.dll">
+      <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
     </None>
-    <None Include="..\shaders\tiled_renderer.glsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="..\shaders\tonemap.glsl">
+    <None Include="..\shaders\renderer.glsl">
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="..\shaders\common\anyhit.glsl">
@@ -182,68 +182,23 @@
     <None Include="..\shaders\common\vertex.glsl">
       <Filter>Source Files\shaders\common</Filter>
     </None>
-    <None Include="thirdparty\oidn\lib\OpenImageDenoise.dll">
-      <Filter>Source Files\thirdparty\oidn\lib</Filter>
+    <None Include="..\shaders\output.glsl">
+      <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="thirdparty\oidn\lib\tbb.dll">
-      <Filter>Source Files\thirdparty\oidn\lib</Filter>
+    <None Include="..\shaders\postprocess.glsl">
+      <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="thirdparty\oidn\lib\tbbmalloc.dll">
-      <Filter>Source Files\thirdparty\oidn\lib</Filter>
+    <None Include="..\shaders\preview_flareon.glsl">
+      <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="thirdparty\SDL2\lib\x64\SDL2.dll">
-      <Filter>Source Files\thirdparty\sdl2\lib\x64</Filter>
+    <None Include="..\build_include\bin\SDL2.dll">
+      <Filter>Resource Files\build_include\bin</Filter>
     </None>
-    <None Include="thirdparty\SDL2\lib\x86\SDL2.dll">
-      <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
+    <None Include="..\build_include\bin\tbb.dll">
+      <Filter>Resource Files\build_include\bin</Filter>
     </None>
-    <None Include="..\shaders_amd\accumulation.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\output.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\postprocess.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\postprocess_neutral.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\progressive.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\tiled_renderer.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\tonemap.glsl">
-      <Filter>Source Files\shaders_amd</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\anyhit.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\closest_hit.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\disney.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\globals.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\intersection.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\pathtrace.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\sampling.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\uniforms.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
-    </None>
-    <None Include="..\shaders_amd\common\vertex.glsl">
-      <Filter>Source Files\shaders_amd\common</Filter>
+    <None Include="..\build_include\bin\OpenImageDenoise.dll">
+      <Filter>Resource Files\build_include\bin</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -294,9 +249,6 @@
     <ClCompile Include="thirdparty\imgui\imgui.cpp">
       <Filter>Source Files\thirdparty\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="thirdparty\imgui\imgui_demo.cpp">
-      <Filter>Source Files\thirdparty\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="thirdparty\imgui\imgui_draw.cpp">
       <Filter>Source Files\thirdparty\imgui</Filter>
     </ClCompile>
@@ -326,6 +278,12 @@
     </ClCompile>
     <ClCompile Include="thirdparty\RadeonRays\split_bvh.cpp">
       <Filter>Source Files\thirdparty\RadeonRays</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdparty\imgui\imgui_tables.cpp">
+      <Filter>Source Files\thirdparty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="miniz.c">
+      <Filter>Source Files\thirdparty</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -458,6 +416,27 @@
     <ClInclude Include="Strint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GlobalState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Export.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Colors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="earcut.hpp">
+      <Filter>Header Files\mapbox</Filter>
+    </ClInclude>
+    <ClInclude Include="tinyexr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="miniz.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="thirdparty\oidn\lib\OpenImageDenoise.lib">
@@ -481,5 +460,20 @@
     <Library Include="thirdparty\SDL2\lib\x86\SDL2test.lib">
       <Filter>Source Files\thirdparty\sdl2\lib\x86</Filter>
     </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="App.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\x64\Release\output\readme.txt">
+      <Filter>Resource Files\build_include\output</Filter>
+    </Text>
   </ItemGroup>
 </Project>

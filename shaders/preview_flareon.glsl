@@ -4,14 +4,6 @@
  */
 
 #version 330
-#define PROGRESSIVE
-
-highp float;
-highp int;
-highp sampler2D;
-highp samplerCube;
-highp isampler2D;
-highp sampler2DArray;
 
 out vec3 color;
 in vec2 TexCoords;
@@ -25,18 +17,20 @@ in vec2 TexCoords;
 #include common/disney.glsl
 #include common/pathtrace.glsl
 
+uniform sampler2D imgTex;
+
 void main(void)
 {
-    seed = TexCoords;
+    InitRNG(gl_FragCoord.xy, 1);
 
-    float r1 = 0.0;
-    float r2 = 0.0;
+    float r1 = 2.0 * rand();
+    float r2 = 2.0 * rand();
 
     vec2 jitter;
     jitter.x = r1 < 1.0 ? sqrt(r1) - 1.0 : 1.0 - sqrt(2.0 - r1);
     jitter.y = r2 < 1.0 ? sqrt(r2) - 1.0 : 1.0 - sqrt(2.0 - r2);
 
-    jitter /= (screenResolution * 0.5);
+    jitter /= screenResolution;
     vec2 d = (2.0 * TexCoords - 1.0) + jitter;
 
     float scale = tan(camera.fov * 0.5);
@@ -47,10 +41,20 @@ void main(void)
     vec3 focalPoint = camera.focalDist * rayDir;
     float cam_r1 = rand() * TWO_PI;
     float cam_r2 = rand() * camera.aperture;
+#ifdef USE_DOF
     vec3 randomAperturePos = (cos(cam_r1) * camera.right + sin(cam_r1) * camera.up) * sqrt(cam_r2);
     vec3 finalRayDir = normalize(focalPoint - randomAperturePos);
+#endif
+#ifndef USE_DOF
+	vec3 finalRayDir = normalize(focalPoint);
+#endif
 
+#ifdef USE_DOF
     Ray ray = Ray(camera.position + randomAperturePos, finalRayDir);
+#endif
+#ifndef USE_DOF
+	Ray ray = Ray(camera.position, finalRayDir);
+#endif
 
     vec3 pixelColor = PathTrace(ray);
 

@@ -4,9 +4,10 @@
  */
 
 #include "Program.h"
+#include "GlobalState.h"
 #include <stdexcept>
 
-extern bool useDebug;
+extern LavaFrameState GlobalState;
 
 namespace LavaFrame
 {
@@ -17,7 +18,7 @@ namespace LavaFrame
             glAttachShader(object, shaders[i].getObject());
 
         glLinkProgram(object);
-        if (useDebug) {
+        if (GlobalState.useDebug) {
             printf("Linking program %d\n", int(object));
         }
         for (unsigned i = 0; i < shaders.size(); i++)
@@ -35,7 +36,7 @@ namespace LavaFrame
             delete[] info;
             glDeleteProgram(object);
             object = 0;
-            if (useDebug) {
+            if (GlobalState.useDebug) {
                 printf("Error %s\n", msg.c_str());
             }
             throw std::runtime_error(msg.c_str());

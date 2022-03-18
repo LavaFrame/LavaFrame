@@ -21,10 +21,11 @@ namespace LavaFrame
 {
     class Camera;
 
-    enum LightType
+    enum LightType // TODO: Working on Directional light here
     {
         RectLight,
-        SphereLight
+        SphereLight,
+        DistantLight
     };
 
     struct Light

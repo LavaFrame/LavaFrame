@@ -9,7 +9,6 @@
 #include "Program.h"
 #include <Vec2.h>
 #include <Vec3.h>
-
 #include <vector>
 
 namespace LavaFrame
@@ -21,8 +20,8 @@ namespace LavaFrame
         RenderOptions()
         {
             maxDepth = 2;
-            tileWidth = 128;
-            tileHeight = 128;
+            tileWidth = 512;
+            tileHeight = 512;
             useEnvMap = false;
             resolution = iVec2(1280, 720);
             hdrMultiplier = 1.0f;
@@ -31,7 +30,17 @@ namespace LavaFrame
             RRDepth = 2;
             bgColor = Vec3(0.5f, 0.5f, 0.5f);
             denoiserFrameCnt = 50;
-            enableDenoiser = false;
+            enableAutomaticDenoise = false;
+            tonemapIndex = 2;
+            useCA = false;
+            caDistance = 0.05;
+            caP1 = 5;
+            caP2 = -0.5;
+            caP3 = 0.5;
+            useCADistortion = false;
+            bool useVignette = false;
+            float vignetteIntensity = 0;
+            float vignettePower = 1;
         }
         iVec2 resolution;
         int maxDepth;
@@ -39,11 +48,21 @@ namespace LavaFrame
         int tileHeight;
         bool useEnvMap;
         bool enableRR;
-        bool enableDenoiser;
+        bool enableAutomaticDenoise;
         bool useConstantBg;
+        bool useCA;
+        bool useCADistortion;
+        bool useVignette;
         int RRDepth;
         int denoiserFrameCnt;
+        int tonemapIndex;
         float hdrMultiplier;
+        float caDistance;
+        float caP1;
+        float caP2;
+        float caP3;
+        float vignetteIntensity;
+        float vignettePower;
         Vec3 bgColor;
     };
 
@@ -52,7 +71,7 @@ namespace LavaFrame
     class Renderer
     {
     protected:
-        Scene* scene;
+        Scene *scene;
         Quad* quad;
 
         iVec2 screenSize;
@@ -78,7 +97,7 @@ namespace LavaFrame
         bool initialized;
 
     public:
-        Renderer(Scene* scene, const std::string& shadersDirectory);
+        Renderer(Scene *scene, const std::string& shadersDirectory);
         virtual ~Renderer();
 
         const iVec2 GetScreenSize() const { return screenSize; }
@@ -91,6 +110,9 @@ namespace LavaFrame
         virtual void Update(float secondsElapsed);
         virtual float GetProgress() const = 0;
         virtual int GetSampleCount() const = 0;
-        virtual void GetOutputBuffer(unsigned char**, int& w, int& h) = 0;
+        virtual void GetOutputBuffer(unsigned char**, int &w, int &h) = 0;
+        virtual void GetOutputBufferHDR(float** data, int& w, int& h) = 0;
+        virtual uint32_t SetViewport(int width, int height) = 0;
+        virtual uint32_t Denoise() = 0;
     };
 }

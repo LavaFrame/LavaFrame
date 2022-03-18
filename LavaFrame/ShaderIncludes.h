@@ -5,6 +5,9 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 //    ===========
 //    Shadinclude
@@ -88,6 +91,9 @@ namespace LavaFrame
             if (!file.is_open())
             {
                 std::cerr << "ERROR: could not open the shader at: " << path << "\n" << std::endl;
+#if defined(_WIN32)
+                MessageBox(NULL, "Failed to load shaders. Please attempt to reinstall shaders, otherwise contact the authors.", "Error", MB_ICONERROR);
+#endif
                 return ShaderSource{ fullSourceCode, path };
             }
 

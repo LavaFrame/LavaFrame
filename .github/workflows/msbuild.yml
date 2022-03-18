@@ -1,7 +1,9 @@
 name: Windows Build
 
-on: push
-    
+on:
+ workflow_dispatch:
+ push:
+
 env:
   # Path to the solution file relative to the root of the project.
   SOLUTION_FILE_PATH: .
@@ -13,17 +15,13 @@ env:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
     - uses: actions/checkout@v2
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
-
-    - name: Restore NuGet packages
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
@@ -36,11 +34,4 @@ jobs:
       with:
         name: build
         path: D:\a\LavaFrame\LavaFrame\x64\Release\
-        retention-days: 10
-        
-    - name: Upload build artifacts - Release AMD
-      uses: actions/upload-artifact@v2.2.4
-      with:
-        name: build_amd
-        path: D:\a\LavaFrame\LavaFrame\x64\Release_AMD\
-        retention-days: 10
+        retention-days: 14

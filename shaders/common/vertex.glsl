@@ -3,14 +3,7 @@
  * This is based on the original GLSL-PathTracer by Asif Ali.
  */
 
-#version 440
-
-precision highp float;
-precision highp int;
-precision highp sampler2D;
-precision highp samplerCube;
-precision highp isampler2D;
-precision highp sampler2DArray;
+#version 330
 
 layout (location = 0) in vec2 position;
 layout (location = 1) in vec2 texCoords;

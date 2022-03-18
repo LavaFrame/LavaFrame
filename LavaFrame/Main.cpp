@@ -1,27 +1,15 @@
 /*
-* Hi, and welcome to the LavaFrame source code !
-* The goal of this project was to create a (somewhat) production
-* ready renderer. I used it as a
-* project to build my C++ and GLSL skills further by forking and
-* extending another project and building it into something I can
-* use for my own projects.
-*
-* THIS SOURCE CODE CAN BE A BIT MESSY AT TIMES !!! PLEASE BEWARE AND FEEL FREE TO IMPROVE ON IT !
-*
-* - Nolram
-*
 * MIT License
 * Check license.txt for more information on licensing
 * Based on the original software by Alif Ali (knightcrawler25)
 */
-
 #define _USE_MATH_DEFINES
+#define IMGUI_DEFINE_MATH_OPERATORS
 
 #include <SDL2/SDL.h>
 #include <GL/gl3w.h>
 #include <iostream>
 #include <io.h>
-
 #include <time.h>
 #include <math.h>
 #include <string>
@@ -30,51 +18,33 @@
 #include "TiledRenderer.h"
 #include "Camera.h"
 #include "Strint.h"
+#include "GlobalState.h"
+#include "Export.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
-
-#include "Loader.h"
 #include "ImGuizmo.h"
+#include "Colors.h"
+#include "Loader.h"
 #include "tinydir.h"
+#if defined(_WIN32)
+#pragma message("Compiling using Windows features.")
+#include <windows.h>
+#endif
 
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image.h"
-#include "stb_image_write.h"
-
-
-using namespace std;
 using namespace LavaFrame;
 
-Scene* scene = nullptr;
-Renderer* renderer = nullptr;
-
-std::vector<string> sceneFiles;
-
-float mouseSensitivity = 0.005f;
-bool keyPressed = false;
-int sampleSceneIndex = 0;
-int selectedInstance = 0;
 double lastTime = SDL_GetTicks();
-bool done = false;
-bool noUi = false;
-bool noWindow = false;
-bool useDebug = false;
-int maxSamples = -1;
-float previewScale = 0.5f;
-bool useNeutralTonemap = false;
-std::string exportName = "0";
-int currentJpgQuality = 95;
-std::string exportType = "png";
+std::vector<std::string> sceneFiles;
 
-std::string shadersDir = "./shaders/";
-std::string assetsDir = "./assets/";
-std::string releaseVersion = "Version 0.5.2";
-std::string versionString = "LavaFrame - " + releaseVersion;
-
+LavaFrameState GlobalState;
 RenderOptions renderOptions;
+ImVec2 viewportPanelSize;
+
+bool viewportHovered = false;
+bool gizmoUsed = false;
 
 struct LoopData
 {
@@ -82,189 +52,194 @@ struct LoopData
 	SDL_GLContext mGLContext = nullptr;
 };
 
-void GetSceneFiles() //Load and index all scene files in a directory.
+void GetSceneFiles() // Load and index all scene files in the assets directory.
 {
 	tinydir_dir dir;
 	int i;
-	tinydir_open_sorted(&dir, assetsDir.c_str());
+	tinydir_open_sorted(&dir, GlobalState.assetsDir.c_str());
 
 	for (i = 0; i < dir.n_files; i++)
 	{
 		tinydir_file file;
 		tinydir_readfile_n(&dir, &file, i);
 
-		if (std::string(file.extension) == "ignition") //Support for old ignition files
+		if ((std::string(file.extension) == "ignition") || (std::string(file.extension) == "scene") || (std::string(file.extension) == "lfs") || (std::string(file.extension) == "lf") || (std::string(file.extension) == "lavaframe") || (std::string(file.extension) == "lavaframescene"))
 		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
+			sceneFiles.push_back(GlobalState.assetsDir + std::string(file.name));
 		}
-		if (std::string(file.extension) == "scene") //Support for old scene files
-		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
-		}
-		if (std::string(file.extension) == "lfs") //LavaFrame Scene
-		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
-		}
-		if (std::string(file.extension) == "lf") //LavaFrame Scene
-		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
-		}
-		if (std::string(file.extension) == "lavaframe") //Full name file
-		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
-		}
-		if (std::string(file.extension) == "lavaframescene") //Completely typed out filename
-		{
-			sceneFiles.push_back(assetsDir + std::string(file.name));
+		else if (GlobalState.useDebug) {
+			printf((std::string("Rejected file : ") + std::string(file.name) + "\n").c_str());
 		}
 	}
 
 	tinydir_close(&dir);
 }
 
-void LoadScene(std::string sceneName) //Load scene - this is also called on startup.
+void LoadScene(std::string sceneName, SDL_Window* window, bool setWindowTitle = true) // Load scene - this is also called on startup.
 {
-	delete scene;
-	scene = new Scene();
-	LoadSceneFromFile(sceneName, scene, renderOptions);
-	selectedInstance = 0;
-	scene->renderOptions = renderOptions;
+	delete GlobalState.scene;
+	GlobalState.scene = new Scene();
+	LoadSceneFromFile(sceneName, GlobalState.scene, renderOptions);
+	GlobalState.selectedInstance = 0;
+	GlobalState.scene->renderOptions = renderOptions;
+	if (setWindowTitle) SDL_SetWindowTitle(window, GlobalState.versionString.c_str());
 }
 
-bool InitRenderer() //Create the tiled renderer and inform the user that the proccess has started.
+bool InitRenderer() // Create the tiled renderer and inform the user that the proccess has started.
 {
-	delete renderer;
-	renderer = new TiledRenderer(scene, shadersDir);
-	renderer->Init();
-	printf("LavaFrame renderer started !\n");
+	delete GlobalState.renderer;
+	GlobalState.renderer = new TiledRenderer(GlobalState.scene, GlobalState.shadersDir);
+	GlobalState.renderer->Init();
+	viewportPanelSize.x = GlobalState.scene->renderOptions.resolution.x;
+	viewportPanelSize.y = GlobalState.scene->renderOptions.resolution.y;
+
 	return true;
 }
 
-void SaveFrame(const std::string filename) //Saves current frame as a png
+void Render()
 {
-	unsigned char* data = nullptr;
-	int w, h;
-	renderer->GetOutputBuffer(&data, w, h);
-	stbi_flip_vertically_on_write(true);
-	stbi_write_png(filename.c_str(), w, h, 3, data, w * 3);
-	delete data;
-}
-void SaveFrameTGA(const std::string filename) //Saves current frame as a png
-{
-	unsigned char* data = nullptr;
-	int w, h;
-	renderer->GetOutputBuffer(&data, w, h);
-	stbi_flip_vertically_on_write(true);
-	stbi_write_tga(filename.c_str(), w, h, 3, data);
-	delete data;
-}
-void SaveFrameJPG(const std::string filename, int jpgQuality) //Saves current frame as a bitmap-JPG
-{
-	unsigned char* data = nullptr;
-	int w, h;
-	renderer->GetOutputBuffer(&data, w, h);
-	stbi_flip_vertically_on_write(true);
-	stbi_write_jpg(filename.c_str(), w, h, 3, data, jpgQuality);
-	delete data;
-}
-void SaveFrameBMP(const std::string filename) //Saves current frame as a bitmap-JPG
-{
-	unsigned char* data = nullptr;
-	int w, h;
-	renderer->GetOutputBuffer(&data, w, h);
-	stbi_flip_vertically_on_write(true);
-	stbi_write_bmp(filename.c_str(), w, h, 3, data);
-	delete data;
-}
+	GlobalState.renderer->Render();
 
-void Render() //Main Render function for ImGUI and the renderer.
-{
-	auto io = ImGui::GetIO();
-	renderer->Render();
-	//const glm::ivec2 screenSize = renderer->GetScreenSize();
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-	renderer->Present();
+	//Viewport Setup
+	float viewport_scaler;
 
-	// Rendering of window
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.WindowPadding = { 0, 0 };
+
+	ImGuiWindowFlags window_flags{};
+	window_flags += ImGuiWindowFlags_NoDecoration;
+	window_flags += ImGuiWindowFlags_NoFocusOnAppearing;
+	window_flags += ImGuiWindowFlags_NoBringToFrontOnFocus;
+	window_flags += ImGuiWindowFlags_NoMove;
+
+	ImGui::SetNextWindowPos({ static_cast<float>(GlobalState.displayX / 5), 0 });
+	ImGui::SetNextWindowSize({ static_cast<float>((GlobalState.displayX / 5) * 3),  static_cast<float>(GlobalState.displayY) });
+
+	if (GlobalState.noUi) {
+		ImGui::SetNextWindowPos({ 0, 0 });
+		ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX), static_cast<float>(GlobalState.displayY) });
+	}
+
+	ImGui::Begin("Viewport", NULL, window_flags);
+	{
+		viewportPanelSize = ImGui::GetContentRegionAvail();
+
+		viewportPanelSize.x = GlobalState.scene->renderOptions.resolution.x;
+		viewportPanelSize.y = GlobalState.scene->renderOptions.resolution.y;
+
+		if (GlobalState.scene->camera->isMoving)
+		{
+			GlobalState.renderer->Present();
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, viewportPanelSize.x, viewportPanelSize.y);
+		GlobalState.traceTexture = GlobalState.renderer->SetViewport(viewportPanelSize.x, viewportPanelSize.y);
+		if (GlobalState.showDenoise) GlobalState.viewportTexture = GlobalState.denoiseTexture;
+		else GlobalState.viewportTexture = GlobalState.traceTexture;
+
+		viewport_scaler = std::min(ImGui::GetContentRegionAvail().x / GlobalState.scene->renderOptions.resolution.x, ImGui::GetContentRegionAvail().y / GlobalState.scene->renderOptions.resolution.y);
+
+		ImGui::SetCursorPos((ImGui::GetContentRegionAvail() * 0.5f) - ((viewportPanelSize * viewport_scaler) * 0.5));
+		if (!GlobalState.noUi) ImGui::Image((void*)GlobalState.viewportTexture, { viewportPanelSize.x * viewport_scaler, viewportPanelSize.y * viewport_scaler }, ImVec2(0, 1), ImVec2(1, 0));
+		else ImGui::Image((void*)GlobalState.viewportTexture, { viewportPanelSize.x, viewportPanelSize.y}, ImVec2(0, 1), ImVec2(1, 0));
+		viewportHovered = ImGui::IsItemHovered();
+
+		ImGui::End();
+
+		if (!GlobalState.noUi) style.WindowPadding = { static_cast<float>(GlobalState.nativeScreenWidth / 200), static_cast<float>(GlobalState.nativeScreenWidth / 200) };
+		else style.WindowPadding = { 0, 0 };
+	}
+
 	ImGui::Render();
+	ImGui::UpdatePlatformWindows();
+
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void Update(float secondsElapsed)
+void Update(float secondsElapsed, LoopData loopdata)
 {
-	keyPressed = false;
-	if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) && ImGui::IsAnyMouseDown() && !ImGuizmo::IsOver()) //Mouse control
-	{
-		if (ImGui::IsMouseDown(0))
-		{
-			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(0, 0);
-			scene->camera->OffsetOrientation(mouseDelta.x, mouseDelta.y); //Move camera in 3D
-			ImGui::ResetMouseDragDelta(0);
-		}
-		else if (ImGui::IsMouseDown(1))
-		{
-			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(1, 0);
-			scene->camera->SetRadius(mouseSensitivity * mouseDelta.y); //"Scroll" camera in 3D
-			ImGui::ResetMouseDragDelta(1);
-		}
-		else if (ImGui::IsMouseDown(2))
-		{
-			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(2, 0);
-			scene->camera->Strafe(mouseSensitivity * mouseDelta.x, mouseSensitivity * mouseDelta.y); //Move the camera sidewards
-			ImGui::ResetMouseDragDelta(2);
-		}
-		scene->camera->isMoving = true; //Render preview frames
-	}
+	GlobalState.keyPressed = false;
 
+	if (ImGui::IsAnyMouseDown() and !GlobalState.noMove)
+	{
+		ImVec2 mousePos = ImGui::GetMousePos();
+		if (gizmoUsed) GlobalState.scene->camera->isMoving = true;
+		if (viewportHovered && !gizmoUsed) // Check if mouse is on viewport and not over gizmo
+		{
+			if (ImGui::IsMouseDown(0))
+			{
+				//Rotate Mouse around center
+				ImVec2 mouseDelta = ImGui::GetMouseDragDelta(0, 0);
+				GlobalState.scene->camera->OffsetOrientation(mouseDelta.x, mouseDelta.y);
+				ImGui::ResetMouseDragDelta(0);
+				
+			}
+			else if (ImGui::IsMouseDown(1))
+			{
+				//Move mouse the in Z axis
+				ImVec2 mouseDelta = ImGui::GetMouseDragDelta(1, 0);
+				GlobalState.scene->camera->SetRadius(GlobalState.mouseSensitivity * mouseDelta.y);
+				ImGui::ResetMouseDragDelta(1);
+			}
+			else if (ImGui::IsMouseDown(2))
+			{
+				//Move mouse the in the XY Plane
+				ImVec2 mouseDelta = ImGui::GetMouseDragDelta(2, 0);
+				GlobalState.scene->camera->Strafe(GlobalState.mouseSensitivity * mouseDelta.x, GlobalState.mouseSensitivity * mouseDelta.y);
+				ImGui::ResetMouseDragDelta(2);
+			}
+			GlobalState.scene->camera->isMoving = true;
+		}
+	}
 
 	// Maximum sample auto export
-	if (maxSamples == renderer->GetSampleCount()) {
-		if (exportType == "png") {
-			if (exportName == "0") {
-				SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
+	if (GlobalState.maxSamples + 1 == GlobalState.renderer->GetSampleCount()) {
+		if (GlobalState.exportType == "png") {
+			if (GlobalState.exportName == "") {
+				SaveFrame("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".png", loopdata.mWindow);
 			}
 			else {
-				SaveFrame("./" + exportName + ".png");
+				SaveFrame("./" + GlobalState.exportName + ".png", loopdata.mWindow);
 			}
 		}
-		else if (exportType == "jpg") {
-			if (exportName == "0") {
-				SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", currentJpgQuality);
+		else if (GlobalState.exportType == "jpg") {
+			if (GlobalState.exportName == "") {
+				SaveFrameJPG("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality, loopdata.mWindow);
 			}
 			else {
-				SaveFrameJPG("./" + exportName + ".jpg", currentJpgQuality);
+				SaveFrameJPG("./" + GlobalState.exportName + ".jpg", GlobalState.currentJpgQuality, loopdata.mWindow);
 			}
 		}
-		else if (exportType == "tga") {
-			if (exportName == "0") {
-				SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
+		else if (GlobalState.exportType == "tga") {
+			if (GlobalState.exportName == "") {
+				SaveFrameTGA("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".tga", loopdata.mWindow);
 			}
 			else {
-				SaveFrameTGA("./" + exportName + ".tga");
+				SaveFrameTGA("./" + GlobalState.exportName + ".tga", loopdata.mWindow);
 			}
 		}
-		else if (exportType == "bmp") {
-			if (exportName == "0") {
-				SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
+		else if (GlobalState.exportType == "bmp") {
+			if (GlobalState.exportName == "") {
+				SaveFrameBMP("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".bmp", loopdata.mWindow);
 			}
 			else {
-				SaveFrameBMP("./" + exportName + ".bmp");
+				SaveFrameBMP("./" + GlobalState.exportName + ".bmp", loopdata.mWindow);
 			}
 		}
-
-		printf("Render finished !");
+		printf("Render finished\n");
 		exit(0);
 	}
-	renderer->Update(secondsElapsed);
+	GlobalState.renderer->Update(secondsElapsed);
 }
 
 void EditTransform(const float* view, const float* projection, float* matrix)
 {
 	static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
 	static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::WORLD);
+	gizmoUsed = ImGuizmo::IsUsing();
 
-	if (ImGui::IsKeyPressed(90))  //Hotkeys for object translation
+	if (ImGui::IsKeyPressed(90))  // Hotkeys for object translation
 	{
 		mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
 	}
@@ -298,9 +273,9 @@ void EditTransform(const float* view, const float* projection, float* matrix)
 
 	float matrixTranslation[3], matrixRotation[3], matrixScale[3];
 	ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
-	ImGui::InputFloat3("Tr", matrixTranslation);
-	ImGui::InputFloat3("Rt", matrixRotation);
-	ImGui::InputFloat3("Sc", matrixScale);
+	ImGui::InputFloat3("Position", matrixTranslation);
+	ImGui::InputFloat3("Rotation", matrixRotation);
+	ImGui::InputFloat3("Scale", matrixScale);
 	ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
 
 	if (mCurrentGizmoOperation != ImGuizmo::SCALE)
@@ -322,9 +297,23 @@ void EditTransform(const float* view, const float* projection, float* matrix)
 	ImGuizmo::Manipulate(view, projection, mCurrentGizmoOperation, mCurrentGizmoMode, matrix, NULL, NULL);
 }
 
-void MainLoop(void* arg) //Its the main loop !
+static void HelpMarker(const char* desc)
+{
+	ImGui::TextDisabled("(?)");
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::BeginTooltip();
+		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+		ImGui::TextUnformatted(desc);
+		ImGui::PopTextWrapPos();
+		ImGui::EndTooltip();
+	}
+}
+
+void MainLoop(void* arg) // Its the main loop !
 {
 	LoopData& loopdata = *(LoopData*)arg;
+	SDL_GetWindowSize(loopdata.mWindow, &GlobalState.displayX, &GlobalState.displayY);
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -332,19 +321,19 @@ void MainLoop(void* arg) //Its the main loop !
 		ImGui_ImplSDL2_ProcessEvent(&event);
 		if (event.type == SDL_QUIT)
 		{
-			done = true;
+			GlobalState.done = true;
 		}
 		if (event.type == SDL_WINDOWEVENT) // Render resolution gets set to window size
 		{
 			if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 			{
-				scene->renderOptions.resolution = iVec2(event.window.data1, event.window.data2);
-				InitRenderer(); //Restart renderer on window resize. 
+				//GlobalState.scene->renderOptions.resolution = iVec2(event.window.data1, event.window.data2);
+				//InitRenderer(); // Restart renderer on window resize.
 			}
 
 			if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(loopdata.mWindow))
 			{
-				done = true;
+				GlobalState.done = true;
 			}
 		}
 	}
@@ -353,310 +342,430 @@ void MainLoop(void* arg) //Its the main loop !
 	ImGui_ImplSDL2_NewFrame(loopdata.mWindow);
 	ImGui::NewFrame();
 	ImGuizmo::SetOrthographic(false);
-
 	ImGuizmo::BeginFrame();
 	{
-		//io.Fonts->GetTexDataAsAlpha8(); Old font handling
-
-		//Window flags
-		static bool no_titlebar = false;
-		static bool no_menu = false;
-		static bool no_move = true;
-		static bool no_resize = false;
-		static bool window_override_size = true;
-
 		bool optionsChanged = false;
 
-		ImGuiWindowFlags window_flags = 0;
-		if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
-		if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
-		if (no_move)            window_flags |= ImGuiWindowFlags_NoMove;
-		if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize;
+		if (GlobalState.noUi == false) {
 
-		if (noUi == false) {
-			ImGui::SetNextWindowPos({ 0, 1 });
-			if (window_override_size) {
-				ImGui::SetNextWindowSize({ 340, 512 });
-				window_override_size = false;
-			}
-			ImGui::Begin(versionString.c_str(), nullptr, window_flags); //Main panel
+			// Window flags
+			ImGuiWindowFlags window_flags = 0;
+			window_flags |= ImGuiWindowFlags_NoTitleBar;
+			window_flags |= ImGuiWindowFlags_MenuBar;
+			window_flags |= ImGuiWindowFlags_NoMove;
+			window_flags |= ImGuiWindowFlags_NoResize;
 
+			GlobalState.scene->camera->isMoving = false;
+
+			bool requiresReload = false;
+
+			ImGui::SetNextWindowPos({ 0, 0 });
+			ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
+
+			ImGui::Begin("Panel1", nullptr, window_flags); //Main panel
 
 			if (ImGui::BeginMenuBar()) // Export menu
 			{
-				if (ImGui::BeginMenu("Export"))
+				if (ImGui::BeginMenu("File"))
 				{
-					if (ImGui::MenuItem("Export as JPG", "")) {
-						if (exportName == "0") {
-							SaveFrameJPG("./render_" + to_string(renderer->GetSampleCount()) + ".jpg", currentJpgQuality);
-						}
-						else {
-							SaveFrameJPG("./" + exportName + ".jpg", 80);
-						}
-					}
-					if (ImGui::MenuItem("Export as PNG", "")) {
-						if (exportName == "0") {
-							SaveFrame("./render_" + to_string(renderer->GetSampleCount()) + ".png");
-						}
-						else {
-							SaveFrame("./" + exportName + ".png");
-						}
-					}
-					if (ImGui::MenuItem("Export as TGA", "")) {
-						if (exportName == "0") {
-							SaveFrameTGA("./render_" + to_string(renderer->GetSampleCount()) + ".tga");
-						}
-						else {
-							SaveFrameTGA("./" + exportName + ".tga");
-						}
-					}
-
-						if (ImGui::MenuItem("Export as BMP", "")) {
-							if (exportName == "0") {
-								SaveFrameBMP("./render_" + to_string(renderer->GetSampleCount()) + ".bmp");
+					if (ImGui::BeginMenu("Export")) {
+						if (ImGui::MenuItem("Export as JPG", "")) {
+							if (GlobalState.exportName == "") {
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameJPG("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".jpg", GlobalState.currentJpgQuality, loopdata.mWindow);
 							}
 							else {
-								SaveFrameBMP("./" + exportName + ".bmp");
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameJPG("./" + GlobalState.exportName + ".jpg", GlobalState.currentJpgQuality, loopdata.mWindow);
+							}
+						}
+						if (ImGui::MenuItem("Export as PNG", "")) {
+							if (GlobalState.exportName == "") {
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrame("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".png", loopdata.mWindow);
+							}
+							else {
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrame("./" + GlobalState.exportName + ".png", loopdata.mWindow);
+							}
+						}
+						if (ImGui::MenuItem("Export as TGA", "")) {
+							if (GlobalState.exportName == "") {
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameTGA("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".tga", loopdata.mWindow);
+							}
+							else {
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameTGA("./" + GlobalState.exportName + ".tga", loopdata.mWindow);
+							}
+						}
+
+						if (ImGui::MenuItem("Export as BMP", "")) {
+							if (GlobalState.exportName == "") {
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameBMP("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".bmp", loopdata.mWindow);
+							}
+							else {
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameBMP("./" + GlobalState.exportName + ".bmp", loopdata.mWindow);
+							}
+						}
+						if (ImGui::MenuItem("Export as EXR (BETA)", "")) {
+							if (GlobalState.exportName == "") {
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameEXR("./render_" + std::to_string(GlobalState.renderer->GetSampleCount()) + ".exr", loopdata.mWindow);
+							}
+							else {
+								SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + " [Exporting]").c_str());
+								SaveFrameEXR("./" + GlobalState.exportName + ".exr", loopdata.mWindow);
 							}
 						}
 						ImGui::EndMenu();
 					}
-					ImGui::EndMenuBar();
+					ImGui::EndMenu();
 				}
-				if (useDebug) { //Some debug stats, --debug / -db
-					ImGui::Text("- Debug Mode -");
-					ImGui::Text("Debug enabled : %d", useDebug);
-					ImGui::Text("Render size : %d x %d", renderer->GetScreenSize().x, renderer->GetScreenSize().y);
-					if (ImGui::Button("Reload scenes")) //Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
-					{
-						sceneFiles.clear();
-						GetSceneFiles();
+			}
+			ImGui::EndMenuBar();
+
+			if (GlobalState.useDebug) { // Some debug stats, --debug / -db
+				ImGui::Text("- Debug Mode -");
+				ImGui::Text("Debug enabled : %d", GlobalState.useDebug);
+				ImGui::Text(std::string("Progress : " + std::to_string(GlobalState.renderer->GetProgress())).c_str());
+				ImGui::Text("Render size : %d x %d", GlobalState.renderer->GetScreenSize().x, GlobalState.renderer->GetScreenSize().y);
+				ImGui::Text("Tile size : %d x %d", GlobalState.scene->renderOptions.tileWidth, GlobalState.scene->renderOptions.tileHeight);
+				if (ImGui::Button("Reload scenes")) // Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
+				{
+					sceneFiles.clear();
+					GetSceneFiles();
+				}
+			}
+
+			ImGui::Text("Rendered samples: %d ", GlobalState.renderer->GetSampleCount()); // Sample counter
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Currently rendered samples per pixel.");
+
+			if (GlobalState.useDebug) {
+				if (ImGui::Button("Recompile shaders")) // Button for working on shaders to restart the renderer without a complete application restart.
+				{
+					InitRenderer(); // Recompile shaders and restart the renderer.
+				}
+				if (ImGui::Button("Relay exportname"))
+				{
+					if (GlobalState.exportName == "") {
+						printf("Empty exportname.\n");
 					}
+					else {
+						printf((GlobalState.exportName + "\n").c_str());
+					};
+				}
+			}
+
+			ImGui::Separator();
+			ImGui::Text("\n");
+
+			if (ImGui::CollapsingHeader("System"))
+			{
+				std::vector<const char*> scenes;
+				for (int i = 0; i < sceneFiles.size(); ++i)
+				{
+					scenes.push_back(sceneFiles[i].c_str());
 				}
 
-				ImGui::Text("Rendered samples: %d ", renderer->GetSampleCount()); //Sample counter
+				if (ImGui::Combo("Active scene", &GlobalState.sceneIndex, scenes.data(), scenes.size(), scenes.size()))
+				{
+					std::string scene_name = scenes.at(GlobalState.sceneIndex);
+					SDL_SetWindowTitle(loopdata.mWindow, (GlobalState.versionString + "      [Loading scene " + scene_name + "]").c_str());
+					LoadScene(sceneFiles[GlobalState.sceneIndex], loopdata.mWindow);
+					InitRenderer();
+				}
+				ImGui::InputText("Export filename", &GlobalState.exportName);
+				ImGui::SliderInt("JPG export quality", &GlobalState.currentJpgQuality, 1, 200);
+				const char* exr_compression_types[] = { "None", "RLE", "ZIPS", "ZIP", "PIZ", "ZFP"};
+				ImGui::Combo("EXR Compression", &GlobalState.exrCompressionIndex, exr_compression_types, 6);
+				optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &GlobalState.mouseSensitivity, 0.001f, 1.0f);
+				ImGui::Text("\n");
+			}
+
+			if (ImGui::CollapsingHeader("Render Settings"))
+			{
+				Vec3* bgCol = &renderOptions.bgColor;
+
+				optionsChanged |= ImGui::SliderInt("Max ray-depth", &renderOptions.maxDepth, 1, 20);
 				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Currently rendered samples per pixel.");
-
-				if (useDebug) {
-					if (ImGui::Button("Recompile shaders")) //Button for working on shaders or tonemaps to restart the renderer without a complete application restart.
-					{
-						InitRenderer(); //Recompile shaders and restart the renderer.
-					}
-				}
-
-				//Controls instruction - these will go into the documentation since they are universal.
-				//ImGui::BulletText("LMB + drag to rotate");
-				//ImGui::BulletText("MMB + drag to pan");
-				//ImGui::BulletText("RMB + drag to zoom in/out");
-
+					ImGui::SetTooltip("Limits the amount of times a ray is allowed to bounce. Causes longer render times for better quality.");
+				//requiresReload |= ImGui::Checkbox("Enable RR", &renderOptions.enableRR); Russian roulette filtering. 2 is basically the only sensible option here, so its only setable from the scene file now.
+				//requiresReload |= ImGui::SliderInt("RR depth", &renderOptions.RRDepth, 1, 10);
 				ImGui::Separator();
-				ImGui::Text("\n");
+				requiresReload |= ImGui::Checkbox("Enable HDRI", &renderOptions.useEnvMap);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Enable lighting from a 360 degree HDR image for lighting.");
+				optionsChanged |= ImGui::SliderFloat("HDRI multiplier", &renderOptions.hdrMultiplier, 0.0f, 5.0f);
+				ImGui::Separator();
+				requiresReload |= ImGui::Checkbox("Enable constant lighting", &renderOptions.useConstantBg);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Creates a constant surrounding color lighting the scene.");
+				optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
+				ImGui::Separator();
 
-				if (ImGui::CollapsingHeader("System"))
-				{
-					std::vector<const char*> scenes;
-					for (int i = 0; i < sceneFiles.size(); ++i)
-					{
-						scenes.push_back(sceneFiles[i].c_str());
-					}
+				const char* tonemappers[] = { "None", "Linear", "ACES", "Reinhard", "Kanjero", "Hejl Richard", "Uncharted 2" };
+				ImGui::Combo("Tonemapper", &renderOptions.tonemapIndex, tonemappers, 7);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Selects the tonemap operator. NONE is designed to be used with EXR HDR export and will look incorrect if viewed raw.");
 
-					if (ImGui::Combo("Active scene", &sampleSceneIndex, scenes.data(), scenes.size(), scenes.size()))
-					{
-						LoadScene(sceneFiles[sampleSceneIndex]);
-						SDL_RestoreWindow(loopdata.mWindow);
-						SDL_SetWindowSize(loopdata.mWindow, renderOptions.resolution.x, renderOptions.resolution.y);
-						InitRenderer();
-					}
-					ImGui::InputText("Export filename", &exportName);
-					ImGui::SliderInt("JPG export quality", &currentJpgQuality, 1, 200);
-					optionsChanged |= ImGui::SliderFloat("Mouse Sensitivity", &mouseSensitivity, 0.001f, 1.0f);
-
-					ImGui::Text("\n");
-				}
-
-				ImGui::Text("\n");
-
-				if (ImGui::CollapsingHeader("Render Settings"))
-				{
-					bool requiresReload = false;
-					Vec3* bgCol = &renderOptions.bgColor;
-
-					optionsChanged |= ImGui::SliderInt("Max ray-depth", &renderOptions.maxDepth, 1, 20);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Limits the amount of times a ray is allowed to bounce. Causes longer render times for better quality.");
-					//requiresReload |= ImGui::Checkbox("Enable RR", &renderOptions.enableRR); Seems to currently do nothing, left it disabled for UI clarity. Can be set from scene file.
-					//requiresReload |= ImGui::SliderInt("RR depth", &renderOptions.RRDepth, 1, 10);
-					ImGui::Separator();
-					requiresReload |= ImGui::Checkbox("Enable HDRI", &renderOptions.useEnvMap);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Enable lighting from a 360 degree HDR image for lighting.");
-					optionsChanged |= ImGui::SliderFloat("HDRI multiplier", &renderOptions.hdrMultiplier, 0.1f, 10.0f);
-					ImGui::Separator();
-					requiresReload |= ImGui::Checkbox("Enable constant lighting", &renderOptions.useConstantBg);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Creates a constant sourrounding color lighting the scene.");
-					optionsChanged |= ImGui::ColorEdit3("Constant color", (float*)bgCol, 0);
-					ImGui::Separator();
-					ImGui::Checkbox("Enable denoiser", &renderOptions.enableDenoiser);
-					ImGui::SliderInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 1, 250);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Run the denoiser and update the view every x samples.");
-
-					if (requiresReload)
-					{
-						scene->renderOptions = renderOptions;
-						InitRenderer(); //When the options change, restart the render proccess. 
-					}
-
-					scene->renderOptions.enableDenoiser = renderOptions.enableDenoiser;
-					scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
-				}
-
-				ImGui::Text("\n");
-
-				if (ImGui::CollapsingHeader("Camera"))
-				{
-					float fov = Math::Degrees(scene->camera->fov);
-					float aperture = scene->camera->aperture * 1000.0f;
-					optionsChanged |= ImGui::SliderFloat("Field of vision", &fov, 10, 90);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Field of vision of the camera.");
-					scene->camera->SetFov(fov);
-					optionsChanged |= ImGui::SliderFloat("Aperture", &aperture, 0.0f, 10.8f);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Aperture of the camera. Rule of thumb : The larger this is, the more depth of field you will get. Set to 0 to disable.");
-					scene->camera->aperture = aperture / 1000.0f;
-					optionsChanged |= ImGui::SliderFloat("Focal Distance", &scene->camera->focalDist, 0.01f, 50.0f);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Focus distance of the camera.");
-					ImGui::Text("Pos: %.2f, %.2f, %.2f", scene->camera->position.x, scene->camera->position.y, scene->camera->position.z);
-				}
+				GlobalState.scene->renderOptions.tonemapIndex = renderOptions.tonemapIndex;
 
 			}
 
+			if (ImGui::CollapsingHeader("Preview Settings")) {
+				// For integrating more preview engines in the future
+				ImGui::Combo("Preview Engine", &GlobalState.previewEngineIndex, "Flareon\0", 2);
+				ImGui::SameLine(); HelpMarker(
+					"Selects the preview engine to use.\nFlareon is an interactive viewport engine based on the same\npath-tracing backend as the LavaFrame renderer.");
 
-			scene->camera->isMoving = false;
+				if (GlobalState.previewEngineIndex == 0) requiresReload |= ImGui::InputFloat("Preview Scale", &GlobalState.previewScale, 0.1, 0.25);
+				if (GlobalState.previewScale > 2.0) GlobalState.previewScale = 2.0;
+				if (GlobalState.previewScale < 0.1) GlobalState.previewScale = 0.1;
+
+				if (GlobalState.previewEngineIndex == 0) requiresReload |= ImGui::Checkbox("Use Aperture in Preview", &GlobalState.useDofInPreview);
+			}
+
+			if (ImGui::CollapsingHeader("Denoiser")) {
+				if (ImGui::Button("Run denoise")) GlobalState.denoiseTexture = GlobalState.renderer->Denoise();
+				ImGui::Checkbox("Show denoise", &GlobalState.showDenoise);
+				ImGui::Separator();
+				ImGui::Checkbox("Enable automatic denoise", &GlobalState.scene->renderOptions.enableAutomaticDenoise);
+				ImGui::InputInt("Denoise on x sample", &renderOptions.denoiserFrameCnt, 10, 50);
+				if (renderOptions.denoiserFrameCnt < 1) renderOptions.denoiserFrameCnt = 1;
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Run the denoiser and update the view every x samples.");
+
+				GlobalState.scene->renderOptions.denoiserFrameCnt = renderOptions.denoiserFrameCnt;
+			}
+
+			if (ImGui::CollapsingHeader("Effects")) {
+				// Chromatic Aberration
+				ImGui::Checkbox("Chromatic Abberation", &renderOptions.useCA);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Adds a chromatic abberation effect to the scene, simulating the RGB-split of a lens.");
+				if (renderOptions.useCA) {
+					ImGui::Checkbox("Use CA distortion", &renderOptions.useCADistortion);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Enables spherical distortion of the chromatic abberation effect, which is closer to the distortion of a real lens.");
+					ImGui::SliderFloat("CA Distance", &renderOptions.caDistance, 0, 5);
+					if (renderOptions.useCADistortion) ImGui::SliderFloat("CA Angularity", &renderOptions.caP1, 0, 10);
+					if (renderOptions.useCADistortion) ImGui::SliderFloat("CA Center", &renderOptions.caP3, 0, 1);
+					ImGui::SliderFloat("CA Directionality", &renderOptions.caP2, -1, 1);
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Controls the chromatic abberation direction.");
+					ImGui::Separator();
+				}
+
+				// Vignette, with intensity and power controls
+				ImGui::Checkbox("Vignette", &renderOptions.useVignette);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Adds a vignette effect to the scene.");
+				if (renderOptions.useVignette) {
+					ImGui::SliderFloat("Vignette Intensity", &renderOptions.vignetteIntensity, -1, 1);
+					ImGui::SliderFloat("Vignette Falloff", &renderOptions.vignettePower, 0, 5);
+					ImGui::Separator();
+				}
+				
+			}
+			GlobalState.scene->renderOptions.useCA = renderOptions.useCA;
+			GlobalState.scene->renderOptions.useCADistortion = renderOptions.useCADistortion;
+			GlobalState.scene->renderOptions.caDistance = renderOptions.caDistance;
+			GlobalState.scene->renderOptions.caP1 = renderOptions.caP1;
+			GlobalState.scene->renderOptions.caP2 = renderOptions.caP2;
+			GlobalState.scene->renderOptions.caP3 = renderOptions.caP3;
+			GlobalState.scene->renderOptions.useVignette = renderOptions.useVignette;
+			GlobalState.scene->renderOptions.vignetteIntensity = renderOptions.vignetteIntensity;
+			GlobalState.scene->renderOptions.vignettePower = renderOptions.vignettePower;
+
+			if (requiresReload)
+			{
+				GlobalState.scene->renderOptions = renderOptions;
+				InitRenderer(); // When the options change, restart the render proccess.
+			}
+
+			ImGui::End();
+
+			// PANEL 2
+			ImGui::SetNextWindowPos({ (static_cast<float>(GlobalState.displayX) / 5) * 4, 0 });
+			ImGui::SetNextWindowSize({ static_cast<float>(GlobalState.displayX / 5), static_cast<float>(GlobalState.displayY) });
+
+			ImGui::Begin("Panel2", nullptr, window_flags);
+
+			if (ImGui::CollapsingHeader("Camera"))
+			{
+				float fov = Math::Degrees(GlobalState.scene->camera->fov);
+				float aperture = GlobalState.scene->camera->aperture * 1000.0f;
+				optionsChanged |= ImGui::SliderFloat("Field of vision", &fov, 10, 90);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Field of vision of the camera.");
+				GlobalState.scene->camera->SetFov(fov);
+				optionsChanged |= ImGui::SliderFloat("Aperture", &aperture, 0.0f, 10.8f);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Aperture of the camera.");
+				GlobalState.scene->camera->aperture = aperture / 1000.0f;
+				optionsChanged |= ImGui::SliderFloat("Focal Distance", &GlobalState.scene->camera->focalDist, 0.1f, 50.0f);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Focus distance of the camera.");
+				ImGui::Text("Pos: %.2f, %.2f, %.2f", GlobalState.scene->camera->position.x, GlobalState.scene->camera->position.y, GlobalState.scene->camera->position.z);
+			}
 
 			if (optionsChanged)
 			{
-				scene->renderOptions = renderOptions;
-				scene->camera->isMoving = true;
+				GlobalState.scene->renderOptions = renderOptions;
+				GlobalState.scene->camera->isMoving = true;
 			}
 
-			if (noUi == false) {
-				ImGui::Text("\n");
+			if (ImGui::CollapsingHeader("Objects"))
+			{
+				bool objectPropChanged = false;
 
-				if (ImGui::CollapsingHeader("Objects"))
+				std::vector<std::string> listboxItems;
+				for (int i = 0; i < GlobalState.scene->meshInstances.size(); i++)
 				{
-					bool objectPropChanged = false;
+					listboxItems.push_back(GlobalState.scene->meshInstances[i].name);
+				}
 
-					std::vector<std::string> listboxItems;
-					for (int i = 0; i < scene->meshInstances.size(); i++)
+				// Object Selection
+				ImGui::ListBoxHeader("Instances");
+				for (int i = 0; i < GlobalState.scene->meshInstances.size(); i++)
+				{
+					bool is_selected = GlobalState.selectedInstance == i;
+					if (ImGui::Selectable(listboxItems[i].c_str(), is_selected))
 					{
-						listboxItems.push_back(scene->meshInstances[i].name);
-					}
-
-					// Object Selection
-					ImGui::ListBoxHeader("Instances");
-					for (int i = 0; i < scene->meshInstances.size(); i++)
-					{
-						bool is_selected = selectedInstance == i;
-						if (ImGui::Selectable(listboxItems[i].c_str(), is_selected))
-						{
-							selectedInstance = i;
-						}
-					}
-					ImGui::ListBoxFooter();
-
-					ImGui::Separator();
-					ImGui::Text("Materials");
-
-					// Material properties
-					Vec3* albedo = &scene->materials[scene->meshInstances[selectedInstance].materialID].albedo;
-					Vec3* emission = &scene->materials[scene->meshInstances[selectedInstance].materialID].emission;
-					Vec3* extinction = &scene->materials[scene->meshInstances[selectedInstance].materialID].extinction;
-
-					objectPropChanged |= ImGui::ColorEdit3("Albedo", (float*)albedo, 0);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Color of the object.");
-					objectPropChanged |= ImGui::SliderFloat("Metallic", &scene->materials[scene->meshInstances[selectedInstance].materialID].metallic, 0.0f, 1.0f);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("How metalness of the object.");
-					objectPropChanged |= ImGui::SliderFloat("Roughness", &scene->materials[scene->meshInstances[selectedInstance].materialID].roughness, 0.001f, 1.0f);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("How smoothness of the object. Setting this to 0 and metallic to max will result in a mirror.");
-					objectPropChanged |= ImGui::SliderFloat("Specular", &scene->materials[scene->meshInstances[selectedInstance].materialID].specular, 0.0f, 1.0f);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Intensity of specular highlights.");
-					objectPropChanged |= ImGui::SliderFloat("SpecularTint", &scene->materials[scene->meshInstances[selectedInstance].materialID].specularTint, 0.0f, 1.0f);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Tint of the specular highlights.");
-					objectPropChanged |= ImGui::SliderFloat("Subsurface", &scene->materials[scene->meshInstances[selectedInstance].materialID].subsurface, 0.0f, 1.0f);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Amount of subsurface scattering on the object.");
-					objectPropChanged |= ImGui::SliderFloat("Anisotropic", &scene->materials[scene->meshInstances[selectedInstance].materialID].anisotropic, 0.0f, 1.0f);
-					objectPropChanged |= ImGui::SliderFloat("Sheen", &scene->materials[scene->meshInstances[selectedInstance].materialID].sheen, 0.0f, 1.0f);
-					objectPropChanged |= ImGui::SliderFloat("SheenTint", &scene->materials[scene->meshInstances[selectedInstance].materialID].sheenTint, 0.0f, 1.0f);
-					objectPropChanged |= ImGui::SliderFloat("Clearcoat", &scene->materials[scene->meshInstances[selectedInstance].materialID].clearcoat, 0.0f, 1.0f);
-					objectPropChanged |= ImGui::SliderFloat("clearcoatRoughness", &scene->materials[scene->meshInstances[selectedInstance].materialID].clearcoatRoughness, 0.001f, 1.0f);
-					objectPropChanged |= ImGui::SliderFloat("Transmission", &scene->materials[scene->meshInstances[selectedInstance].materialID].transmission, 0.0f, 1.0f);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Amount of transmission/glass-ness. ");
-					objectPropChanged |= ImGui::SliderFloat("IOR", &scene->materials[scene->meshInstances[selectedInstance].materialID].ior, 1.001f, 2.0f);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Index of refraction of the object. Only used with transmission.");
-					objectPropChanged |= ImGui::ColorEdit3("Extinction", (float*)extinction, 0);
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Light extinction of the transmission.");
-
-					// Transform properties
-					ImGui::Separator();
-					ImGui::Text("Transforms");
-					{
-						float viewMatrix[16];
-						float projMatrix[16];
-
-						auto io = ImGui::GetIO();
-						scene->camera->ComputeViewProjectionMatrix(viewMatrix, projMatrix, io.DisplaySize.x / io.DisplaySize.y);
-						Mat4 xform = scene->meshInstances[selectedInstance].transform;
-
-						EditTransform(viewMatrix, projMatrix, (float*)&xform);
-
-						if (memcmp(&xform, &scene->meshInstances[selectedInstance].transform, sizeof(float) * 16))
-						{
-							scene->meshInstances[selectedInstance].transform = xform;
-							objectPropChanged = true;
-						}
-					}
-
-					if (objectPropChanged)
-					{
-						scene->RebuildInstances();
+						GlobalState.selectedInstance = i;
 					}
 				}
+				ImGui::ListBoxFooter();
+
+				ImGui::Separator();
+				ImGui::Text("Materials");
+
+				// Material properties
+				Vec3* albedo = &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].albedo;
+				Vec3* emission = &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].emission;
+				Vec3* extinction = &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].extinction;
+
+				objectPropChanged |= ImGui::ColorEdit3("Albedo", (float*)albedo, 0);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Color of the object.");
+				objectPropChanged |= ImGui::SliderFloat("Metallic", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].metallic, 0.0f, 1.0f);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("How metalness of the object.");
+				objectPropChanged |= ImGui::SliderFloat("Roughness", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].roughness, 0.0f, 1.0f);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("How smoothness of the object. Setting this to 0 and metallic to max will result in a mirror.");
+				objectPropChanged |= ImGui::SliderFloat("Specular", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].specular, 0.0f, 1.0f);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Intensity of specular highlights.");
+				objectPropChanged |= ImGui::SliderFloat("SpecularTint", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].specularTint, 0.0f, 1.0f);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Tint of the specular highlights.");
+				objectPropChanged |= ImGui::SliderFloat("Subsurface", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].subsurface, 0.0f, 1.0f);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Amount of subsurface scattering on the object.");
+				objectPropChanged |= ImGui::SliderFloat("Anisotropic", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].anisotropic, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Sheen", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].sheen, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("SheenTint", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].sheenTint, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Clearcoat", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].clearcoat, 0.0f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("clearcoatRoughness", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].clearcoatRoughness, 0.001f, 1.0f);
+				objectPropChanged |= ImGui::SliderFloat("Transmission", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].transmission, 0.0f, 1.0f);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Amount of transmission/glass-ness. ");
+				objectPropChanged |= ImGui::SliderFloat("IOR", &GlobalState.scene->materials[GlobalState.scene->meshInstances[GlobalState.selectedInstance].materialID].ior, 1.001f, 2.0f);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Index of refraction of the object. Only used with transmission.");
+				objectPropChanged |= ImGui::ColorEdit3("Extinction", (float*)extinction, 0);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Light extinction of the transmission.");
+				ImGuiColorEditFlags emission_color_edit_flags = 0;
+				emission_color_edit_flags |= ImGuiColorEditFlags_HDR;
+				emission_color_edit_flags |= ImGuiColorEditFlags_Float;
+				emission_color_edit_flags |= ImGuiColorEditFlags_DisplayHSV;
+				objectPropChanged |= ImGui::ColorEdit3("Emission", (float *)emission, emission_color_edit_flags);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Emission color of the object.");
+
+				// Transform properties
+				ImGui::Separator();
+				ImGui::Text("Transforms");
+				{
+					float viewMatrix[16];
+					float projMatrix[16];
+
+					auto io = ImGui::GetIO();
+					GlobalState.scene->camera->ComputeViewProjectionMatrix(viewMatrix, projMatrix, io.DisplaySize.x / io.DisplaySize.y);
+					Mat4 xform = GlobalState.scene->meshInstances[GlobalState.selectedInstance].transform;
+
+					EditTransform(viewMatrix, projMatrix, (float*)&xform);
+
+					if (memcmp(&xform, &GlobalState.scene->meshInstances[GlobalState.selectedInstance].transform, sizeof(float) * 16))
+					{
+						GlobalState.scene->meshInstances[GlobalState.selectedInstance].transform = xform;
+						objectPropChanged = true;
+					}
+				}
+
+				if (objectPropChanged)
+				{
+					GlobalState.scene->RebuildInstances();
+				}
 			}
+
+			ImGui::End();
+			
+		}
+		if (GlobalState.noUi == true) {
+			GlobalState.scene->camera->isMoving = false;
+		}
+		if (GlobalState.noUi == true && GlobalState.displaySampleCounter == true) {
+			
+			// Window flags
+			ImVec4* colors = ImGui::GetStyle().Colors;
+			colors[ImGuiCol_Border] = ImVec4(0.01f, 0.01f, 0.01f, 0.00f);
+			colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.0f);
+
+			ImGuiWindowFlags window_flags_samplecounter = 0;
+			window_flags_samplecounter |= ImGuiWindowFlags_NoDecoration;
+			window_flags_samplecounter |= ImGuiWindowFlags_NoMove;
+			window_flags_samplecounter |= ImGuiWindowFlags_NoResize;
+
+			GlobalState.scene->camera->isMoving = false;
+
+			ImGui::SetNextWindowSize({ 256, 0 });
+			ImGui::SetNextWindowPos({ 8, 8 });
+			ImGui::SetNextWindowFocus();
+			ImGui::Begin("samplecount", NULL, window_flags_samplecounter);
+			ImGui::Text("Rendered samples: %d ", GlobalState.renderer->GetSampleCount());
 			ImGui::End();
 		}
-		double presentTime = SDL_GetTicks();
-		Update((float)(presentTime - lastTime));
-		lastTime = presentTime;
-		glClearColor(0., 0., 0., 0.);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //OpenGL clearing.
-		glDisable(GL_DEPTH_TEST);
-		Render();
-		SDL_GL_SwapWindow(loopdata.mWindow);
+	}
+
+	double presentTime = SDL_GetTicks();
+	Update((float)(presentTime - lastTime), loopdata);
+	lastTime = presentTime;
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // OpenGL clearing.
+	glDisable(GL_DEPTH_TEST);
+	Render();
+	SDL_GL_SwapWindow(loopdata.mWindow);
 }
 
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
-	Log(("--- " + versionString + " ---\n").c_str());
-
 	srand((unsigned int)time(0));
+#if defined(_WIN32)
+	AddDllDirectory(PCWSTR(R"(/bin/)"));
+#endif
 
 	std::string sceneFile;
+	const char* remote_ip = "";
+	int remote_port = 4269;
 
-	for (int i = 1; i < argc; ++i) 
+	for (int i = 1; i < argc; ++i)
 	{
 		const std::string arg(argv[i]);
 		switch (strint(arg.c_str())) {
@@ -669,101 +778,177 @@ int main(int argc, char** argv)
 			break;
 
 		case strint("-u"):
-			noUi = true;
+			GlobalState.noUi = true;
 			break;
 
 		case strint("--noui"):
-			noUi = true;
+			GlobalState.noUi = true;
+			break;
+
+		case strint("-nm"):
+			GlobalState.noMove = true;
+			break;
+
+		case strint("--nomove"):
+			GlobalState.noMove = true;
 			break;
 
 		case strint("-w"):
-			noWindow = true;
+			GlobalState.noWindow = true;
 			break;
 
 		case strint("--nowindow"):
-			noWindow = true;
+			GlobalState.noWindow = true;
 			break;
 
 		case strint("-n"):
-			useNeutralTonemap = true;
+			renderOptions.tonemapIndex = 0;
 			break;
 
 		case strint("--neutral"):
-			useNeutralTonemap = true;
+			renderOptions.tonemapIndex = 0;
 			break;
 
 		case strint("-ms"):
-			std::string::size_type sz0;
-			maxSamples = std::stoi(argv[++i], &sz0);
+			std::string::size_type sz;
+			GlobalState.maxSamples = std::stoi(argv[++i], &sz);
 			break;
 
 		case strint("--maxsamples"):
-			std::string::size_type sz1;
-			maxSamples = std::stoi(argv[++i], &sz1);
+		{
+			std::string::size_type sz;
+			GlobalState.maxSamples = std::stoi(argv[++i], &sz);
 			break;
+		}
 
 		case strint("-ps"):
-			std::string::size_type sz2;
-			previewScale = std::stoi(argv[++i], &sz2);
+		{
+			std::string::size_type sz;
+			GlobalState.previewScale = std::stoi(argv[++i], &sz);
 			break;
+		}
 
 		case strint("--previewscale"):
-			std::string::size_type sz3;
-			previewScale = std::stoi(argv[++i], &sz3);
+		{
+			std::string::size_type sz;
+			GlobalState.previewScale = std::stoi(argv[++i], &sz);
+			break;
+		}
+
+		case strint("-ou"):
+			GlobalState.output_path = argv[++i];
+			break;
+
+		case strint("--outputpath"):
+			GlobalState.output_path = argv[++i];
 			break;
 
 		case strint("-ep"):
-			exportName = argv[++i];
+			GlobalState.exportName = argv[++i];
 			break;
 
 		case strint("-exportname"):
-			exportName = argv[++i];
+			GlobalState.exportName = argv[++i];
 			break;
 
 		case strint("-et"):
-			exportType = argv[++i];
+			GlobalState.exportType = argv[++i];
 			break;
 
 		case strint("--exporttype"):
-			exportType = argv[++i];
+			GlobalState.exportType = argv[++i];
 			break;
 
 		case strint("-dn"):
-			renderOptions.enableDenoiser = true;
+			renderOptions.enableAutomaticDenoise = true;
 			break;
 
 		case strint("--denoise"):
-			renderOptions.enableDenoiser = true;
+			renderOptions.enableAutomaticDenoise = true;
 			break;
 
 		case strint("-db"):
-			useDebug = true;
+			GlobalState.useDebug = true;
+			break;
+
+		case strint("-sc"):
+			GlobalState.displaySampleCounter = true;
+			break;
+
+		case strint("--samplecounter"):
+			GlobalState.displaySampleCounter = true;
 			break;
 
 		case strint("--debug"):
-			useDebug = true;
+			GlobalState.useDebug = true;
 			break;
 
 		case strint("-df"):
-			std::string::size_type sz4;
-			renderOptions.denoiserFrameCnt = std::stoi(argv[++i], &sz4);
+		{
+			std::string::size_type sz;
+			renderOptions.denoiserFrameCnt = std::stoi(argv[++i], &sz);
 			break;
+		}
 
 		case strint("--denoiseframe"):
-			std::string::size_type sz5;
-			renderOptions.denoiserFrameCnt = std::stoi(argv[++i], &sz5);
+		{
+			std::string::size_type sz;
+			renderOptions.denoiserFrameCnt = std::stoi(argv[++i], &sz);
 			break;
-
+		}
 
 		case strint("--jpgquality"):
-			std::string::size_type sz6;
-			currentJpgQuality = std::stoi(argv[++i], &sz6);
+		{
+			std::string::size_type sz;
+			GlobalState.currentJpgQuality = std::stoi(argv[++i], &sz);
 			break;
+		}
 
 		case strint("-jpgq"):
-			std::string::size_type sz7;
-			currentJpgQuality = std::stoi(argv[++i], &sz7);
+		{
+			std::string::size_type sz;
+			GlobalState.currentJpgQuality = std::stoi(argv[++i], &sz);
 			break;
+		}
+
+		case strint("-tn"):
+		{
+			std::string::size_type sz;
+			renderOptions.tonemapIndex = std::stoi(argv[++i], &sz);
+			break;
+		}
+
+		case strint("--tonemap"):
+		{
+			std::string::size_type sz;
+			renderOptions.tonemapIndex = std::stoi(argv[++i], &sz);
+			break;
+		}
+
+		case strint("-h"):
+		{
+			std::cout << (("--- " + GlobalState.versionString + " ---").c_str()) << std::endl;
+			std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
+			std::cout << "Options:" << std::endl;
+			std::cout << "  -s, --scene                     Load the scene from the specified file" << std::endl;
+			std::cout << "  -h, --help                      Print this help message and exit" << std::endl;
+			std::cout << "  -u, --noui                      Disable the UI" << std::endl;
+			std::cout << "  -nm, --nomove                   Disable camera movement" << std::endl;
+			std::cout << "  -w, --nowindow                  Disable the window" << std::endl;
+			std::cout << "  -n, --neutral                   Use neutral tonemapping" << std::endl;
+			std::cout << "  -ms, --maxsamples <int>         Set the maximum number of samples per pixel before export" << std::endl;
+			std::cout << "  -sc, --samplecounter            Enables an on-screen samplecounter. Requires noUI mode." << std::endl;
+			std::cout << "  -ps, --previewscale <float>     Set the preview scale" << std::endl;
+			std::cout << "  -ou, --outputpath <string>      Set the output path" << std::endl;
+			std::cout << "  -ep, --exportname <string>      Set the export name" << std::endl;
+			std::cout << "  -et, --exporttype <string>      Set the export type" << std::endl;
+			std::cout << "  -dn, --denoise                  Enable automatic denoiser" << std::endl;
+			std::cout << "  -db, --debug                    Enable debug mode" << std::endl;
+			std::cout << "  -df, --denoiseframe <int>       Set the denoiser frame count" << std::endl;
+			std::cout << "  -jpgq, --jpgquality <int>       Set the jpeg quality" << std::endl;
+			std::cout << "  -tn, --tonemap <int>            Set the tonemapper based on index" << std::endl;
+			return 0;
+		}
 
 		default:
 			printf("Unknown argument '%s' \n", arg.c_str());
@@ -772,24 +957,25 @@ int main(int argc, char** argv)
 		}
 	}
 
+	Log(("--- " + GlobalState.versionString + " ---\n").c_str());
+
 	if (!sceneFile.empty())
 	{
-		scene = new Scene();
+		GlobalState.scene = new Scene();
 
-		if (!LoadSceneFromFile(sceneFile, scene, renderOptions))
+		if (!LoadSceneFromFile(sceneFile, GlobalState.scene, renderOptions))
 			exit(0);
 
-		scene->renderOptions = renderOptions;
-		std::cout << "Scene loaded\n\n";
+		GlobalState.scene->renderOptions = renderOptions;
 	}
 	else
 	{
 		GetSceneFiles();
-		LoadScene(sceneFiles[sampleSceneIndex]);
+		LoadScene(sceneFiles[GlobalState.sceneIndex], NULL, false);
 	}
 
 	// Setup SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) //Init. SDL2
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) // Init. SDL2
 	{
 		printf("Error: %s\n", SDL_GetError());
 		return -1;
@@ -797,21 +983,12 @@ int main(int argc, char** argv)
 
 	LoopData loopdata;
 
-#ifdef __APPLE__ //Broken apple support
-	// GL 3.2 Core + GLSL 150
-	const char* glsl_version = "#version 150";
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#else
-	// GL 3.0 + GLSL 130
-	const char* glsl_version = "#version 130";
+	// GL 3.0 + GLSL 330
+	const char* glsl_version = "#version 330";
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#endif
 
 	// Create window with graphics context
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -819,13 +996,26 @@ int main(int argc, char** argv)
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
-	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	if (noWindow == true) {
-		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
+	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
+	if (GlobalState.noUi == true) {
+		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
 	}
-	loopdata.mWindow = SDL_CreateWindow("LavaFrame", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, renderOptions.resolution.x, renderOptions.resolution.y, window_flags);
+	if (GlobalState.noWindow == true) {
+		window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
+	}
 
+	SDL_DisplayMode sdldisplaymode;
+	SDL_GetDesktopDisplayMode(0, &sdldisplaymode);
+	GlobalState.nativeScreenWidth = sdldisplaymode.w;
+	GlobalState.nativeScreenHeight = sdldisplaymode.h;
 
+	SDL_Rect displayBounds;
+	SDL_GetDisplayUsableBounds(0, &displayBounds);
+	int screenWidth = displayBounds.w;
+	int screenHeight = displayBounds.h;
+
+	if (!GlobalState.noUi) loopdata.mWindow = SDL_CreateWindow(GlobalState.versionString.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenWidth, screenHeight, window_flags);
+	else loopdata.mWindow = SDL_CreateWindow(GlobalState.versionString.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GlobalState.scene->renderOptions.resolution.x, GlobalState.scene->renderOptions.resolution.y, window_flags);
 
 	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
@@ -833,32 +1023,31 @@ int main(int argc, char** argv)
 	if (!loopdata.mGLContext)
 	{
 		fprintf(stderr, "Failed to initialize OpenGL context!\n");
+#if defined(_WIN32)
+		MessageBox(NULL, "Failed to initialize OpenGL.", "Error", MB_ICONERROR);
+#endif
 		return 1;
 	}
 	SDL_GL_SetSwapInterval(0); // Disable vsync
 
 	// Initialize OpenGL loader
-#if GL_VERSION_3_2
-#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
 	bool err = gl3wInit() != 0;
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
-	bool err = glewInit() != GLEW_OK;
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-	bool err = gladLoadGL() == 0;
-#endif
 	if (err)
 	{
 		fprintf(stderr, "Failed to initialize OpenGL loader!\n");
+#if defined(_WIN32)
+		MessageBox(NULL, "", "Failed to initialize OpenGL loader.", MB_ICONERROR);
+#endif
 		return 1;
 	}
-#endif
 
 	// Setup Dear ImGui context and style
-	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", 16); //Make the font not-eyesore 
-	if (useDebug) {
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;
+	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", GlobalState.nativeScreenWidth / 121); //Make the font not-eyesore
+	if (GlobalState.useDebug) {
 		io.IniFilename = "guiconfig.ini";
 	}
 	else {
@@ -866,81 +1055,81 @@ int main(int argc, char** argv)
 	}
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		  // Enable DOCKING
+
 	ImGuiStyle& style = ImGui::GetStyle();
-	style.Alpha = 0.9f;
+	ImVec4* colors = ImGui::GetStyle().Colors;
+
+	style.Alpha = 1.0f;
 	style.WindowRounding = 0;
 	style.GrabRounding = 1;
 	style.GrabMinSize = 20;
-	style.FrameRounding = 3;
-	ImVec4* colors = ImGui::GetStyle().Colors;
+	style.FrameRounding = 2.5;
+	style.FramePadding = { 4, 4 };
 
-	colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-	colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-	colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 0.74f);
-	colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
-	colors[ImGuiCol_Border] = ImVec4(0.01f, 0.01f, 0.01f, 0.50f);
-	colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	colors[ImGuiCol_FrameBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.54f);
-	colors[ImGuiCol_FrameBgHovered] = ImVec4(1.00f, 1.00f, 1.00f, 0.40f);
-	colors[ImGuiCol_FrameBgActive] = ImVec4(1.00f, 0.45f, 0.00f, 0.67f);
-	colors[ImGuiCol_TitleBg] = ImVec4(0.04f, 0.04f, 0.04f, 1.00f);
-	colors[ImGuiCol_TitleBgActive] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
-	colors[ImGuiCol_MenuBarBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
-	colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
-	colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
-	colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
-	colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
-	colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_SliderGrab] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_SliderGrabActive] = ImVec4(1.00f, 0.64f, 0.30f, 1.00f);
-	colors[ImGuiCol_Button] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_ButtonHovered] = ImVec4(1.00f, 0.63f, 0.27f, 1.00f);
-	colors[ImGuiCol_ButtonActive] = ImVec4(0.57f, 0.28f, 0.00f, 1.00f);
-	colors[ImGuiCol_Header] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_HeaderHovered] = ImVec4(1.00f, 0.58f, 0.18f, 1.00f);
-	colors[ImGuiCol_HeaderActive] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_Separator] = ImVec4(0.45f, 0.45f, 0.45f, 0.50f);
-	colors[ImGuiCol_SeparatorHovered] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
-	colors[ImGuiCol_SeparatorActive] = ImVec4(0.17f, 0.16f, 0.16f, 1.00f);
-	colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_ResizeGripHovered] = ImVec4(1.00f, 0.61f, 0.24f, 1.00f);
-	colors[ImGuiCol_ResizeGripActive] = ImVec4(1.00f, 0.75f, 0.51f, 1.00f);
-	colors[ImGuiCol_Tab] = ImVec4(0.85f, 0.42f, 0.00f, 1.00f);
-	colors[ImGuiCol_TabHovered] = ImVec4(1.00f, 0.69f, 0.36f, 1.00f);
-	colors[ImGuiCol_TabActive] = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
-	colors[ImGuiCol_TabUnfocused] = ImVec4(0.31f, 0.15f, 0.00f, 1.00f);
-	colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.64f, 0.31f, 0.00f, 1.00f);
-	colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
-	colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-	colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-	colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-	colors[ImGuiCol_TextSelectedBg] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
-	colors[ImGuiCol_NavHighlight] = ImVec4(1.00f, 0.49f, 0.00f, 1.00f);
-	colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
-	colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
-	colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
-	
-	//End of UI style code.
+	colors[ImGuiCol_Text] = THEME_COLOR_WHITE;
+	colors[ImGuiCol_TextDisabled] = THEME_COLOR_GRAY;
+	colors[ImGuiCol_WindowBg] = THEME_BACKGROUND_DARK;
+	colors[ImGuiCol_ChildBg] = THEME_BACKGROUND_DARK_TRANSPARENT;
+	colors[ImGuiCol_PopupBg] = THEME_BACKGROUND_DARKER_TRANSPARENT;
+	colors[ImGuiCol_Border] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_BorderShadow] = THEME_NONE;
+	colors[ImGuiCol_FrameBg] = THEME_BACKGROUND_LIGHT;
+	colors[ImGuiCol_FrameBgHovered] = THEME_BACKGROUND_LIGHT;
+	colors[ImGuiCol_FrameBgActive] = THEME_BACKGROUND_LIGHT;
+	colors[ImGuiCol_TitleBg] = THEME_NONE;
+	colors[ImGuiCol_TitleBgActive] = THEME_NONE;
+	colors[ImGuiCol_TitleBgCollapsed] = THEME_NONE;
+	colors[ImGuiCol_MenuBarBg] = THEME_BACKGROUND_DARKER;
+	colors[ImGuiCol_ScrollbarBg] = THEME_BACKGROUND_DARKER_TRANSPARENT;
+	colors[ImGuiCol_ScrollbarGrab] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_ScrollbarGrabHovered] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_ScrollbarGrabActive] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_CheckMark] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_SliderGrab] = THEME_BACKGROUND_DARKER_TRANSPARENT;
+	colors[ImGuiCol_SliderGrabActive] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_Button] = THEME_SUBDUED_TRANSPARENT;
+	colors[ImGuiCol_ButtonHovered] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_ButtonActive] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_Header] = THEME_SUBDUED_TRANSPARENT;
+	colors[ImGuiCol_HeaderHovered] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_HeaderActive] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_Separator] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_SeparatorHovered] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_SeparatorActive] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_ResizeGrip] = THEME_NONE;
+	colors[ImGuiCol_ResizeGripHovered] = THEME_NONE;
+	colors[ImGuiCol_ResizeGripActive] = THEME_NONE;
+	colors[ImGuiCol_Tab] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_TabHovered] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_TabActive] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_TabUnfocused] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_TabUnfocusedActive] = THEME_ENLIGHTEN_TRANSPARENT;
+	colors[ImGuiCol_TableHeaderBg] = THEME_BACKGROUND_DARKER;
+	colors[ImGuiCol_TableBorderStrong] = THEME_BACKGROUND_DARKER;
+	colors[ImGuiCol_TableBorderLight] = THEME_BACKGROUND_LIGHT;
+	colors[ImGuiCol_TableRowBg] = THEME_BACKGROUND_DARK;
+	colors[ImGuiCol_TableRowBgAlt] = THEME_BACKGROUND_DARK;
+	colors[ImGuiCol_TextSelectedBg] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_DragDropTarget] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_NavHighlight] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_NavWindowingHighlight] = THEME_COLOR_ORANGE;
+	colors[ImGuiCol_NavWindowingDimBg] = THEME_BACKGROUND_DARK_TRANSPARENT;
+	colors[ImGuiCol_ModalWindowDimBg] = THEME_BACKGROUND_DARK_TRANSPARENT;
 
 	ImGui_ImplSDL2_InitForOpenGL(loopdata.mWindow, loopdata.mGLContext);
-
 	ImGui_ImplOpenGL3_Init(glsl_version);
-
-	//ImGui::StyleColorsDark();
 
 	if (!InitRenderer())
 		return 1;
 
-	while (!done)
+	while (!GlobalState.done)
 	{
 		MainLoop(&loopdata);
 	}
 
-	delete renderer;
-	delete scene;
+	delete GlobalState.renderer;
+	delete GlobalState.scene;
 
 	// Cleanup
 	ImGui_ImplOpenGL3_Shutdown();

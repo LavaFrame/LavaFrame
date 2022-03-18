@@ -1,0 +1,12 @@
+#pragma once
+#define THEME_NONE ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+#define THEME_COLOR_WHITE ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+#define THEME_COLOR_GRAY ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+#define THEME_BACKGROUND_DARK ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
+#define THEME_BACKGROUND_DARKER ImVec4(0.05f, 0.05f, 0.05f, 1.00f);
+#define THEME_BACKGROUND_DARKER_TRANSPARENT ImVec4(0.0f, 0.0f, 0.0f, 0.8f);
+#define THEME_BACKGROUND_DARK_TRANSPARENT ImVec4(0.0f, 0.0f, 0.0f, 0.25f);
+#define THEME_BACKGROUND_LIGHT ImVec4(0.25f, 0.25f, 0.25f, 1.0f);
+#define THEME_COLOR_ORANGE ImVec4(1.00f, 0.42f, 0.00f, 1.00f);
+#define THEME_SUBDUED_TRANSPARENT ImVec4(0.00f, 0.00f, 0.00f, 0.5f);
+#define THEME_ENLIGHTEN_TRANSPARENT ImVec4(0.43f, 0.43f, 0.43f, 0.50f);

@@ -11,21 +11,22 @@
 namespace LavaFrame
 {
     class Scene;
+
     class TiledRenderer : public Renderer
     {
     private:
         // FBOs
         GLuint pathTraceFBO;
-        GLuint pathTraceFBOLowRes;
+        GLuint previewFBO;
         GLuint accumFBO;
         GLuint outputFBO;
 
         // Shaders
         Program* pathTraceShader;
-        Program* pathTraceShaderLowRes;
+        Program* previewEngineShader;
         Program* accumShader;
         Program* outputShader;
-        Program* tonemapShader;
+        Program* postShader;
 
         // Textures
         GLuint pathTraceTexture;
@@ -62,8 +63,11 @@ namespace LavaFrame
         void Render();
         void Present() const;
         void Update(float secondsElapsed);
+        uint32_t SetViewport(int width, int height);
+        uint32_t Denoise();
         float GetProgress() const;
         int GetSampleCount() const;
         void GetOutputBuffer(unsigned char**, int& w, int& h);
+        void GetOutputBufferHDR(float** data, int& w, int& h);
     };
 }

@@ -2,7 +2,7 @@
  * Read license.txt for license information.
  * This is based on the original GLSL-PathTracer by Asif Ali.
  */
- 
+
 //-----------------------------------------------------------------------
 float ClosestHit(Ray r, inout State state, inout LightSampleRec lightSampleRec)
 //-----------------------------------------------------------------------
@@ -24,7 +24,7 @@ float ClosestHit(Ray r, inout State state, inout LightSampleRec lightSampleRec)
         float area    = params.y;
         float type    = params.z;
 
-        // Rectangular Area Light
+        // Intersect rectangular area light
         if (type == 0.) 
         {
             vec3 normal = normalize(cross(u, v));
@@ -48,7 +48,7 @@ float ClosestHit(Ray r, inout State state, inout LightSampleRec lightSampleRec)
             }
         }
 
-        // Spherical Area Light
+        // Intersect spherical area light
         if (type == 1.) 
         {
             d = SphereIntersect(radius, position, r);
@@ -66,6 +66,7 @@ float ClosestHit(Ray r, inout State state, inout LightSampleRec lightSampleRec)
     }
 #endif
 
+    // Intersect BVH and tris
     int stack[64];
     int ptr = 0;
     stack[ptr++] = -1;

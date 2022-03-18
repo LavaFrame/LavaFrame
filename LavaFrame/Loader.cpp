@@ -1,5 +1,11 @@
 /*
+    This is a modified version of the original code from the tinsel renderer.
+    Link to original code: https://github.com/mmacklin/tinsel
+*/
 
+// Original license :
+
+/*
 Copyright (c) 2018 Miles Macklin
 
 This software is provided 'as-is', without any express or implied
@@ -17,40 +23,40 @@ freely, subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be
    misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
-
 */
-
-/*
-    This is a modified version of the original code from the tinsel renderer.
-    Link to original code: https://github.com/mmacklin/tinsel
-*/
-
+#pragma warning( disable : 6031 )
 #include "Loader.h"
+#include "GlobalState.h"
+#include "ImGuizmo.h"
 #include <tiny_obj_loader.h>
 #include <iostream>
 #include <iterator>
 #include <algorithm>
 #include <stdio.h>
 
-extern std::string versionString;
-extern bool useDebug;
+extern LavaFrameState GlobalState;
 
 namespace LavaFrame
 {
     static const int kMaxLineLength = 2048;
     int(*Log)(const char* szFormat, ...) = printf;
+    int legacyAcesOverride = 2;
 
     bool LoadSceneFromFile(const std::string& filename, Scene* scene, RenderOptions& renderOptions)
     {
         FILE* file;
         file = fopen(filename.c_str(), "r");
+        GlobalState.overrideTileSize = false;
 
         if (!file)
         {
+#if defined(_WIN32)
+            MessageBox(NULL, "Scene file could not be opened for reading !", "Loading failed", MB_ICONERROR);
+#endif
             Log("Couldn't open scene file %s for reading\n", filename.c_str());
             return false;
         }
-        Log("Loading Scene...\n");
+        Log(std::string("Loading scene " + filename + " ...\n").c_str());
 
         struct MaterialData
         {
@@ -91,13 +97,14 @@ namespace LavaFrame
                 char albedoTexName[100] = "None";
                 char metallicRoughnessTexName[100] = "None";
                 char normalTexName[100] = "None";
+                char emissionTexName[100] = "None";
 
                 while (fgets(line, kMaxLineLength, file))
                 {
                     // end group
                     if (strchr(line, '}'))
                         break;
-                    if (useDebug) {
+                    if (GlobalState.useDebug) {
                         Log("Loading material data...\n");
                     }
                     sscanf(line, " name %s", name);
@@ -118,8 +125,9 @@ namespace LavaFrame
                     sscanf(line, " ior %f", &material.ior);
                     sscanf(line, " extinction %f %f %f", &material.extinction.x, &material.extinction.y, &material.extinction.z);
                     sscanf(line, " albedoTexture %s", albedoTexName);
-                    sscanf(line, " metallicRoughnessTexture %s", metallicRoughnessTexName); //new
-                    sscanf(line, " normalTexture %s", normalTexName); //new
+                    sscanf(line, " metallicRoughnessTexture %s", metallicRoughnessTexName);
+                    sscanf(line, " normalTexture %s", normalTexName);
+                    sscanf(line, " emissionTexture %s", emissionTexName);
                 }
 
                 // Albedo Texture
@@ -133,6 +141,10 @@ namespace LavaFrame
                 // Normal Map Texture
                 if (strcmp(normalTexName, "None") != 0)
                     material.normalmapTexID = scene->AddTexture(path + normalTexName);
+
+                // Emission Map Texture
+                if (strcmp(emissionTexName, "None") != 0)
+                    material.emissionmapTexID = scene->AddTexture(path + emissionTexName);
 
                 // add material to map
                 if (materialMap.find(name) == materialMap.end()) // New material
@@ -153,7 +165,7 @@ namespace LavaFrame
 
                 while (fgets(line, kMaxLineLength, file))
                 {
-                    if (useDebug) {
+                    if (GlobalState.useDebug) {
                         Log("Loading scene lighting...\n");
                     }
                     // end group
@@ -198,7 +210,7 @@ namespace LavaFrame
                 while (fgets(line, kMaxLineLength, file))
                 {
                     // end group
-                    if (useDebug) {
+                    if (GlobalState.useDebug) {
                         Log("Loading scene camera data...\n");
                     }
                     if (strchr(line, '}'))
@@ -232,19 +244,43 @@ namespace LavaFrame
                     // end group
                     if (strchr(line, '}'))
                         break;
-                    if (useDebug) {
+                    if (GlobalState.useDebug) {
                         Log("Loading scene data...\n");
                     }
-                    sscanf(line, " envMap %s", envMap);
+                    sscanf(line, " envMap %s", envMap); // Legacy
                     sscanf(line, " hdriMap %s", envMap);
                     sscanf(line, " resolution %d %d", &renderOptions.resolution.x, &renderOptions.resolution.y);
                     sscanf(line, " hdrMultiplier %f", &renderOptions.hdrMultiplier);
                     sscanf(line, " hdriMultiplier %f", &renderOptions.hdrMultiplier);
                     sscanf(line, " maxDepth %i", &renderOptions.maxDepth);
-                    sscanf(line, " tileWidth %i", &renderOptions.tileWidth);
-                    sscanf(line, " tileHeight %i", &renderOptions.tileHeight);
+                    if (sscanf(line, " tileWidth %i", &renderOptions.tileWidth) == 1) {
+                        GlobalState.overrideTileSize = true;
+                    }
+                    if (sscanf(line, " tileHeight %i", &renderOptions.tileHeight) == 1) {
+                        GlobalState.overrideTileSize = true;
+                    }
                     sscanf(line, " enableRR %s", enableRR);
                     sscanf(line, " RRDepth %i", &renderOptions.RRDepth);
+                    sscanf(line, " tonemapIndex %i", &renderOptions.tonemapIndex);
+                    sscanf(line, " useAces %i", &legacyAcesOverride);
+                    if (legacyAcesOverride == 1) {
+                        renderOptions.tonemapIndex = 1;
+                    }
+                    if (legacyAcesOverride == 0) {
+                        renderOptions.tonemapIndex = 0;
+                    }
+                    // Chromatic Aberration controls
+                    sscanf(line, " useChromaticAberration %i", &renderOptions.useCA);
+                    sscanf(line, " CADistance %f", &renderOptions.caDistance);
+                    sscanf(line, " useCAdistortion %i", &renderOptions.useCADistortion);
+                    sscanf(line, " CAAngularity %f", &renderOptions.caP1);
+                    sscanf(line, " CADirectionality %f", &renderOptions.caP2);
+                    sscanf(line, " CACenter %f", &renderOptions.caP3);
+                    // Vignette controls : useVignette, vignetteIntensity, vignettePower
+                    sscanf(line, " useVignette %i", &renderOptions.useVignette);
+                    sscanf(line, " vignetteIntensity %f", &renderOptions.vignetteIntensity);
+                    sscanf(line, " vignettePower %f", &renderOptions.vignettePower);
+
                 }
 
                 if (strcmp(envMap, "None") != 0)
@@ -303,6 +339,7 @@ namespace LavaFrame
 
                     sscanf(line, " position %f %f %f", &xform[3][0], &xform[3][1], &xform[3][2]);
                     sscanf(line, " scale %f %f %f", &xform[0][0], &xform[1][1], &xform[2][2]);
+                    
                 }
                 if (!filename.empty())
                 {
@@ -330,10 +367,20 @@ namespace LavaFrame
 
         fclose(file);
 
+        if (!GlobalState.overrideTileSize) {
+            renderOptions.tileHeight = renderOptions.resolution.y;
+            renderOptions.tileWidth = renderOptions.resolution.x;
+        }
+
+        GlobalState.initTileSizeX = renderOptions.tileWidth;
+        GlobalState.initTileSizeY = renderOptions.tileHeight;
+
         if (!cameraAdded)
             scene->AddCamera(Vec3(0.0f, 0.0f, 10.0f), Vec3(0.0f, 0.0f, -10.0f), 35.0f);
 
         scene->CreateAccelerationStructures();
+
+        Log("Scene loaded.\n");
 
         return true;
     }

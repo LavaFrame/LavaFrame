@@ -5,6 +5,7 @@
 
 uniform bool isCameraMoving;
 uniform bool useEnvMap;
+uniform bool useAces;
 uniform vec3 randomVector;
 uniform vec2 screenResolution;
 uniform float hdrTexSize;
@@ -34,3 +35,4 @@ uniform int numOfLights;
 uniform int maxDepth;
 uniform int topBVHIndex;
 uniform int vertIndicesSize;
+uniform int frame;
