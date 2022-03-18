@@ -32,9 +32,6 @@
 #if defined(_WIN32)
 #pragma message("Compiling using Windows features.")
 #include <windows.h>
-// NetImgui for Remote rendering inspection
-// TODO : INCLUDE THIS IN THE LICENSE FILE !
-#include "NetImgui_Api.h"
 #endif
 
 using namespace LavaFrame;
@@ -932,54 +929,6 @@ int main(int argc, char** argv)
 			break;
 		}
 
-		case strint("-rm"):
-		{
-#if defined(_WIN32)
-			networkMode = true;
-			remote_ip = argv[++i];
-			break;
-#else
-			printf("Remote networking not supported with this build.\n"); 
-			return 0;
-#endif
-		}
-
-		case strint("--remote"):
-		{
-#if defined(_WIN32)
-			networkMode = true;
-			remote_ip = argv[++i];
-			break;
-#else
-			printf("Remote networking not supported with this build.\n");
-			return 0;
-#endif
-		}
-
-		case strint("-rmp"):
-		{
-#if defined(_WIN32)
-			std::string::size_type sz;
-			remote_port = std::stoi(argv[++i], &sz);
-			break;
-#else
-			printf("Remote networking not supported with this build.\n");
-			return 0;
-#endif
-		}
-
-		case strint("--remoteport"):
-		{
-#if defined(_WIN32)
-			std::string::size_type sz;
-			remote_port = std::stoi(argv[++i], &sz);
-			break;
-#else
-			printf("Remote networking not supported with this build.\n");
-			return 0;
-#endif
-		}
-
 		case strint("-tn"):
 		{
 			std::string::size_type sz;
@@ -1016,10 +965,6 @@ int main(int argc, char** argv)
 			std::cout << "  -df, --denoiseframe <int>       Set the denoiser frame count" << std::endl;
 			std::cout << "  -jpgq, --jpgquality <int>       Set the jpeg quality" << std::endl;
 			std::cout << "  -tn, --tonemap <int>            Set the tonemapper based on index" << std::endl;
-#if defined(_WIN32)
-			std::cout << "  -rm, --remote <IP>				Enable remote network render control." << std::endl;
-			std::cout << "  -rmp, --remoteport <int>		Set remote port." << std::endl;
-#endif
 			return 0;
 		}
 
@@ -1196,14 +1141,6 @@ int main(int argc, char** argv)
 	if (!InitRenderer())
 		return 1;
 
-#if defined(_WIN32)
-	if (networkMode) {
-		NetImgui::Startup();
-		if (NetImgui::ConnectToApp("LavaFrame Renderer Instance", remote_ip, remote_port)) { printf("Connected to remote server.\n"); }
-		else { printf("Failed to connect to server.\n"); }
-	}
-#endif
-
 	while (!GlobalState.done)
 	{
 		MainLoop(&loopdata);
@@ -1213,7 +1150,6 @@ int main(int argc, char** argv)
 	delete GlobalState.scene;
 
 	// Cleanup
-	NetImgui::Shutdown(true);
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
