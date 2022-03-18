@@ -3,8 +3,8 @@
 ### A GPU based renderer.
 ![showcase1](showcase.jpg)
 ![showcase2](showcase2.jpg)
-Join us on [Discord](https://discord.gg/wYaHPPrb7x)
 =======
+Join us on [Discord](https://discord.gg/wYaHPPrb7x)
 (Currently only supports Windows - native Linux support coming in the future)
 
 ## Installation
