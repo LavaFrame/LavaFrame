@@ -30,8 +30,8 @@ vec4 tonemap(in vec4 c, float limit)
     return c * 1.0 / (1.0 + luminance / limit);
 }
 
-// ACES Tonemapping
-vec4 tonemapACES(in vec4 c, float limit)
+// Fitted ACES Tonemapping
+vec4 tonemapACES(in vec4 c)
 {
     float a = 2.51f;
     float b = 0.03f;
@@ -83,6 +83,7 @@ vec4 tonemapKanjero(in vec4 c)
 	return c;
 }
 
+// Uncharted 2 Tonemapping
 vec4 toneMapUncharted2(vec4 color)
 {
     const float A = 0.15;
@@ -134,24 +135,29 @@ void main()
         color = color;
     }
 
+	// Case for linear tonemapping
     if (tonemapIndex == 1) {
         color = pow(tonemap(color, 2), vec4(1.0 / 2.2));
     }
 
+    // Case for ACES tonemapping
     if (tonemapIndex == 2) {
-        color = pow(tonemapACES(color, 1.5), vec4(1.0 / 2.2));
+        color = pow(tonemapACES(color), vec4(1.0 / 2.2));
     }
 
+	// Case for Reinhard tonemapping
     if (tonemapIndex == 3) {
         color = pow(tonemapReinhard(color), vec4(1.0 / 2.2));
     }
 
+    // Case for Kanjero tonemapping
     if (tonemapIndex == 4) {
         color = pow(tonemapKanjero(color), vec4(1.0 / 2.2));
     }
 
+    // Case for linear tonemapping
     if (tonemapIndex == 5) {
-        color =toneMapHejlRichard(color);
+        color = toneMapHejlRichard(color);
     }
 
     if (tonemapIndex == 6) {
