@@ -158,7 +158,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)lavaframe\;$(SolutionDir)lavaframe\thirdparty\imgui;$(SolutionDir)lavaframe\thirdparty\glew\include;$(SolutionDir)lavaframe\thirdparty\stb;$(SolutionDir)lavaframe\thirdparty\gl3w;$(SolutionDir)lavaframe\thirdparty\imguizmo;$(SolutionDir)lavaframe\thirdparty\RadeonRays;$(SolutionDir)lavaframe\thirdparty\tinydir;$(SolutionDir)lavaframe\thirdparty\oidn\include\;$(SolutionDir)lavaframe\thirdparty\netimgui\;$(SolutionDir)lavaframe\thirdparty\SDL2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)lavaframe\;$(SolutionDir)lavaframe\thirdparty\imgui;$(SolutionDir)lavaframe\thirdparty\glew\include;$(SolutionDir)lavaframe\thirdparty\stb;$(SolutionDir)lavaframe\thirdparty\gl3w;$(SolutionDir)lavaframe\thirdparty\imguizmo;$(SolutionDir)lavaframe\thirdparty\RadeonRays;$(SolutionDir)lavaframe\thirdparty\tinydir;$(SolutionDir)lavaframe\thirdparty\oidn\include\;$(SolutionDir)lavaframe\thirdparty\netimgui\;$(SolutionDir)flareonpreview\includeheaders\;$(SolutionDir)lavaframe\thirdparty\SDL2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <Optimization>Full</Optimization>
@@ -170,8 +170,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)lavaframe\thirdparty\SDL2\lib\$(PlatformTarget);$(SolutionDir)lavaframe\thirdparty\oidn\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;SDL2.lib;SDL2main.lib;OpenImageDenoise.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\Flareon\$(Configuration)\;$(SolutionDir)lavaframe\thirdparty\SDL2\lib\$(PlatformTarget);$(SolutionDir)lavaframe\thirdparty\oidn\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;SDL2.lib;SDL2main.lib;OpenImageDenoise.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;flareonpreview.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <Version>
       </Version>
@@ -184,7 +184,8 @@
     </Link>
     <CustomBuildStep>
       <Command>Xcopy /y /r /q /c /s "$(SolutionDir)build_include\." "$(OutDirFullPath)"
-Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"</Command>
+Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"
+copy /y "$(SolutionDir)$(Platform)\Flareon\$(Configuration)\flareonpreview.dll" "$(OutDirFullPath)"</Command>
     </CustomBuildStep>
     <CustomBuildStep>
       <Message>
@@ -305,14 +306,6 @@ Xcopy /y /r /q /c /S "$(SolutionDir)shaders\." "$(OutDirFullPath)shaders\"</Comm
       <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</TreatOutputAsContent>
     </None>
     <None Include="..\shaders\postprocess.glsl">
-      <FileType>Document</FileType>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Outputs)</Outputs>
-      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</VerifyInputsAndOutputsExist>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-      <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</TreatOutputAsContent>
-    </None>
-    <None Include="..\shaders\preview_flareon.glsl">
       <FileType>Document</FileType>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Outputs)</Outputs>

@@ -188,9 +188,6 @@
     <None Include="..\shaders\postprocess.glsl">
       <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="..\shaders\preview_flareon.glsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
     <None Include="..\build_include\bin\SDL2.dll">
       <Filter>Resource Files\build_include\bin</Filter>
     </None>

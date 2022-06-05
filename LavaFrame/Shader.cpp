@@ -37,6 +37,7 @@ namespace LavaFrame
             delete[] info;
             glDeleteShader(object);
             object = 0;
+            printf("Error occured in : %s\n", sourceObj.path.c_str());
             printf("Shader compile error : %s\n", msg.c_str());
             throw std::runtime_error(msg.c_str());
         }

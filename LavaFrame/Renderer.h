@@ -38,9 +38,9 @@ namespace LavaFrame
             caP2 = -0.5;
             caP3 = 0.5;
             useCADistortion = false;
-            bool useVignette = false;
-            float vignetteIntensity = 0;
-            float vignettePower = 1;
+            useVignette = false;
+            vignetteIntensity = 0;
+            vignettePower = 2;
         }
         iVec2 resolution;
         int maxDepth;

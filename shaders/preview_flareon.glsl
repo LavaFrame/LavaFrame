@@ -1,8 +1,3 @@
-/*
- * Read license.txt for license information.
- * This is based on the original GLSL-PathTracer by Asif Ali.
- */
-
 #version 330
 
 out vec3 color;
